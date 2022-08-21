@@ -1,0 +1,8 @@
+631.deepsjeng_s-928B.champsimtrace.xz
+638.imagick_s-10316B.champsimtrace.xz
+641.leela_s-800B.champsimtrace.xz
+644.nab_s-5853B.champsimtrace.xz
+648.exchange2_s-1699B.champsimtrace.xz
+649.fotonik3d_s-1176B.champsimtrace.xz
+654.roms_s-842B.champsimtrace.xz
+657.xz_s-3167B.champsimtrace.xz
