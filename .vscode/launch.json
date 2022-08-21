@@ -1,0 +1,43 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/champsim_plus_ramulator", // the executable file's name for debugging
+            // Below are parmeters input into the executable file
+            "args": [
+                "--warmup_instructions",
+                "1000000",
+                "--simulation_instructions",
+                "2000000",
+                //"configs/HBM-config.cfg",
+                "configs/DDR4-config.cfg",
+                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
+            ],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            //"preLaunchTask": "C/C++: g++ build all files",
+            "miDebuggerPath": "/usr/bin/gdb" // The path of debugger
+        }
+    ]
+}

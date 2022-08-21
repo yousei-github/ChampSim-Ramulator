@@ -1,1 +1,49 @@
-
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++ build all files",
+			"command": "/usr/bin/g++", // The path of compiler
+			"args": [
+				"-fdiagnostics-color=always",
+				//"-O1",	// O1/O2/O3
+				"-g",
+				"-Wall",
+				// "-MM",
+				// "-MT",
+				//"-fopenmp",
+				"-std=c++17",	// c++11/c++17
+				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
+				"${workspaceFolder}/inc/",
+				"-I",
+				"${workspaceFolder}/inc/ChampSim/",
+				"-I",
+				"${workspaceFolder}/inc/Ramulator/",
+				// Below are input files (can be from multiples folders)
+				"${workspaceFolder}/src/ChampSim/*.cc",
+				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
+				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
+				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
+				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
+				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
+				"${workspaceFolder}/src/Ramulator/*.cpp",
+				"${workspaceFolder}/src/*.cc",
+				// Below is the executable file's name
+				"-o",
+				"${workspaceFolder}/bin/champsim_plus_ramulator"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: /usr/bin/g++"
+		}
+	]
+}
