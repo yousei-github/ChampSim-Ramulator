@@ -82,7 +82,7 @@ where [COMPILER] is the compiler's name, such as g++.
 ## Debug
 Debug methods are explained below.
 
-### Visual Studio Code-based method.
+### 1. Visual Studio Code-based method.
 - You may need to modify the debugger's path in the `launch.json` file in the `.vscode` directory.
 - Click `Start Debugging` in the `Run` tab.
 
