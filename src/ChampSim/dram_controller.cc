@@ -232,7 +232,7 @@ int MEMORY_CONTROLLER::add_pq(PACKET* packet) { return add_rq(packet); }
 
 uint32_t MEMORY_CONTROLLER::memory_get_channel(uint64_t address)
 {
-  uint32_t channel;
+  uint32_t channel = 0;
   MemoryType type = get_memory_type(address);
 
   switch (type)
@@ -250,7 +250,7 @@ uint32_t MEMORY_CONTROLLER::memory_get_channel(uint64_t address)
 
 uint32_t MEMORY_CONTROLLER::memory_get_bank(uint64_t address)
 {
-  uint32_t bank;
+  uint32_t bank = 0;
   MemoryType type = get_memory_type(address);
 
   switch (type)
@@ -268,7 +268,7 @@ uint32_t MEMORY_CONTROLLER::memory_get_bank(uint64_t address)
 
 uint32_t MEMORY_CONTROLLER::memory_get_column(uint64_t address)
 {
-  uint32_t column;
+  uint32_t column = 0;
   MemoryType type = get_memory_type(address);
 
   switch (type)
@@ -286,7 +286,7 @@ uint32_t MEMORY_CONTROLLER::memory_get_column(uint64_t address)
 
 uint32_t MEMORY_CONTROLLER::memory_get_row(uint64_t address)
 {
-  uint32_t row;
+  uint32_t row = 0;
   MemoryType type = get_memory_type(address);
 
   switch (type)
