@@ -13,10 +13,10 @@
 #define BRANCH_USE_BIMODAL             (ENABLE)
 #define REPLACEMENT_USE_LRU            (ENABLE)
 #define BTB_USE_BASIC                  (ENABLE)
-#define RAMULATOR                      (ENABLE) // whether use ramulator
-#define MEMORY_USE_HYBRID              (ENABLE) // whether use hybrid memory system
+#define RAMULATOR                      (DISABLE) // whether use ramulator
+#define MEMORY_USE_HYBRID              (DISABLE) // whether use hybrid memory system
 #define PRINT_STATISTICS_INTO_FILE     (ENABLE)
-#define PRINT_MEMORY_TRACE             (ENABLE)
+#define PRINT_MEMORY_TRACE             (DISABLE)
 
 
 #define KB (1024ul) // unit is byte
@@ -33,7 +33,10 @@
 
 /* Includes */
 #include <stdint.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
+#include <cstdio>
 
 /* Defines */
 typedef enum
