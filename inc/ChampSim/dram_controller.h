@@ -159,6 +159,7 @@ public:
     }
     else if (request.addr < memory.max_address + memory2.max_address)
     {
+      request.addr = request.addr - memory.max_address; // the memory itself doesn't know other memories' space, so we manage the overall mapping.
       stall = !memory2.send(request);
     }
     else
@@ -196,6 +197,7 @@ public:
     }
     else if (request.addr < memory.max_address + memory2.max_address)
     {
+      request.addr = request.addr - memory.max_address; // the memory itself doesn't know other memories' space, so we manage the overall mapping.
       stall = !memory2.send(request);
     }
     else

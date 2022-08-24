@@ -13,8 +13,8 @@
 #define BRANCH_USE_BIMODAL             (ENABLE)
 #define REPLACEMENT_USE_LRU            (ENABLE)
 #define BTB_USE_BASIC                  (ENABLE)
-#define RAMULATOR                      (DISABLE) // whether use ramulator
-#define MEMORY_USE_HYBRID              (DISABLE) // whether use hybrid memory system
+#define RAMULATOR                      (ENABLE) // whether use ramulator
+#define MEMORY_USE_HYBRID              (ENABLE) // whether use hybrid memory system
 #define PRINT_STATISTICS_INTO_FILE     (ENABLE)
 #define PRINT_MEMORY_TRACE             (DISABLE)
 
@@ -56,7 +56,7 @@ typedef struct
 {
     FILE* trace_file;
     char* trace_string;
-    uint64_t address;    // full_addr >> 6 = address (granularity: cache line or 64 Byte)
+    uint64_t address;    // The address's granularity is byte.
     uint8_t access_type; // read access = 0, write access = 1
 } OutputMemoryTraceFileType;
 
