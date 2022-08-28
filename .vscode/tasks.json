@@ -7,7 +7,7 @@
 			"command": "/usr/bin/g++", // The path of compiler
 			"args": [
 				"-fdiagnostics-color=always",
-				//"-O1",	// O1/O2/O3
+				"-O2",	// O1/O2/O3
 				"-g",
 				"-Wall",
 				// "-MM",
@@ -22,10 +22,25 @@
 				"${workspaceFolder}/inc/Ramulator/",
 				// Below are input files (can be from multiples folders)
 				"${workspaceFolder}/src/ChampSim/*.cc",
+				// branch
 				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
+				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
+				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
+				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
+
+				// prefetcher
 				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
+				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
+				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
+				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
+
+				// replacement
 				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
+				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
+				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
+				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
+
 				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
 				"${workspaceFolder}/src/Ramulator/*.cpp",
 				"${workspaceFolder}/src/*.cc",
