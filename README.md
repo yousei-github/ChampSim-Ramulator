@@ -8,6 +8,9 @@ This project is based on the master branch of [ChampSim](https://github.com/yous
 - Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` for enabling hybrid memory systems or to `DISABLE` for enabling single memory systems.
 - Set the preprocessor `PRINT_STATISTICS_INTO_FILE` to `ENABLE` for printing statistics into `.statistics` file.
 - Set the preprocessor `PRINT_MEMORY_TRACE` to `ENABLE` for printing memory trace into `.trace` file. Each line in the trace file represents a memory request, with the hexadecimal address followed by 'R' or 'W' for read or write.
+- Set the preprocessor `BRANCH_PREDICTOR` to `BRANCH_USE_BIMODAL` for using bimodal branch predictor. Similarly, there also have gshare, hashed_perceptron, perceptron branch predictors. Following this logic, you can also modify other preprocessors, such as `INSTRUCTION_PREFETCHER`, `LLC_REPLACEMENT_POLICY`, `LLC_PREFETCHER`, and so on.
+
+The CPU's parameters are defined in the `champsim_constants.h` file.
 
 ## ChampSim
 [ChampSim](https://github.com/ChampSim/ChampSim) is a trace-based simulator for a microarchitecture study. You can sign up to the public mailing list by sending an empty mail to champsim+subscribe@googlegroups.com. If you have questions about how to use ChampSim, you can often receive a quicker response on the mailing list. Please reserve GitHub Issues for bugs. Traces for the 3rd Data Prefetching Championship (DPC-3) can be found from here (https://dpc3.compas.cs.stonybrook.edu/?SW_IS).
@@ -71,7 +74,7 @@ Build methods are explained below.
 - Click `Run Build Task` in the `Terminal` tab.
 
 ### 2. Command line-based method.
-By referring the contents of `tasks.json` file in the `vscode` directory, input the below command,
+By referring the contents of `tasks.json` file in the `.vscode` directory, input the below command,
 ```
 $ [COMPILER] -g -Wall -std=c++17 -I project_directory/inc/ -I project_directory/inc/ChampSim/ -I project_directory/inc/Ramulator/ 
 project_directory/src/ChampSim/*.cc project_directory/src/ChampSim/branch/bimodal/*.cc project_directory/src/ChampSim/prefetcher/no/*.cc project_directory/src/ChampSim/prefetcher/no_instr/*.cc project_directory/src/ChampSim/replacement/lru/*.cc project_directory/src/ChampSim/btb/basic_btb/*.cc project_directory/src/Ramulator/*.cpp project_directory/src/*.cc
@@ -87,12 +90,10 @@ Debug methods are explained below.
 - Click `Start Debugging` in the `Run` tab.
 
 ### 2. Command line-based method.
-By referring the contents of `launch.json` file in the `vscode` directory, input the below command,
+By referring the contents of `launch.json` file in the `.vscode` directory, input the below command,
 ```
 (waiting for updating)
 ```
-
-Please be aware this project only uses bimodal for branch predictor, lru for replacement, no and no_instr for prefetcher. If you want to try other modules, you can modify their source files by referring to this branch's source code. 
 
 # Run simulation
 According to the setting in the `ProjectConfiguration.h` file, the input parameters vary. There are three types of input pattern.
@@ -140,6 +141,16 @@ Simulation done.
 ```
 
 The number of warmup and simulation instructions given will be the number of instructions retired. Note that the statistics printed at the end of the simulation include only the simulation phase.
+
+# How to create traces
+
+Program traces are available in a variety of locations, however, many ChampSim users wish to trace their own programs for research purposes.
+Example tracing utilities are provided in the `tracer/` directory.
+
+# Evaluate Simulation
+
+ChampSim measures the IPC (Instruction Per Cycle) value as a performance metric. <br>
+There are some other useful metrics printed out at the end of simulation. <br>
 
 # Miscellaneous
 
