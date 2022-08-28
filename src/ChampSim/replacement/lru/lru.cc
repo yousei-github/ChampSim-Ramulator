@@ -4,10 +4,7 @@
 #include "cache.h"
 #include "util.h"
 
-#include "ProjectConfiguration.h" // user file
-#if USER_CODES == ENABLE
-#if REPLACEMENT_USE_LRU == ENABLE
-
+#if (USER_CODES) == (ENABLE)
 void CACHE::repl_rreplacementDlru_initialize() {}
 
 // find replacement victim
@@ -19,7 +16,7 @@ uint32_t CACHE::repl_rreplacementDlru_victim(uint32_t cpu, uint64_t instr_id, ui
 
 // called on every cache hit and cache fill
 void CACHE::repl_rreplacementDlru_update(uint32_t cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type,
-                                     uint8_t hit)
+                                         uint8_t hit)
 {
   if (hit && type == WRITEBACK)
     return;
@@ -30,13 +27,11 @@ void CACHE::repl_rreplacementDlru_update(uint32_t cpu, uint32_t set, uint32_t wa
   std::for_each(begin, end, [hit_lru](BLOCK& x) {
     if (x.lru <= hit_lru)
       x.lru++;
-  });
+                });
   std::next(begin, way)->lru = 0; // promote to the MRU position
 }
 
 void CACHE::repl_rreplacementDlru_final_stats() {}
-
-#endif
 
 #else
 void CACHE::initialize_replacement() {}
@@ -61,9 +56,9 @@ void CACHE::update_replacement_state(uint32_t cpu, uint32_t set, uint32_t way, u
   std::for_each(begin, end, [hit_lru](BLOCK& x) {
     if (x.lru <= hit_lru)
       x.lru++;
-  });
+                });
   std::next(begin, way)->lru = 0; // promote to the MRU position
 }
 
 void CACHE::replacement_final_stats() {}
-#endif
+#endif  // USER_CODES

@@ -8,8 +8,7 @@
 
 #include "ooo_cpu.h"
 
-#if USER_CODES == ENABLE
-#if BTB_USE_BASIC == ENABLE
+#if (USER_CODES) == (ENABLE)
 
 #define BASIC_BTB_SETS 1024
 #define BASIC_BTB_WAYS 8
@@ -278,10 +277,7 @@ void O3_CPU::btb_bbtbDbasic_btb_update(uint64_t ip, uint64_t branch_target, uint
   }
 }
 
-#endif
-
 #else
-
 #define BASIC_BTB_SETS 1024
 #define BASIC_BTB_WAYS 8
 #define BASIC_BTB_INDIRECT_SIZE 4096
@@ -544,5 +540,4 @@ void O3_CPU::update_btb(uint64_t ip, uint64_t branch_target, uint8_t taken, uint
     }
   }
 }
-
-#endif
+#endif  // USER_CODES
