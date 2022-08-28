@@ -126,14 +126,23 @@ public:
 
   int prefetch_code_line(uint64_t pf_v_addr);
 
-#if USER_CODES == ENABLE
-  enum class bpred_t { bbranchDbimodal }; // branch predictor type selection
+#if (USER_CODES) == (ENABLE)
+  /* Definition and declaration for branch predictor */
+  // Branch predictor type selection, i.e., bimodal, gshare, hashed_perceptron, perceptron.
+  enum class bpred_t { bbranchDbimodal, bbranchDgshare, bbranchDhashed_perceptron, bbranchDperceptron };
 
+  // Initialization for branch predictor
   void bpred_bbranchDbimodal_initialize();
+  void bpred_bbranchDgshare_initialize();
+  void bpred_bbranchDhashed_perceptron_initialize();
+  void bpred_bbranchDperceptron_initialize();
+
   void impl_branch_predictor_initialize()
   {
-    if (bpred_type == bpred_t::bbranchDbimodal)
-      bpred_bbranchDbimodal_initialize();
+    if (bpred_type == bpred_t::bbranchDbimodal) bpred_bbranchDbimodal_initialize();
+    else if (bpred_type == bpred_t::bbranchDgshare) bpred_bbranchDgshare_initialize();
+    else if (bpred_type == bpred_t::bbranchDhashed_perceptron) bpred_bbranchDhashed_perceptron_initialize();
+    else if (bpred_type == bpred_t::bbranchDperceptron) bpred_bbranchDperceptron_initialize();
     else
     {
       std::cout << __func__ << ": Branch predictor module not found." << std::endl;
@@ -141,30 +150,56 @@ public:
     }
   }
 
+  // Last result for branch predictor
   void bpred_bbranchDbimodal_last_result(uint64_t, uint64_t, uint8_t, uint8_t);
+  void bpred_bbranchDgshare_last_result(uint64_t, uint64_t, uint8_t, uint8_t);
+  void bpred_bbranchDhashed_perceptron_last_result(uint64_t, uint64_t, uint8_t, uint8_t);
+  void bpred_bbranchDperceptron_last_result(uint64_t, uint64_t, uint8_t, uint8_t);
+
   void impl_last_branch_result(uint64_t ip, uint64_t target, uint8_t taken, uint8_t branch_type)
   {
-    if (bpred_type == bpred_t::bbranchDbimodal)
-      return bpred_bbranchDbimodal_last_result(ip, target, taken, branch_type);
-    throw std::invalid_argument("Branch predictor module not found");
+    if (bpred_type == bpred_t::bbranchDbimodal) bpred_bbranchDbimodal_last_result(ip, target, taken, branch_type);
+    else if (bpred_type == bpred_t::bbranchDgshare) bpred_bbranchDgshare_last_result(ip, target, taken, branch_type);
+    else if (bpred_type == bpred_t::bbranchDhashed_perceptron) bpred_bbranchDhashed_perceptron_last_result(ip, target, taken, branch_type);
+    else if (bpred_type == bpred_t::bbranchDperceptron) bpred_bbranchDperceptron_last_result(ip, target, taken, branch_type);
+    else
+    {
+      std::cout << __func__ << ": Branch predictor module not found." << std::endl;
+      throw std::invalid_argument("Branch predictor module not found");
+    }
   }
 
+  // Predict for branch predictor
   uint8_t bpred_bbranchDbimodal_predict(uint64_t, uint64_t, uint8_t, uint8_t);
+  uint8_t bpred_bbranchDgshare_predict(uint64_t, uint64_t, uint8_t, uint8_t);
+  uint8_t bpred_bbranchDhashed_perceptron_predict(uint64_t, uint64_t, uint8_t, uint8_t);
+  uint8_t bpred_bbranchDperceptron_predict(uint64_t, uint64_t, uint8_t, uint8_t);
+
   uint8_t impl_predict_branch(uint64_t ip, uint64_t predicted_target, uint8_t always_taken, uint8_t branch_type)
   {
-    if (bpred_type == bpred_t::bbranchDbimodal)
-      return bpred_bbranchDbimodal_predict(ip, predicted_target, always_taken, branch_type);
-    throw std::invalid_argument("Branch predictor module not found");
+    if (bpred_type == bpred_t::bbranchDbimodal) return bpred_bbranchDbimodal_predict(ip, predicted_target, always_taken, branch_type);
+    else if (bpred_type == bpred_t::bbranchDgshare) return bpred_bbranchDgshare_predict(ip, predicted_target, always_taken, branch_type);
+    else if (bpred_type == bpred_t::bbranchDhashed_perceptron) return bpred_bbranchDhashed_perceptron_predict(ip, predicted_target, always_taken, branch_type);
+    else if (bpred_type == bpred_t::bbranchDperceptron) return bpred_bbranchDperceptron_predict(ip, predicted_target, always_taken, branch_type);
+    else
+    {
+      std::cout << __func__ << ": Branch predictor module not found." << std::endl;
+      throw std::invalid_argument("Branch predictor module not found");
+    }
+
     return 0;
   }
 
-  enum class btb_t { bbtbDbasic_btb };  // basic Branch Target Buffer (BTB) type selection
+  /* Definition and declaration for branch target buffer */
+  // Basic Branch Target Buffer (BTB) type selection, i.e., basic_btb.
+  enum class btb_t { bbtbDbasic_btb };
 
+  // Initialization for branch target buffer 
   void btb_bbtbDbasic_btb_initialize();
+
   void impl_btb_initialize()
   {
-    if (btb_type == btb_t::bbtbDbasic_btb)
-      btb_bbtbDbasic_btb_initialize();
+    if (btb_type == btb_t::bbtbDbasic_btb) btb_bbtbDbasic_btb_initialize();
     else
     {
       std::cout << __func__ << ": Branch target buffer module not found." << std::endl;
@@ -172,60 +207,85 @@ public:
     }
   }
 
+  // Update for branch target buffer 
   void btb_bbtbDbasic_btb_update(uint64_t, uint64_t, uint8_t, uint8_t);
+
   void impl_update_btb(uint64_t ip, uint64_t branch_target, uint8_t taken, uint8_t branch_type)
   {
-    if (btb_type == btb_t::bbtbDbasic_btb)
-      return btb_bbtbDbasic_btb_update(ip, branch_target, taken, branch_type);
-    throw std::invalid_argument("Branch target buffer module not found");
+    if (btb_type == btb_t::bbtbDbasic_btb) btb_bbtbDbasic_btb_update(ip, branch_target, taken, branch_type);
+    else
+    {
+      std::cout << __func__ << ": Branch target buffer module not found." << std::endl;
+      throw std::invalid_argument("Branch target buffer module not found");
+    }
   }
 
+  // Predict for branch target buffer 
   std::pair<uint64_t, uint8_t> btb_bbtbDbasic_btb_predict(uint64_t, uint8_t);
+
   std::pair<uint64_t, uint8_t> impl_btb_prediction(uint64_t ip, uint8_t branch_type)
   {
-    if (btb_type == btb_t::bbtbDbasic_btb)
-      return btb_bbtbDbasic_btb_predict(ip, branch_type);
-    throw std::invalid_argument("Branch target buffer module not found");
+    if (btb_type == btb_t::bbtbDbasic_btb) return btb_bbtbDbasic_btb_predict(ip, branch_type);
+    else
+    {
+      std::cout << __func__ << ": Branch target buffer module not found." << std::endl;
+      throw std::invalid_argument("Branch target buffer module not found");
+    }
   }
 
-  enum class ipref_t { pprefetcherDno_instr };
+  /* Definition and declaration for instruction prefetcher */
+  // Instruction prefetcher type selection, i.e., no_instr, next_line_instr.
+  enum class ipref_t { pprefetcherDno_instr, pprefetcherDnext_line_instr };
 
+  // Initialization for instruction prefetcher
   void pref_pprefetcherDno_instr_initialize();
+  void pref_pprefetcherDnext_line_instr_initialize();
+
+  // Branch operate for instruction prefetcher
   void pref_pprefetcherDno_instr_branch_operate(uint64_t, uint8_t, uint64_t);
+  void pref_pprefetcherDnext_line_instr_branch_operate(uint64_t, uint8_t, uint64_t);
+
   void impl_prefetcher_branch_operate(uint64_t ip, uint8_t branch_type, uint64_t branch_target)
   {
-    if (ipref_type == ipref_t::pprefetcherDno_instr)
-      return pref_pprefetcherDno_instr_branch_operate(ip, branch_type, branch_target);
-    throw std::invalid_argument("Instruction prefetcher module not found");
+    if (ipref_type == ipref_t::pprefetcherDno_instr) pref_pprefetcherDno_instr_branch_operate(ip, branch_type, branch_target);
+    else if (ipref_type == ipref_t::pprefetcherDnext_line_instr) pref_pprefetcherDnext_line_instr_branch_operate(ip, branch_type, branch_target);
+    else
+    {
+      std::cout << __func__ << ": Instruction prefetcher module not found." << std::endl;
+      throw std::invalid_argument("Instruction prefetcher module not found");
+    }
   }
 
+  // Cache operate for instruction prefetcher
   uint32_t pref_pprefetcherDno_instr_cache_operate(uint64_t, uint8_t, uint8_t, uint32_t);
+  uint32_t pref_pprefetcherDnext_line_instr_cache_operate(uint64_t, uint8_t, uint8_t, uint32_t);
+
+  // Cycle operate for instruction prefetcher
   void pref_pprefetcherDno_instr_cycle_operate();
+  void pref_pprefetcherDnext_line_instr_cycle_operate();
+
   void impl_prefetcher_cycle_operate()
   {
-    if (ipref_type == ipref_t::pprefetcherDno_instr)
-      return pref_pprefetcherDno_instr_cycle_operate();
-    throw std::invalid_argument("Instruction prefetcher module not found");
+    if (ipref_type == ipref_t::pprefetcherDno_instr) pref_pprefetcherDno_instr_cycle_operate();
+    else if (ipref_type == ipref_t::pprefetcherDnext_line_instr) pref_pprefetcherDnext_line_instr_cycle_operate();
+    else
+    {
+      std::cout << __func__ << ": Instruction prefetcher module not found." << std::endl;
+      throw std::invalid_argument("Instruction prefetcher module not found");
+    }
   }
 
+  // Cache fill for instruction prefetcher
   uint32_t pref_pprefetcherDno_instr_cache_fill(uint64_t, uint32_t, uint32_t, uint8_t, uint64_t, uint32_t);
+  uint32_t pref_pprefetcherDnext_line_instr_cache_fill(uint64_t, uint32_t, uint32_t, uint8_t, uint64_t, uint32_t);
+
+  // Final stats for instruction prefetcher
   void pref_pprefetcherDno_instr_final_stats();
-
-#if PREFETCHER_USE_NO_AND_NO_INSTR == ENABLE
-
-#endif
-
-#if BRANCH_USE_BIMODAL == ENABLE
-
-#endif
-
-#if BTB_USE_BASIC == ENABLE
-
-#endif
+  void pref_pprefetcherDnext_line_instr_final_stats();
 
 #else
 #include "ooo_cpu_modules.inc"
-#endif
+#endif  // USER_CODES
 
   const bpred_t bpred_type;
   const btb_t btb_type;
