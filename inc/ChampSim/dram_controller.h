@@ -25,8 +25,8 @@ constexpr int32_t ceil(float num)
 }
 } // namespace detail
 
-#if USER_CODES == ENABLE
-#if RAMULATOR == ENABLE
+#if (USER_CODES) == (ENABLE)
+#if (RAMULATOR) == (ENABLE)
 #include "Memory.h"
 #include "Request.h"
 using namespace ramulator;
@@ -93,13 +93,12 @@ struct DDR_CHANNEL
 #endif
 
 // Define the MEMORY_CONTROLLER class
-#if RAMULATOR == ENABLE
-#if MEMORY_USE_HYBRID == ENABLE
+#if (RAMULATOR) == (ENABLE)
+#if (MEMORY_USE_HYBRID) == (ENABLE)
 template<typename T, typename T2>
 class MEMORY_CONTROLLER : public champsim::operable, public MemoryRequestConsumer
 {
 public:
-#if RAMULATOR == ENABLE
   double clock_scale = MEMORY_CONTROLLER_CLOCK_SCALE;
   double clock_scale2 = MEMORY_CONTROLLER_CLOCK_SCALE;
 
@@ -286,81 +285,6 @@ public:
 
     return 0;
   };
-#else
-  /** @note
-   *  DRAM_IO_FREQ defined in champsim_constants.h
-   *
-   *  The unit of tRP/tRCD/tCAS/DRAM_DBUS_TURN_AROUND_TIME is cycle (1 cycle = 1 / DRAM_IO_FREQ microsecond)
-   *  tRP is the time of precharging phase.
-   *
-   *  tRCD is row-to-column delay, which is the time when the subarray copies the row into the sense-amplifier
-   *  after receiving ACTIVATE command from the DRAM controller.
-   *
-   *  tCAS is the time between sending a column address to the memory and the beginning of the data in response, or,
-   *  is the delay, in clock cycles, between the internal READ command and the availability of the first bit of output
-   *  data.
-   *  In other words, tCAS is tCL which means the time between the data leaves the subarray and reaches the processor.
-   *  Also, tCL is the abbreviation of CAS latency (CL).
-   *
-   *  CAS WRITE latency (CWL) is the delay, in clock cycles, between the internal WRITE command and the availability of
-   *  the first bit of output data.
-   *
-   *  Thus, READ latency (RL) is controlled by the sum of the tRCD and tCAS register settings.
-   *  WRITE latency (WL) is controlled by the sum of the tRCD and tCWL register settings.
-   *  [reference](https://doi.org/10.1109/HPCA.2013.6522354)
-   *  [reference](https://www.micron.com/-/media/client/global/documents/products/data-sheet/ddr4/8gb_ddr4_sdram.pdf, Micron 8Gb: x4, x8, x16 DDR4 SDRAM Features)
-   */
-  const static uint64_t tRP = detail::ceil(1.0 * tRP_DRAM_NANOSECONDS * DRAM_IO_FREQ / 1000);
-  const static uint64_t tRCD = detail::ceil(1.0 * tRCD_DRAM_NANOSECONDS * DRAM_IO_FREQ / 1000);
-  const static uint64_t tCAS = detail::ceil(1.0 * tCAS_DRAM_NANOSECONDS * DRAM_IO_FREQ / 1000);
-  const static uint64_t DRAM_DBUS_TURN_AROUND_TIME = detail::ceil(1.0 * DBUS_TURN_AROUND_NANOSECONDS * DRAM_IO_FREQ / 1000);
-  const static uint64_t DRAM_DBUS_RETURN_TIME = detail::ceil(1.0 * BLOCK_SIZE / DRAM_CHANNEL_WIDTH);
-
-  MEMORY_STATISTICS statistics;
-
-  std::array<DDR_CHANNEL, DDR_CHANNELS> ddr_channels;
-  std::array<HBM_CHANNEL, HBM_CHANNELS> hbm_channels;
-
-  MEMORY_CONTROLLER(double freq_scale) : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()) {}
-
-  void operate() override;
-
-  int add_rq(PACKET* packet) override;
-  int add_wq(PACKET* packet) override;
-  int add_pq(PACKET* packet) override;
-#endif
-
-#if RAMULATOR == ENABLE
-  //
-#else
-  uint32_t memory_get_channel(uint64_t address);
-  uint32_t memory_get_bank(uint64_t address);
-  uint32_t memory_get_column(uint64_t address);
-  uint32_t memory_get_row(uint64_t address);
-
-  // HBM doesn't have rank.
-  uint32_t hbm_get_channel(uint64_t address);
-  uint32_t hbm_get_bank(uint64_t address);
-  uint32_t hbm_get_column(uint64_t address);
-  uint32_t hbm_get_row(uint64_t address);
-
-  uint32_t ddr_get_channel(uint64_t address);
-  uint32_t ddr_get_rank(uint64_t address);
-  uint32_t ddr_get_bank(uint64_t address);
-  uint32_t ddr_get_column(uint64_t address);
-  uint32_t ddr_get_row(uint64_t address);
-
-  MemoryType get_memory_type(uint64_t address);
-
-  float get_average_memory_access_time();
-#endif
-
-private:
-#if RAMULATOR == ENABLE
-#else
-  void operate_hbm(HBM_CHANNEL& channel);
-  void operate_ddr(DDR_CHANNEL& channel);
-#endif
 };
 #else
 template<typename T>
