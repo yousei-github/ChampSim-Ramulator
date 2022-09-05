@@ -20,7 +20,7 @@
 #include <tuple>
 #include <ProjectConfiguration.h>  // User file
 
-#if USER_CODES == ENABLE
+#if (USER_CODES) == (ENABLE)
 #include "champsim_constants.h"
 #endif
 
@@ -383,7 +383,7 @@ public:
         return false;
     }
 
-#if USER_CODES == ENABLE
+#if (USER_CODES) == (ENABLE)
     uint32_t get_queue_occupancy(Request& req)
     {
         req.addr_vec.resize(addr_bits.size());

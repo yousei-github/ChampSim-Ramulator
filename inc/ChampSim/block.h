@@ -22,7 +22,7 @@ public:
   uint32_t pf_metadata;
   uint32_t cpu = NUM_CPUS;
 
-#if USER_CODES == ENABLE
+#if (USER_CODES) == (ENABLE)
   // address is physical address.
 #endif
   uint64_t address = 0, v_address = 0, data = 0, instr_id = 0, ip = 0, event_cycle = std::numeric_limits<uint64_t>::max(), cycle_enqueued = 0;

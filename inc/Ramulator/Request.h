@@ -4,9 +4,11 @@
 #include <vector>
 #include <functional>
 #include "ProjectConfiguration.h" // user file
-#if USER_CODES == ENABLE
+#if (USER_CODES) == (ENABLE)
 #include "memory_class.h"
 #include "block.h"
+#include "champsim_constants.h"
+#include <array>
 #endif
 
 using namespace std;
@@ -47,6 +49,8 @@ public:
         for (auto ret : request.packet.to_return)
             ret->return_data(&(request.packet));
     };
+    
+    std::array<uint8_t, BLOCK_SIZE> data = {0}; // a cache line
 #endif
 
     Request(long addr, Type type, int coreid = 0)

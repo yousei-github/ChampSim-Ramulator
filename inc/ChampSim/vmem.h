@@ -5,6 +5,8 @@
 #include <deque>
 #include <map>
 
+#include "ProjectConfiguration.h" // user file
+
 // reserve 1MB of space
 #define VMEM_RESERVE_CAPACITY 1048576
 

@@ -52,7 +52,7 @@ public:
     VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},       // virtual address prefetch queue
     WQ{WQ_SIZE, HIT_LATENCY};                             // write queue
 
-#if USER_CODES == ENABLE
+#if (USER_CODES) == (ENABLE)
   // Miss status holding registers (MSHR) is the hardware structure for tracking outstanding misses.
   // This mechanism is to insure accesses to the same location execute in program order.
   // Each MSHR refers to one missing cache line and contains a valid bit, the tag of the cache line and

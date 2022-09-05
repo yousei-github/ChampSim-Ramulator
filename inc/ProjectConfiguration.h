@@ -13,6 +13,7 @@
 #define MEMORY_USE_HYBRID              (ENABLE) // whether use hybrid memory system
 #define PRINT_STATISTICS_INTO_FILE     (ENABLE)
 #define PRINT_MEMORY_TRACE             (DISABLE)
+#define MEMORY_USE_SWAPPING_UNIT       (DISABLE)
 
 // CPU setting for branch_predictor (bimodal, gshare, hashed_perceptron, perceptron)
 #define BRANCH_USE_BIMODAL             (O3_CPU::bpred_t::bbranchDbimodal)
@@ -77,6 +78,10 @@
 #define NUMBER_OF_MEMORIES   (1)
 
 #endif
+
+#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
+#define TEST_SWAPPING_UNIT        (ENABLE)
+#endif
 // Standard libraries
 
 /* Includes */
@@ -85,8 +90,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cstdio>
+#include <array>
 
-/* Defines */
+/* Defines (C style) */
 typedef enum
 {
     read_default = 0,
@@ -104,17 +110,22 @@ typedef struct
 {
     FILE* trace_file;
     char* trace_string;
-    uint64_t address;    // The address's granularity is byte.
-    uint8_t access_type; // read access = 0, write access = 1
+    // uint64_t address;    // The address's granularity is byte.
+    // uint8_t access_type; // read access = 0, write access = 1
 } OutputMemoryTraceFileType;
 
 typedef struct
 {
     FILE* trace_file;
     char* trace_string;
+#define PAGE_TABLE_LEVEL_NUMBER     (5)
+
+    std::array<uint64_t, PAGE_TABLE_LEVEL_NUMBER> valid_pte_count = {0};
+    uint64_t virtual_page_count;
+
 } OutputChampSimStatisticsFileType;
 
-/* Declaration */
+/* Declaration (C style) */
 
 void output_memory_trace_initialization(const char* string);
 void output_memory_trace_deinitialization(OutputMemoryTraceFileType& outputmemorytrace);
@@ -125,6 +136,28 @@ void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileTyp
 
 extern OutputMemoryTraceFileType outputmemorytrace_one;
 extern OutputChampSimStatisticsFileType outputchampsimstatistics;
+
+/* Defines (C++ style) */
+// class CHAMPSIM_STATISTICS
+// {
+// private:
+//     /* data */
+//     FILE* trace_file;
+//     char* trace_string;
+// public:
+//     CHAMPSIM_STATISTICS(/* args */);
+//     ~CHAMPSIM_STATISTICS();
+// };
+
+// CHAMPSIM_STATISTICS::CHAMPSIM_STATISTICS(/* args */)
+// {
+// }
+
+// CHAMPSIM_STATISTICS::~CHAMPSIM_STATISTICS()
+// {
+// }
+
+
 
 #endif  // USER_CODES
 
