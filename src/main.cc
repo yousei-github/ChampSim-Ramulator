@@ -335,7 +335,7 @@ int main(int argc, char** argv)
   output_memory_trace_initialization(argv[start_position_of_traces]);
 #endif  // PRINT_MEMORY_TRACE
 
-#if PRINT_STATISTICS_INTO_FILE == ENABLE
+#if (PRINT_STATISTICS_INTO_FILE) == (ENABLE)
   output_champsim_statistics_initialization(argv[start_position_of_traces]);
   fprintf(outputchampsimstatistics.trace_file, "\n*** ChampSim Multicore Out-of-Order Simulator ***\n\n");
 #endif  // PRINT_STATISTICS_INTO_FILE
@@ -1297,6 +1297,94 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory, const 
     (*it)->impl_replacement_initialize();
   }
 
+#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
+#if (TEST_SWAPPING_UNIT) == (ENABLE)
+  /* Test */
+  all_warmup_complete = 1;
+  while (true)
+  {
+    static uint64_t count = 0;
+    static PACKET data1, data2;
+    memory_controller.operate();
+
+    if (count == 100)
+    {
+      memory_controller.start_swapping_segments(0, 64, 1);
+    }
+
+    // issue read and write
+#define DATA1_TO_WRITE (200)
+#define DATA2_TO_WRITE (201)
+#define DATA1_ADDRESS  (2)
+#define DATA2_ADDRESS  (66)
+    if (count == 150)
+    {
+      int32_t status = 0;
+      data1.address = DATA1_ADDRESS;
+      data2.address = DATA2_ADDRESS;
+
+      // read
+      status = memory_controller.add_rq(&data1);
+      status = memory_controller.add_rq(&data2);
+
+      // write
+      data1.data = DATA1_TO_WRITE;
+      data2.data = DATA2_TO_WRITE;
+      status = memory_controller.add_wq(&data1);
+      status = memory_controller.add_wq(&data2);
+    }
+    if (count == 222)
+    {
+      int32_t status = 0;
+      data1.address = DATA1_ADDRESS;
+      data2.address = DATA2_ADDRESS;
+
+      // read
+      status = memory_controller.add_rq(&data1);
+      status = memory_controller.add_rq(&data2);
+
+      // write
+      data1.data = DATA1_TO_WRITE + 2;
+      data2.data = DATA2_TO_WRITE + 2;
+      status = memory_controller.add_wq(&data1);
+      status = memory_controller.add_wq(&data2);
+    }
+    if (count == 10072)
+    {
+      int32_t status = 0;
+      data1.address = DATA1_ADDRESS;
+      data2.address = DATA2_ADDRESS;
+
+      // read
+      status = memory_controller.add_rq(&data1);
+      status = memory_controller.add_rq(&data2);
+
+      // write
+      data1.data = DATA1_TO_WRITE + 4;
+      data2.data = DATA2_TO_WRITE + 4;
+      status = memory_controller.add_wq(&data1);
+      status = memory_controller.add_wq(&data2);
+    }
+
+    if (count == 10000)
+    {
+      memory_controller.start_swapping_segments(0, 64, 2);
+    }
+
+    if (count == 20000)
+    {
+      memory_controller.start_swapping_segments(0, 64, 64);
+    }
+
+    count++;
+    if (count >= warmup_instructions + simulation_instructions)
+    {
+      exit(0);
+    }
+  }
+#endif  // TEST_SWAPPING_UNIT
+#endif  // MEMORY_USE_SWAPPING_UNIT
+
   // simulation entry point
   while (std::any_of(std::begin(simulation_complete), std::end(simulation_complete), std::logical_not<uint8_t>()))
   {
@@ -1457,7 +1545,7 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory, const 
     std::cout << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle << std::endl;
     for (auto it = caches.rbegin(); it != caches.rend(); ++it)
       print_roi_stats(i, *it);
-  }
+}
 #endif
 
   for (auto it = caches.rbegin(); it != caches.rend(); ++it)

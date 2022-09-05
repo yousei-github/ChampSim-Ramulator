@@ -22,7 +22,7 @@ void output_memory_trace_initialization(const char* string)
         last_token = token;
         token = strtok(NULL, delimiter);
     }
-    
+
     // append file_extension to string3.
     const char* file_extension = ".trace";
     char* string3 = (char*)malloc(strlen(last_token) + 1 + strlen(file_extension));
@@ -65,7 +65,7 @@ void output_champsim_statistics_initialization(const char* string)
         last_token = token;
         token = strtok(NULL, delimiter);
     }
-    
+
     // append file_extension to string3.
     const char* file_extension = ".statistics";
     char* string3 = (char*)malloc(strlen(last_token) + 1 + strlen(file_extension));
@@ -75,10 +75,25 @@ void output_champsim_statistics_initialization(const char* string)
     outputchampsimstatistics.trace_file = fopen(string3, "w");
     outputchampsimstatistics.trace_string = (char*)malloc(strlen(string3) + 1);
     strcpy(outputchampsimstatistics.trace_string, string3);
+
+    /* Initialize variabes */
+    for (uint64_t i = 0; i < outputchampsimstatistics.valid_pte_count.size(); i++)
+    {
+        outputchampsimstatistics.valid_pte_count[i] = 0;
+    }
+    outputchampsimstatistics.virtual_page_count = 0;
+
 }
 
 void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileType& outputchampsimstatistics)
 {
+    fprintf(outputchampsimstatistics.trace_file, "\n\nInformation about virtual memory\n\n");
+    for (uint64_t i = 0; i < outputchampsimstatistics.valid_pte_count.size(); i++)
+    {
+        fprintf(outputchampsimstatistics.trace_file, "Level: %ld, valid_pte_count: %ld.\n", i, outputchampsimstatistics.valid_pte_count[i]);
+    }
+    fprintf(outputchampsimstatistics.trace_file, "virtual_page_count: %ld, main memory footprint: %f MB.\n", outputchampsimstatistics.virtual_page_count, outputchampsimstatistics.virtual_page_count * 4.0 / KB);
+
     fclose(outputchampsimstatistics.trace_file);
     printf("Output ChampSim statistics into %s.\n", outputchampsimstatistics.trace_string);
 

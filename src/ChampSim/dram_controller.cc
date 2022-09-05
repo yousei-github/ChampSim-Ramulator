@@ -18,8 +18,14 @@ struct next_schedule : public invalid_is_maximal<PACKET, min_event_cycle<PACKET>
 
 #if (USER_CODES == ENABLE)
 #if (RAMULATOR == ENABLE)
+#if (MEMORY_USE_HYBRID) == (ENABLE)
+
+// TODO: can we define the override member functions at here, like int add_wq(PACKET* packet)? no, refer to the Controller.cpp.
 #else
-#if MEMORY_USE_HYBRID == ENABLE
+
+#endif  // MEMORY_USE_HYBRID
+#else
+#if (MEMORY_USE_HYBRID) == (ENABLE)
 void MEMORY_CONTROLLER::operate()
 {
   for (auto& channel : hbm_channels)
