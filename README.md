@@ -13,7 +13,9 @@ This project is based on the master branch of [ChampSim](https://github.com/yous
 The CPU's parameters are defined in the `champsim_constants.h` file.
 
 ## ChampSim
-[ChampSim](https://github.com/ChampSim/ChampSim) is a trace-based simulator for a microarchitecture study. You can sign up to the public mailing list by sending an empty mail to champsim+subscribe@googlegroups.com. If you have questions about how to use ChampSim, you can often receive a quicker response on the mailing list. Please reserve GitHub Issues for bugs. Traces for the 3rd Data Prefetching Championship (DPC-3) can be found from here (https://dpc3.compas.cs.stonybrook.edu/?SW_IS).
+[ChampSim](https://github.com/ChampSim/ChampSim) is a trace-based simulator for a microarchitecture study. You can sign up to the public mailing list by sending an empty mail to champsim+subscribe@googlegroups.com. If you have questions about how to use ChampSim, you can often receive a quicker response on the mailing list. Please reserve GitHub Issues for bugs. Traces for the 3rd Data Prefetching Championship (DPC-3) can be found from here (https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/). A set of traces used for the 2nd Cache Replacement Championship (CRC-2) can be found from this link. (http://bit.ly/2t2nkUj)
+
+Storage for these traces is kindly provided by Daniel Jimenez (Texas A&M University) and Mike Ferdman (Stony Brook University). If you find yourself frequently using ChampSim, it is highly encouraged that you maintain your own repository of traces, in case the links ever break.
 
 ## Ramulator: A DRAM Simulator
 [Ramulator](https://github.com/CMU-SAFARI/ramulator) is a fast and cycle-accurate DRAM simulator \[1, 2\] that supports a
