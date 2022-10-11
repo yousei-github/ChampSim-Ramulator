@@ -83,6 +83,12 @@ void output_champsim_statistics_initialization(const char* string)
     }
     outputchampsimstatistics.virtual_page_count = 0;
 
+    outputchampsimstatistics.read_request_in_memory = 0;
+    outputchampsimstatistics.read_request_in_memory2 = 0;
+    outputchampsimstatistics.write_request_in_memory = 0;
+    outputchampsimstatistics.write_request_in_memory2 = 0;
+
+    outputchampsimstatistics.remapping_request_queue_congestion = 0;
 }
 
 void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileType& outputchampsimstatistics)
@@ -93,6 +99,13 @@ void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileTyp
         fprintf(outputchampsimstatistics.trace_file, "Level: %ld, valid_pte_count: %ld.\n", i, outputchampsimstatistics.valid_pte_count[i]);
     }
     fprintf(outputchampsimstatistics.trace_file, "virtual_page_count: %ld, main memory footprint: %f MB.\n", outputchampsimstatistics.virtual_page_count, outputchampsimstatistics.virtual_page_count * 4.0 / KB);
+
+    fprintf(outputchampsimstatistics.trace_file, "\n\nInformation about memory controller\n\n");
+    fprintf(outputchampsimstatistics.trace_file, "read_request_in_memory: %ld, read_request_in_memory2: %ld.\n", outputchampsimstatistics.read_request_in_memory, outputchampsimstatistics.read_request_in_memory2);
+    fprintf(outputchampsimstatistics.trace_file, "write_request_in_memory: %ld, write_request_in_memory2: %ld.\n", outputchampsimstatistics.write_request_in_memory, outputchampsimstatistics.write_request_in_memory2);
+    fprintf(outputchampsimstatistics.trace_file, "hit rate: %f.\n", (outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.write_request_in_memory) / float(outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.read_request_in_memory2 + outputchampsimstatistics.write_request_in_memory + outputchampsimstatistics.write_request_in_memory2));
+
+    fprintf(outputchampsimstatistics.trace_file, "remapping_request_queue_congestion: %ld.\n", outputchampsimstatistics.remapping_request_queue_congestion);
 
     fclose(outputchampsimstatistics.trace_file);
     printf("Output ChampSim statistics into %s.\n", outputchampsimstatistics.trace_string);

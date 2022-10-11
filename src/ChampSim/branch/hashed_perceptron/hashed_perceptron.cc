@@ -54,7 +54,7 @@ sources for you to plagiarize.
 
 #include "ooo_cpu.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 // this many tables
 
 #define NTABLES 16

@@ -2,7 +2,7 @@
 
 #include "cache.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 void CACHE::pref_pprefetcherDnext_line_initialize()
 {
   std::cout << NAME << " next line prefetcher" << std::endl;

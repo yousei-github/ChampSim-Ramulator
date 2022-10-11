@@ -8,7 +8,7 @@
 
 #include "ooo_cpu.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 
 #define BASIC_BTB_SETS 1024
 #define BASIC_BTB_WAYS 8
@@ -134,7 +134,7 @@ uint64_t basic_btb_get_call_size(uint8_t cpu, uint64_t ip)
 
 void O3_CPU::btb_bbtbDbasic_btb_initialize()
 {
-#if PRINT_STATISTICS_INTO_FILE == ENABLE
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
   fprintf(outputchampsimstatistics.trace_file, "Basic BTB sets: %d ways: %d indirect buffer size: %d RAS size: %d\n", BASIC_BTB_SETS, BASIC_BTB_WAYS, BASIC_BTB_INDIRECT_SIZE, BASIC_BTB_RAS_SIZE);
 #else
   std::cout << "Basic BTB sets: " << BASIC_BTB_SETS << " ways: " << BASIC_BTB_WAYS << " indirect buffer size: " << BASIC_BTB_INDIRECT_SIZE

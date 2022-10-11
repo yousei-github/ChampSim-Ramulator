@@ -1,6 +1,6 @@
 #include "cache.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 void CACHE::pref_pprefetcherDno_initialize() {}
 
 uint32_t CACHE::pref_pprefetcherDno_cache_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)

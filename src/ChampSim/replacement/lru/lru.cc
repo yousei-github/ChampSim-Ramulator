@@ -4,7 +4,7 @@
 #include "cache.h"
 #include "util.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 void CACHE::repl_rreplacementDlru_initialize() {}
 
 // find replacement victim

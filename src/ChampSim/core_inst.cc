@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "ProjectConfiguration.h" // user file
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
 #else
 VirtualMemory vmem(8589934592, 1 << 12, 5, 1, 200);
 

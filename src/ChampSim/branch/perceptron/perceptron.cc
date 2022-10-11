@@ -44,7 +44,7 @@
 
 #include "ooo_cpu.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 template <typename T, std::size_t HISTLEN, std::size_t BITS>
 class perceptron
 {

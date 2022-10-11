@@ -27,7 +27,7 @@ tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(
   }
   else
   {
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
     // trace is in local folder.
     // If you want to transplant this code to windows version, you need take care of gzip/xz format
 #endif
@@ -149,7 +149,7 @@ public:
 
 tracereader* get_tracereader(std::string fname, uint8_t cpu, bool is_cloudsuite)
 {
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
   // Note here the return value is affixed with new.
 #endif
   if (is_cloudsuite)

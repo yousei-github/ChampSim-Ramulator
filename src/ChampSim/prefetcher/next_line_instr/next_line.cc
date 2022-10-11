@@ -2,7 +2,7 @@
 
 #include "ooo_cpu.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 void O3_CPU::pref_pprefetcherDnext_line_instr_initialize()
 {
   std::cout << "CPU " << cpu << " next line instruction prefetcher" << endl;

@@ -264,6 +264,42 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
 
     bool is_read = prefetch_as_load || (handle_pkt.type != PREFETCH);
 
+#if (USER_CODES == ENABLE)
+    uint64_t cycle_enqueued_backup = handle_pkt.cycle_enqueued;
+    uint64_t event_cycle_backup = handle_pkt.event_cycle;
+    std::vector<MemoryRequestProducer*> to_return_backup = handle_pkt.to_return;
+
+    // Allocate an MSHR
+    if (handle_pkt.fill_level <= fill_level)
+    {
+      auto it = MSHR.insert(std::end(MSHR), handle_pkt);
+      it->cycle_enqueued = current_cycle;
+      it->event_cycle = std::numeric_limits<uint64_t>::max();
+    }
+
+    if (handle_pkt.fill_level <= fill_level)
+      handle_pkt.to_return = {this};
+    else
+      handle_pkt.to_return.clear();
+
+    int result;
+    if (!is_read)
+      result = lower_level->add_pq(&handle_pkt);
+    else
+      result = lower_level->add_rq(&handle_pkt);
+
+    if (result == int(ReturnValue::Full))
+    {
+      // Recover handle_pkt
+      handle_pkt.cycle_enqueued = cycle_enqueued_backup;
+      handle_pkt.event_cycle = event_cycle_backup;
+      handle_pkt.to_return = to_return_backup;
+      // delete the last element
+      MSHR.pop_back();
+      return false;
+    }
+    
+#else
     // check to make sure the lower level queue has room for this read miss
     int queue_type = (is_read) ? 1 : 3;
 
@@ -287,6 +323,8 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       lower_level->add_pq(&handle_pkt);
     else
       lower_level->add_rq(&handle_pkt);
+#endif  // USER_CODES
+
   }
 
   // update prefetcher on load instructions and prefetches from upper levels
@@ -443,17 +481,17 @@ int CACHE::add_rq(PACKET* packet)
     std::cout << "[" << NAME << "_RQ] " << __func__ << " instr_id: " << packet->instr_id << " address: " << std::hex << (packet->address >> OFFSET_BITS);
     std::cout << " full_addr: " << packet->address << " v_address: " << packet->v_address << std::dec << " type: " << +packet->type
       << " occupancy: " << RQ.occupancy();
-  })
+  });
 
-    // check for the latest writebacks in the write queue
-    champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
+  // check for the latest writebacks in the write queue
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
 
   if (found_wq != WQ.end())
   {
 
-    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;);
 
-      packet->data = found_wq->data;
+    packet->data = found_wq->data;
     for (auto ret : packet->to_return)
       ret->return_data(packet);
 
@@ -466,9 +504,9 @@ int CACHE::add_rq(PACKET* packet)
   if (found_rq != RQ.end())
   {
 
-    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;);
 
-      packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
+    packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
     packet_dep_merge(found_rq->sq_index_depend_on_me, packet->sq_index_depend_on_me);
     packet_dep_merge(found_rq->instr_depend_on_me, packet->instr_depend_on_me);
     packet_dep_merge(found_rq->to_return, packet->to_return);
@@ -483,9 +521,9 @@ int CACHE::add_rq(PACKET* packet)
   {
     RQ_FULL++;
 
-    DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;);
 
-      return -2; // cannot handle this request
+    return -2; // cannot handle this request
   }
 
   // if there is no duplicate, add it to RQ
@@ -494,9 +532,9 @@ int CACHE::add_rq(PACKET* packet)
   else
     RQ.push_back_ready(*packet);
 
-  DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
+  DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;);
 
-    RQ_TO_CACHE++;
+  RQ_TO_CACHE++;
   return RQ.occupancy();
 }
 
@@ -509,26 +547,26 @@ int CACHE::add_wq(PACKET* packet)
     std::cout << "[" << NAME << "_WQ] " << __func__ << " instr_id: " << packet->instr_id << " address: " << std::hex << (packet->address >> OFFSET_BITS);
     std::cout << " full_addr: " << packet->address << " v_address: " << packet->v_address << std::dec << " type: " << +packet->type
       << " occupancy: " << RQ.occupancy();
-  })
+  });
 
-    // check for duplicates in the write queue
-    champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
+  // check for duplicates in the write queue
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
 
   if (found_wq != WQ.end())
   {
 
-    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED" << std::endl;);
 
-      WQ_MERGED++;
+    WQ_MERGED++;
     return 0; // merged index
   }
 
   // Check for room in the queue
   if (WQ.full())
   {
-    DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;);
 
-      ++WQ_FULL;
+    ++WQ_FULL;
     return -2;
   }
 
@@ -538,9 +576,9 @@ int CACHE::add_wq(PACKET* packet)
   else
     WQ.push_back_ready(*packet);
 
-  DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
+  DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;);
 
-    WQ_TO_CACHE++;
+  WQ_TO_CACHE++;
   WQ_ACCESS++;
 
   return WQ.occupancy();
@@ -627,17 +665,17 @@ int CACHE::add_pq(PACKET* packet)
     std::cout << "[" << NAME << "_WQ] " << __func__ << " instr_id: " << packet->instr_id << " address: " << std::hex << (packet->address >> OFFSET_BITS);
     std::cout << " full_addr: " << packet->address << " v_address: " << packet->v_address << std::dec << " type: " << +packet->type
       << " occupancy: " << RQ.occupancy();
-  })
+  });
 
-    // check for the latest wirtebacks in the write queue
-    champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
+  // check for the latest wirtebacks in the write queue
+  champsim::delay_queue<PACKET>::iterator found_wq = std::find_if(WQ.begin(), WQ.end(), eq_addr<PACKET>(packet->address, match_offset_bits ? 0 : OFFSET_BITS));
 
   if (found_wq != WQ.end())
   {
 
-    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_WQ" << std::endl;);
 
-      packet->data = found_wq->data;
+    packet->data = found_wq->data;
     for (auto ret : packet->to_return)
       ret->return_data(packet);
 
@@ -649,9 +687,9 @@ int CACHE::add_pq(PACKET* packet)
   auto found = std::find_if(PQ.begin(), PQ.end(), eq_addr<PACKET>(packet->address, OFFSET_BITS));
   if (found != PQ.end())
   {
-    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_PQ" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_PQ" << std::endl;);
 
-      found->fill_level = std::min(found->fill_level, packet->fill_level);
+    found->fill_level = std::min(found->fill_level, packet->fill_level);
     packet_dep_merge(found->to_return, packet->to_return);
 
     PQ_MERGED++;
@@ -662,9 +700,9 @@ int CACHE::add_pq(PACKET* packet)
   if (PQ.full())
   {
 
-    DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;)
+    DP(if (warmup_complete[packet->cpu]) std::cout << " FULL" << std::endl;);
 
-      PQ_FULL++;
+    PQ_FULL++;
     return -2; // cannot handle this request
   }
 
@@ -674,9 +712,9 @@ int CACHE::add_pq(PACKET* packet)
   else
     PQ.push_back_ready(*packet);
 
-  DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;)
+  DP(if (warmup_complete[packet->cpu]) std::cout << " ADDED" << std::endl;);
 
-    PQ_TO_CACHE++;
+  PQ_TO_CACHE++;
   return PQ.occupancy();
 }
 

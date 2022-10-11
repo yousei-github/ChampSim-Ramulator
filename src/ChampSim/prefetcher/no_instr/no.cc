@@ -1,6 +1,6 @@
 #include "ooo_cpu.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 void O3_CPU::pref_pprefetcherDno_instr_initialize() {}
 
 void O3_CPU::pref_pprefetcherDno_instr_branch_operate(uint64_t ip, uint8_t branch_type, uint64_t branch_target) {}

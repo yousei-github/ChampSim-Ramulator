@@ -18,14 +18,15 @@ struct next_schedule : public invalid_is_maximal<PACKET, min_event_cycle<PACKET>
 
 #if (USER_CODES == ENABLE)
 #if (RAMULATOR == ENABLE)
-#if (MEMORY_USE_HYBRID) == (ENABLE)
+#if (MEMORY_USE_HYBRID == ENABLE)
 
 // TODO: can we define the override member functions at here, like int add_wq(PACKET* packet)? no, refer to the Controller.cpp.
+
 #else
 
 #endif  // MEMORY_USE_HYBRID
 #else
-#if (MEMORY_USE_HYBRID) == (ENABLE)
+#if (MEMORY_USE_HYBRID == ENABLE)
 void MEMORY_CONTROLLER::operate()
 {
   for (auto& channel : hbm_channels)
@@ -418,7 +419,7 @@ uint32_t MEMORY_CONTROLLER::get_size(uint8_t queue_type, uint64_t address)
   return 0;
 }
 
-#if MEMORY_USE_HYBRID == ENABLE
+#if (MEMORY_USE_HYBRID == ENABLE)
 MemoryType MEMORY_CONTROLLER::get_memory_type(uint64_t address)
 {
   if (address < HBM_CAPACITY)

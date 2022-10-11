@@ -904,9 +904,9 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
   DP(if (warmup_complete[cpu])
   {
     std::cout << "[RTS0] " << __func__ << " instr_id: " << sq_it->instr_id << " rob_index: " << sq_it->rob_index << " is popped from to RTS0" << std::endl;
-  })
+  });
 
-    int rq_index = DTLB_bus.lower_level->add_rq(&data_packet);
+  int rq_index = DTLB_bus.lower_level->add_rq(&data_packet);
 
   if (rq_index != -2)
     sq_it->translated = INFLIGHT;
@@ -973,9 +973,9 @@ int O3_CPU::do_translate_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   DP(if (warmup_complete[cpu])
   {
     std::cout << "[RTL0] " << __func__ << " instr_id: " << lq_it->instr_id << " rob_index: " << lq_it->rob_index << " is popped to RTL0" << std::endl;
-  })
+  });
 
-    int rq_index = DTLB_bus.lower_level->add_rq(&data_packet);
+  int rq_index = DTLB_bus.lower_level->add_rq(&data_packet);
 
   if (rq_index != -2)
     lq_it->translated = INFLIGHT;
@@ -1061,7 +1061,7 @@ void O3_CPU::complete_inflight_instruction()
             DP(if (warmup_complete[cpu])
             {
               std::cout << "[ready_to_execute] " << __func__ << " instr_id: " << dependent->instr_id << " is added to ready_to_execute" << std::endl;
-            })
+            });
           }
         }
       }

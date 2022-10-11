@@ -1,6 +1,6 @@
 #include "cache.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 #define maxRRPV 3
 
 // initialize replacement state

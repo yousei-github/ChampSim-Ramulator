@@ -1,6 +1,6 @@
 #include "ooo_cpu.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 #define GLOBAL_HISTORY_LENGTH 14
 #define GLOBAL_HISTORY_MASK (1 << GLOBAL_HISTORY_LENGTH) - 1
 int branch_history_vector[NUM_CPUS];

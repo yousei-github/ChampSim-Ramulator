@@ -4,7 +4,7 @@
 
 #include "cache.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 #define maxRRPV 3
 #define NUM_POLICY 2
 #define SDM_SIZE 32

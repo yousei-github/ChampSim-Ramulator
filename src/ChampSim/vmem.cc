@@ -9,7 +9,7 @@
 #include "champsim.h"
 #include "util.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 // Note ppage_free_list won't be pushed, which means ChampSim won't handle the case when the physical memory is full.
 
 VirtualMemory::VirtualMemory(uint64_t capacity, uint64_t pg_size, uint32_t page_table_levels, uint64_t random_seed, uint64_t minor_fault_penalty)
@@ -49,7 +49,7 @@ std::pair<uint64_t, bool> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t vad
   if (fault)
   {
     ppage_free_list.pop_front();
-#if (PRINT_STATISTICS_INTO_FILE) == (ENABLE)
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     outputchampsimstatistics.virtual_page_count++;
 #endif  // PRINT_STATISTICS_INTO_FILE
   }
@@ -68,7 +68,7 @@ std::pair<uint64_t, bool> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64_t v
     next_pte_page = ppage_free_list.front();
     ppage_free_list.pop_front();
 
-#if (PRINT_STATISTICS_INTO_FILE) == (ENABLE)
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     outputchampsimstatistics.valid_pte_count[level - 1]++;
 #endif  // PRINT_STATISTICS_INTO_FILE
   }

@@ -4,7 +4,7 @@
 
 #include "cache.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 constexpr int PREFETCH_DEGREE = 3;
 
 struct tracker_entry

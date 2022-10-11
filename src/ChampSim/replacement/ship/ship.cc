@@ -6,7 +6,7 @@
 
 #include "cache.h"
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 #define maxRRPV 3
 #define SHCT_SIZE 16384
 #define SHCT_PRIME 16381
