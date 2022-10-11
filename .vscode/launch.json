@@ -8,21 +8,23 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/champsim_plus_ramulator", // the executable file's name for debugging
+            "program": "${workspaceFolder}/bin/champsim_plus_ramulator_O3", // the executable file's name for debugging
             // Below are parmeters input into the executable file
             "args": [
                 "--warmup_instructions",
-                "1000000",
+                "1000000",  // 1000000
                 "--simulation_instructions",
-                "2000000",
-                //"configs/HBM-config.cfg",
+                "1990000000",
+                "--stats",
+                "623.xalancbmk_s-700B.champsimtrace.xz.HBM_DDR4.stats",
+                "configs/HBM-config.cfg",
                 "configs/DDR4-config.cfg",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
+                "../dpc3_traces/623.xalancbmk_s-700B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,
+            "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
                 {
@@ -37,7 +39,7 @@
                 }
             ],
             //"preLaunchTask": "C/C++: g++ build all files",
-            "miDebuggerPath": "/usr/bin/gdb" // The path of debugger
+            "miDebuggerPath": "/usr/local/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
         }
     ]
 }
