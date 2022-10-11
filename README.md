@@ -8,6 +8,8 @@ This project is based on the master branch of [ChampSim](https://github.com/yous
 - Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` for enabling hybrid memory systems or to `DISABLE` for enabling single memory systems.
 - Set the preprocessor `PRINT_STATISTICS_INTO_FILE` to `ENABLE` for printing statistics into `.statistics` file.
 - Set the preprocessor `PRINT_MEMORY_TRACE` to `ENABLE` for printing memory trace into `.trace` file. Each line in the trace file represents a memory request, with the hexadecimal address followed by 'R' or 'W' for read or write.
+- Set the preprocessor `MEMORY_USE_SWAPPING_UNIT` to `ENABLE` for enabling data swapping function in memory controller. (Currently only support hybrid memory systems).
+- Set the preprocessor `MEMORY_USE_OS_TRANSPARENT_MANAGEMENT` to `ENABLE` for enabling os transparent data management of hybrid memory systems, (Currently part of paper [CAMEO](https://doi.org/10.1109/MICRO.2014.63) is implemented).
 - Set the preprocessor `BRANCH_PREDICTOR` to `BRANCH_USE_BIMODAL` for using bimodal branch predictor. Similarly, there have gshare, hashed_perceptron, perceptron branch predictors. Following this logic, you can also modify other preprocessors, such as `INSTRUCTION_PREFETCHER`, `LLC_REPLACEMENT_POLICY`, `LLC_PREFETCHER`, and so on.
 
 The CPU's parameters are defined in the `champsim_constants.h` file.
