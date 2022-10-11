@@ -39,9 +39,14 @@ public:
    *
    */
 
-#if USER_CODES == ENABLE
-   // fill_level is used for specify the level for receiving memory requests.
-#endif
+#if (USER_CODES == ENABLE)
+   // scoped enumerations
+  enum class ReturnValue : int8_t
+  {
+    Full = -2, Forward = -1, Merge = 0, Max
+  };
+  // fill_level is used for specify the level for receiving memory requests.
+#endif  // USER_CODES
   const unsigned fill_level;
   virtual int add_rq(PACKET* packet) = 0;
   virtual int add_wq(PACKET* packet) = 0;

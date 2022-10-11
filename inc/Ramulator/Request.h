@@ -4,7 +4,7 @@
 #include <vector>
 #include <functional>
 #include "ProjectConfiguration.h" // user file
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 #include "memory_class.h"
 #include "block.h"
 #include "champsim_constants.h"
@@ -19,6 +19,7 @@ namespace ramulator
 class Request
 {
 public:
+#if (USER_CODES == ENABLE) && (RAMULATOR == ENABLE)
     bool is_first_command;
     long addr;
     // long addr_row;
@@ -41,7 +42,6 @@ public:
     long depart = -1;
     function<void(Request&)> callback; // call back with more info
 
-#if (USER_CODES == ENABLE) && (RAMULATOR == ENABLE)
     PACKET packet;
     void receive(Request& request)
     {
@@ -49,9 +49,69 @@ public:
         for (auto ret : request.packet.to_return)
             ret->return_data(&(request.packet));
     };
-    
+
     std::array<uint8_t, BLOCK_SIZE> data = {0}; // a cache line
-#endif
+    uint8_t memory_id = NUMBER_OF_MEMORIES;
+
+    /* Member functions */
+    Request(long addr, Type type, int coreid = 0)
+        : is_first_command(true), addr(addr), coreid(coreid), type(type),
+        callback([](Request& req) {})
+    {
+    }
+
+    Request(long addr, Type type, function<void(Request&)> callback, int coreid = 0)
+        : is_first_command(true), addr(addr), coreid(coreid), type(type), callback(callback)
+    {
+    }
+
+    Request(long addr, Type type, function<void(Request&)> callback, int coreid, uint8_t memory_id)
+        : is_first_command(true), addr(addr), coreid(coreid), type(type), callback(callback), memory_id(memory_id)
+    {
+    }
+
+    // Request(long addr, Type type, PACKET packet, int coreid = 0, uint8_t memory_id = 0)
+    //     : is_first_command(true), addr(addr), coreid(coreid), type(type), packet(packet), memory_id(memory_id)
+    // {
+    //     callback = std::bind(&Request::receive, this, placeholders::_1);
+    // }
+
+    Request(long addr, Type type, function<void(Request&)> callback, PACKET packet, int coreid, uint8_t memory_id)
+        : is_first_command(true), addr(addr), coreid(coreid), type(type), callback(callback), packet(packet), memory_id(memory_id)
+    {
+    }
+
+    Request(vector<int>& addr_vec, Type type, function<void(Request&)> callback, int coreid = 0)
+        : is_first_command(true), addr_vec(addr_vec), coreid(coreid), type(type), callback(callback)
+    {
+    }
+
+    Request()
+        : is_first_command(true), coreid(0)
+    {
+    }
+#else
+    bool is_first_command;
+    long addr;
+    // long addr_row;
+    vector<int> addr_vec;
+    // specify which core this request sent from, for virtual address translation
+    int coreid;
+
+    enum class Type
+    {
+        READ,
+        WRITE,
+        REFRESH,
+        POWERDOWN,
+        SELFREFRESH,
+        EXTENSION,
+        MAX
+    } type;
+
+    long arrive = -1;
+    long depart = -1;
+    function<void(Request&)> callback; // call back with more info
 
     Request(long addr, Type type, int coreid = 0)
         : is_first_command(true), addr(addr), coreid(coreid), type(type),
@@ -64,19 +124,6 @@ public:
     {
     }
 
-#if (USER_CODES == ENABLE) && (RAMULATOR == ENABLE)
-    Request(long addr, Type type, PACKET packet, int coreid = 0)
-        : is_first_command(true), addr(addr), coreid(coreid), type(type), packet(packet)
-    {
-        callback = std::bind(&Request::receive, this, placeholders::_1);
-    }
-
-    Request(long addr, Type type, function<void(Request&)> callback, PACKET packet, int coreid = 0)
-        : is_first_command(true), addr(addr), coreid(coreid), type(type), callback(callback), packet(packet)
-    {
-    }
-#endif
-
     Request(vector<int>& addr_vec, Type type, function<void(Request&)> callback, int coreid = 0)
         : is_first_command(true), addr_vec(addr_vec), coreid(coreid), type(type), callback(callback)
     {
@@ -86,6 +133,7 @@ public:
         : is_first_command(true), coreid(0)
     {
     }
+#endif
 };
 
 } /*namespace ramulator*/

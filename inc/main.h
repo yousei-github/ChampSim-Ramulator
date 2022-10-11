@@ -56,7 +56,7 @@
 /* Includes for this project */
 #include <ProjectConfiguration.h>  // User file
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
 #include "ptw.h"
 #endif
 

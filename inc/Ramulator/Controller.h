@@ -27,7 +27,7 @@ using namespace std;
 namespace ramulator
 {
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
 #else
 extern bool warmup_complete;
 #endif
@@ -311,7 +311,7 @@ public:
 
 #if (USER_CODES == ENABLE)
         Stats::statlist.update_read_latency_sum(read_latency_sum.value());
-#endif
+#endif  // USER_CODES
     }
 
     /* Member Functions */
@@ -356,7 +356,7 @@ public:
         Queue& queue = get_queue(req.type);
         return queue.max;
     }
-#endif
+#endif  // USER_CODES
 
     void tick()
     {

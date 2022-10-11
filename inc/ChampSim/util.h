@@ -6,21 +6,64 @@
 
 constexpr unsigned lg2(uint64_t n) { return n < 2 ? 0 : 1 + lg2(n / 2); }
 
-#if USER_CODES == ENABLE
-/** @note Calulate the bit mask from begin to end
+#if (USER_CODES == ENABLE)
+/** @note Calulate the bit mask for lower @b begin bits (start from 0 bit) and ignore the lower @b end bits.
  *  @example
+ *  if begin = 3 and end = 0 are input, then (00...00111)(64 bit) is return.
  *  if begin = 3 and end = 1 are input, then (00...00110)(64 bit) is return.
+ *  if begin = 3 and end = 2 are input, then (00...00100)(64 bit) is return.
+ *  if begin = 3 and end = 3 are input, then (00...00000)(64 bit) is return.
  */
 #endif
 constexpr uint64_t bitmask(std::size_t begin, std::size_t end = 0) { return ((1ull << (begin - end)) - 1) << end; }
 
-#if USER_CODES == ENABLE
-/** @note Combine two data's bits
+#if (USER_CODES == ENABLE)
+/** @note replace @b upper's lower @b bits bits with @b lower's lower @b bits bits.
  *  @example
  *  if upper = 0xb(1011), lower = 0x1(0001) and bits = 2, then (1001)(64 bit) is return.
  */
 #endif
 constexpr uint64_t splice_bits(uint64_t upper, uint64_t lower, std::size_t bits) { return (upper & ~bitmask(bits)) | (lower & bitmask(bits)); }
+
+#if (USER_CODES == ENABLE)
+/** @note get @b number's bits from @b begin bit to @b end bit.
+ *  @example
+ *  if number = 0xa(1010), begin = 1 and end = 0, then (0010)(64 bit) is return.
+ *  if number = 0xa(1010), begin = 4 and end = 1, then (0101)(64 bit) is return.
+ */
+inline uint64_t get_bits(uint64_t number, uint8_t begin, uint8_t end = 0)
+{
+  assert(begin >= end);
+  uint8_t length = begin - end + 1;
+  uint64_t mask = ((1ull << length) - 1) << end;
+  return (number & mask) >> end;
+};
+
+inline uint64_t replace_bits(uint64_t upper, uint64_t lower, uint8_t begin, uint8_t end = 0)
+{
+  assert(begin >= end);
+  uint8_t length = begin - end + 1;
+  uint64_t mask = ((1ull << length) - 1) << end;
+  return (upper & ~mask) | (lower & mask);
+};
+
+inline uint64_t clear_bits(uint64_t number, uint8_t begin, uint8_t end = 0)
+{
+  assert(begin >= end);
+  uint8_t length = begin - end + 1;
+  uint64_t mask = ~(((1ull << length) - 1) << end);
+  return number & mask;
+};
+
+inline uint64_t set_bits(uint64_t number, uint8_t begin, uint8_t end = 0)
+{
+  assert(begin >= end);
+  uint8_t length = begin - end + 1;
+  uint64_t mask = ((1ull << length) - 1) << end;
+  return number | mask;
+};
+
+#endif  // USER_CODES
 
 template <typename T>
 struct is_valid

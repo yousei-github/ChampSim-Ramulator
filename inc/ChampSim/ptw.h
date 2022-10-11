@@ -11,7 +11,7 @@
 #include "operable.h"
 
 #include "ProjectConfiguration.h" // user file
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
 #include "vmem.h"
 #endif
 

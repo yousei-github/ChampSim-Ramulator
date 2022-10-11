@@ -8,12 +8,28 @@
 #define USER_CODES   (ENABLE)
 
 /* Functionality options */
-#if (USER_CODES) == (ENABLE)
-#define RAMULATOR                      (ENABLE) // whether use ramulator
-#define MEMORY_USE_HYBRID              (ENABLE) // whether use hybrid memory system
-#define PRINT_STATISTICS_INTO_FILE     (ENABLE)
-#define PRINT_MEMORY_TRACE             (DISABLE)
-#define MEMORY_USE_SWAPPING_UNIT       (ENABLE)
+#if (USER_CODES == ENABLE)
+#define RAMULATOR                                  (ENABLE) // whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
+#define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system
+#define PRINT_STATISTICS_INTO_FILE                 (ENABLE)
+#define PRINT_MEMORY_TRACE                         (DISABLE)
+#define MEMORY_USE_SWAPPING_UNIT                   (ENABLE)
+#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE)
+
+// Data block management granularity
+#define DATA_GRANULARITY_64B                (64u)
+#define DATA_GRANULARITY_128B               (128u)
+#define DATA_GRANULARITY_256B               (256u)
+#define DATA_GRANULARITY_512B               (512u)
+#define DATA_GRANULARITY_1024B              (1024u)
+#define DATA_GRANULARITY_2048B              (2048u)
+#define DATA_GRANULARITY_4096B              (4096u)
+#define DATA_MANAGEMENT_GRANULARITY         (DATA_GRANULARITY_64B)
+
+#define DATA_MANAGEMENT_OFFSET_BITS         (lg2(DATA_MANAGEMENT_GRANULARITY))
+#define DATA_GRANULARITY_IN_CACHE_LINE      (DATA_MANAGEMENT_GRANULARITY / DATA_GRANULARITY_64B)
+
+#define HOTNESS_THRESHOLD                   (1u)
 
 // CPU setting for branch_predictor (bimodal, gshare, hashed_perceptron, perceptron)
 #define BRANCH_USE_BIMODAL             (O3_CPU::bpred_t::bbranchDbimodal)
@@ -72,16 +88,26 @@
 #define MB (KB*KB)
 #define GB (MB*KB)
 
-#if (MEMORY_USE_HYBRID) == (ENABLE)
-#define NUMBER_OF_MEMORIES   (2)    // we use two memories for hybrid memory system.
+#if (MEMORY_USE_HYBRID == ENABLE)
+#define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
 #else
-#define NUMBER_OF_MEMORIES   (1)
+#define NUMBER_OF_MEMORIES   (1u)
 
+#endif  // MEMORY_USE_HYBRID
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+#define SWAPPING_BUFFER_ENTRY_NUMBER    (64)
+#define SWAPPING_SEGMENT_ONE            (0)
+#define SWAPPING_SEGMENT_TWO            (1)
+#define SWAPPING_SEGMENT_NUMBER         (2)
+
+#define TEST_SWAPPING_UNIT        (DISABLE)
 #endif
 
-#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
-#define TEST_SWAPPING_UNIT        (ENABLE)
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+#define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
 #endif
+
 // Standard libraries
 
 /* Includes */
@@ -90,6 +116,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cstdio>
+#include <cassert>
 #include <array>
 
 /* Defines (C style) */
@@ -118,10 +145,15 @@ typedef struct
 {
     FILE* trace_file;
     char* trace_string;
-#define PAGE_TABLE_LEVEL_NUMBER     (5)
+#define PAGE_TABLE_LEVEL_NUMBER     (5u)
 
     std::array<uint64_t, PAGE_TABLE_LEVEL_NUMBER> valid_pte_count = {0};
     uint64_t virtual_page_count;
+
+    uint64_t read_request_in_memory, read_request_in_memory2;
+    uint64_t write_request_in_memory, write_request_in_memory2;
+
+    uint64_t remapping_request_queue_congestion;
 
 } OutputChampSimStatisticsFileType;
 

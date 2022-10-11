@@ -7,7 +7,7 @@
 namespace champsim
 {
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
 // an abstract class, called operable, that is used only as a base class for inheritance.
 #endif
 class operable

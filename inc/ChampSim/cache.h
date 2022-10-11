@@ -25,7 +25,7 @@
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
   uint32_t cpu = 0;
 #else
   uint32_t cpu;
@@ -52,7 +52,7 @@ public:
     VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},       // virtual address prefetch queue
     WQ{WQ_SIZE, HIT_LATENCY};                             // write queue
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
   // Miss status holding registers (MSHR) is the hardware structure for tracking outstanding misses.
   // This mechanism is to insure accesses to the same location execute in program order.
   // Each MSHR refers to one missing cache line and contains a valid bit, the tag of the cache line and
@@ -91,7 +91,7 @@ public:
   void add_mshr(PACKET* packet);
   void va_translate_prefetches();
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
   // handle_fill() handles MSHR.
   // handle_writeback() handles WQ.
   // handle_read() handles RQ.
@@ -102,7 +102,7 @@ public:
   void handle_read();
   void handle_prefetch();
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
   // readlike_hit() reads a cache line.
   // readlike_miss() reads a cache line from lower level, add new entry in MSHR.
   // filllike_miss() store a new cache line.
@@ -115,7 +115,7 @@ public:
 
   void print_deadlock() override;
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
   /* Definition and declaration for replacement policy */
   // Replacement policy type selection, i.e., lru, ship, srrip, drrip.
   enum class repl_t { rreplacementDlru, rreplacementDship, rreplacementDsrrip, rreplacementDdrrip };
@@ -347,7 +347,7 @@ public:
     VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},       // virtual address prefetch queue
     WQ{WQ_SIZE, HIT_LATENCY};                             // write queue
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
   // Miss status holding registers (MSHR) is the hardware structure for tracking outstanding misses.
   // This mechanism is to insure accesses to the same location execute in program order.
   // Each MSHR refers to one missing cache line and contains a valid bit, the tag of the cache line and
@@ -386,7 +386,7 @@ public:
   void add_mshr(PACKET* packet);
   void va_translate_prefetches();
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
   // handle_fill() handles MSHR.
   // handle_writeback() handles WQ.
   // handle_read() handles RQ.
@@ -397,7 +397,7 @@ public:
   void handle_read();
   void handle_prefetch();
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
   // readlike_hit() reads a cache line.
   // readlike_miss() reads a cache line from lower level, add new entry in MSHR.
   // filllike_miss() store a new cache line.
@@ -410,7 +410,7 @@ public:
 
   void print_deadlock() override;
 
-#if USER_CODES == ENABLE
+#if (USER_CODES == ENABLE)
   enum class repl_t { rreplacementDlru }; // Replacement policy type selection
 
   void repl_rreplacementDlru_initialize();

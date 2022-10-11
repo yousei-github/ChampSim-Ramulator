@@ -9,6 +9,7 @@
 #include "memory_class.h"
 #include "operable.h"
 #include "util.h"
+#include "os_transparent_management.h"
 #include "ProjectConfiguration.h" // user file
 
 // these values control when to send out a burst of writes
@@ -25,12 +26,12 @@ constexpr int32_t ceil(float num)
 }
 } // namespace detail
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 #include <iostream>
 #include <cstdint>
 #include <cassert>
 
-#if (RAMULATOR) == (ENABLE)
+#if  (RAMULATOR == ENABLE)
 #include "Memory.h"
 #include "Request.h"
 using namespace ramulator;
@@ -94,11 +95,11 @@ struct DDR_CHANNEL
 
   unsigned WQ_ROW_BUFFER_HIT = 0, WQ_ROW_BUFFER_MISS = 0, RQ_ROW_BUFFER_HIT = 0, RQ_ROW_BUFFER_MISS = 0, WQ_FULL = 0;
 };
-#endif
+#endif  // RAMULATOR
 
 // Define the MEMORY_CONTROLLER class
-#if (RAMULATOR) == (ENABLE)
-#if (MEMORY_USE_HYBRID) == (ENABLE)
+#if (RAMULATOR == ENABLE)
+#if (MEMORY_USE_HYBRID == ENABLE)
 template<class T, class T2>
 class MEMORY_CONTROLLER : public champsim::operable, public MemoryRequestConsumer
 {
@@ -111,13 +112,14 @@ public:
   ramulator::Memory<T, Controller>& memory;
   ramulator::Memory<T2, Controller>& memory2;
 
-#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
-  /* Swapping unit */
-#define SWAPPING_BUFFER_ENTRY_NUMBER    (64)
-#define SWAPPING_SEGMENT_ONE            (0)
-#define SWAPPING_SEGMENT_TWO            (1)
-#define SWAPPING_SEGMENT_NUMBER         (2)
+  const uint8_t memory_id = 0;
+  const uint8_t memory2_id = 1;
 
+  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+  OS_TRANSPARENT_MANAGEMENT& os_transparent_management;
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+  /* Swapping unit */
   struct BUFFER_ENTRY
   {
     bool finish = false;    // whether a swapping of this entry is completed.
@@ -130,345 +132,587 @@ public:
 
   };
   std::array<BUFFER_ENTRY, SWAPPING_BUFFER_ENTRY_NUMBER> buffer = {};
-  uint64_t base_address[SWAPPING_SEGMENT_NUMBER];    // base_address[0] for segment 1, base_address[1] for segment 2.
+  uint64_t base_address[SWAPPING_SEGMENT_NUMBER];    // base_address[0] for segment 1, base_address[1] for segment 2. Address is hardware address and at cache line granularity.
   uint8_t active_entry_number;
   uint8_t finish_number;
 
-  typedef enum
+  // scoped enumerations
+  enum class SwappingState : uint8_t
   {
-    in_idle = 0,
-    in_swapping,
-  } SwappingStateType;
-  SwappingStateType states;   // the state of swapping mechanism
+    Idle, Swapping
+  };
+  SwappingState states; // the state of swapping mechanism
 
-  // test
+#if (TEST_SWAPPING_UNIT == ENABLE)
 #define MEMORY_DATA_NUMBER         (128)
   std::array<uint8_t, BLOCK_SIZE> memory_data[MEMORY_DATA_NUMBER] = {0};
+#endif  // TEST_SWAPPING_UNIT
 #endif  // MEMORY_USE_SWAPPING_UNIT
+
+  uint64_t read_request_in_memory, read_request_in_memory2;
+  uint64_t write_request_in_memory, write_request_in_memory2;
 
   /* Member functions */
-  MEMORY_CONTROLLER(double freq_scale, double clock_scale, double clock_scale2, Memory<T, Controller>& memory, Memory<T2, Controller>& memory2)
-    : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
-    clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2)
-  {
-#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
-    initialize_swapping();
+  MEMORY_CONTROLLER(double freq_scale, double clock_scale, double clock_scale2, Memory<T, Controller>& memory, Memory<T2, Controller>& memory2);
+  ~MEMORY_CONTROLLER();
 
-    // test
-    for (auto i = 0; i < MEMORY_DATA_NUMBER; i++)
-    {
-      memory_data[i][0] = i;
-    }
+  void operate() override;
+  void print_deadlock() override;
 
-#endif  // MEMORY_USE_SWAPPING_UNIT
-  };
+  int add_rq(PACKET* packet) override;
+  int add_wq(PACKET* packet) override;
+  int add_pq(PACKET* packet) override;
 
-  void operate() override
-  {
-    /* Operate research proposals below */
-    //bool start_swapping_segments(uint64_t address_1, uint64_t address_2, uint8_t size)
-
-#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
-    /* Operate swapping below */
-    operate_swapping();
-#endif  // MEMORY_USE_SWAPPING_UNIT
-
-    /* Operate memories below */
-    static double leap_operation = 0, leap_operation2 = 0;
-    // skip periodically
-    if (leap_operation >= 1)
-    {
-      leap_operation -= 1;
-    }
-    else
-    {
-      memory.tick();
-      leap_operation += clock_scale;
-    }
-
-    if (leap_operation2 >= 1)
-    {
-      leap_operation2 -= 1;
-    }
-    else
-    {
-      memory2.tick();
-      leap_operation2 += clock_scale2;
-    }
-    Stats::curTick++; // processor clock, global, for Statistics
-  };
-
-  int add_rq(PACKET* packet) override
-  {
-    if (all_warmup_complete < NUM_CPUS)
-    {
-      for (auto ret : packet->to_return)
-        ret->return_data(packet);
-
-      return -1; // Fast-forward
-    }
-
-    /* Operate research proposals below */
-
-#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
-    /* Check swapping below */
-    uint8_t under_swapping = check_request(*packet, 1);
-    switch (under_swapping)
-    {
-    case 0: // this address is under swapping.
-      return 0; // queue is full
-      break;
-    case 1: // this address is not under swapping.
-      break;
-    case 2: // though this address is under swapping, we can service its request because the data is in the swapping buffer.
-    {
-      return -1; // Fast-forward
-    }
-    break;
-    default:
-      break;
-    }
-#endif  // MEMORY_USE_SWAPPING_UNIT
-
-    /* Send memory request below */
-    bool stall = true;
-    Request request(packet->address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet);
-
-    // assign the request to the right memory.
-    if (request.addr < memory.max_address)
-    {
-      stall = !memory.send(request);
-    }
-    else if (request.addr < memory.max_address + memory2.max_address)
-    {
-      request.addr = request.addr - memory.max_address; // the memory itself doesn't know other memories' space, so we manage the overall mapping.
-      stall = !memory2.send(request);
-    }
-    else
-    {
-      printf("%s: Error!\n", __FUNCTION__);
-    }
-
-#if (PRINT_MEMORY_TRACE == ENABLE)
-    // output memory trace.
-    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
-#endif  // PRINT_MEMORY_TRACE
-
-    if (stall == true)
-    {
-      return 0; // queue is full
-    }
-    else
-    {
-      return 1;
-    }
-    };
-
-  int add_wq(PACKET* packet) override
-  {
-    if (all_warmup_complete < NUM_CPUS)
-      return -1; // Fast-forward
-
-    /* Operate research proposals below */
-
-#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
-    /* Check swapping below */
-    uint8_t under_swapping = check_request(*packet, 2);
-    switch (under_swapping)
-    {
-    case 0: // this address is under swapping.
-      return -2; // queue is full
-      break;
-    case 1: // this address is not under swapping.
-      break;
-    case 2: // though this address is under swapping, we can service its request because the data is in the swapping buffer.
-    {
-      return -1; // Fast-forward
-    }
-    break;
-    default:
-      break;
-    }
-#endif  // MEMORY_USE_SWAPPING_UNIT
-
-    /* Send memory request below */
-    bool stall = true;
-    Request request(packet->address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet);
-
-    // assign the request to the right memory.
-    if (request.addr < memory.max_address)
-    {
-      stall = !memory.send(request);
-    }
-    else if (request.addr < memory.max_address + memory2.max_address)
-    {
-      request.addr = request.addr - memory.max_address; // the memory itself doesn't know other memories' space, so we manage the overall mapping.
-      stall = !memory2.send(request);
-    }
-    else
-    {
-      printf("%s: Error!\n", __FUNCTION__);
-    }
-
-#if (PRINT_MEMORY_TRACE == ENABLE)
-    // output memory trace.
-    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
-#endif  // PRINT_MEMORY_TRACE
-
-    if (stall == true)
-    {
-      return -2; // queue is full
-    }
-    else
-    {
-      return 1;
-    }
-    };
-
-  int add_pq(PACKET* packet) override
-  {
-    return add_rq(packet);
-  };
-
-  /** @note get the number of valid(active) member in the write/read queue.
+  /** @brief
+   *  Get the number of valid(active) member in the write/read queue.
+   *  The address is physical address.
    */
-  uint32_t get_occupancy(uint8_t queue_type, uint64_t address) override
+  uint32_t get_occupancy(uint8_t queue_type, uint64_t address) override;
+
+  /** @brief
+   *  Get the capacity of the write/read queue.
+   *  The address is physical address.
+   */
+  uint32_t get_size(uint8_t queue_type, uint64_t address) override;
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+public:
+  // input address should be hardware address and at byte granularity
+  bool start_swapping_segments(uint64_t address_1, uint64_t address_2, uint8_t size);
+
+private:
+  /* Member functions for swapping */
+  void initialize_swapping();
+
+  uint8_t operate_swapping();
+
+  // this function is used by memories, like Ramulator.
+  void return_data(Request& request);
+
+  // this function is used by memory controller in add_rq() and add_wq().
+  uint8_t check_request(PACKET& packet, uint8_t type);    // packet needs to prepare its hardware address.
+  uint8_t check_address(uint64_t address, uint8_t type);  // The address is physical address.
+
+#endif  // MEMORY_USE_SWAPPING_UNIT
+
+};
+
+template<class T, class T2>
+MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scale, double clock_scale2, Memory<T, Controller>& memory, Memory<T2, Controller>& memory2)
+  : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
+  clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2),
+  os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(HOTNESS_THRESHOLD, memory.max_address + memory2.max_address, memory.max_address)))
+{
+  read_request_in_memory = read_request_in_memory2 = 0;
+  write_request_in_memory = write_request_in_memory2 = 0;
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+  initialize_swapping();
+
+#if (TEST_SWAPPING_UNIT == ENABLE)
+  for (auto i = 0; i < MEMORY_DATA_NUMBER; i++)
   {
-    Request::Type type = Request::Type::READ;
+    memory_data[i][0] = i;
+  }
+#endif  // TEST_SWAPPING_UNIT
+#endif  // MEMORY_USE_SWAPPING_UNIT
+};
 
-    if (queue_type == 1)
-      type = Request::Type::READ;
-    else if (queue_type == 2)
-      type = Request::Type::WRITE;
-    else if (queue_type == 3)
-      return get_occupancy(1, address);
+template<class T, class T2>
+MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
+{
+  // print some information to outputchampsimstatistics
+  outputchampsimstatistics.read_request_in_memory = read_request_in_memory;
+  outputchampsimstatistics.read_request_in_memory2 = read_request_in_memory2;
+  outputchampsimstatistics.write_request_in_memory = write_request_in_memory;
+  outputchampsimstatistics.write_request_in_memory2 = write_request_in_memory2;
 
+  delete& os_transparent_management;
+};
+
+template<class T, class T2>
+void MEMORY_CONTROLLER<T, T2>::operate()
+{
+  /* Operate research proposals below */
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+  /* Operate swapping below */
+  uint8_t swapping_states = operate_swapping();
+  switch (swapping_states)
+  {
+  case 0: // the swapping unit is idle
+  {
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+    OS_TRANSPARENT_MANAGEMENT::RemappingRequest remapping_request;
+    bool issue = os_transparent_management.issue_remapping_request(remapping_request);
+    if (issue == true)  // get a new remapping request.
+    {
+      start_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, DATA_GRANULARITY_IN_CACHE_LINE);
+    }
+#endif
+  }
+  break;
+  case 1: // the swapping unit is busy
+    break;
+  case 2: // the swapping unit finishes a swapping request
+  {
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+    os_transparent_management.finish_remapping_request();
+#endif
+  }
+  break;
+  default:
+    break;
+  }
+#endif  // MEMORY_USE_SWAPPING_UNIT
+
+  /* Operate memories below */
+  static double leap_operation = 0, leap_operation2 = 0;
+  // skip periodically
+  if (leap_operation >= 1)
+  {
+    leap_operation -= 1;
+  }
+  else
+  {
+    memory.tick();
+    leap_operation += clock_scale;
+  }
+
+  if (leap_operation2 >= 1)
+  {
+    leap_operation2 -= 1;
+  }
+  else
+  {
+    memory2.tick();
+    leap_operation2 += clock_scale2;
+  }
+  Stats::curTick++; // processor clock, global, for Statistics
+};
+
+template<class T, class T2>
+void MEMORY_CONTROLLER<T, T2>::print_deadlock()
+{
+  printf("base_address[0]: %ld, base_address[1]: %ld.\n", base_address[0], base_address[1]);
+};
+
+template<class T, class T2>
+int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
+{
+  const static uint8_t type = 1;  // it means the input request is read request.
+
+  if (all_warmup_complete < NUM_CPUS)
+  {
+    for (auto ret : packet->to_return)
+      ret->return_data(packet);
+
+    return int(ReturnValue::Forward); // Fast-forward
+  }
+
+  /* Operate research proposals below */
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  os_transparent_management.physical_to_hardware_address(*packet);
+  os_transparent_management.memory_activity_tracking(packet->address, type, float(get_occupancy(type, packet->address)) / get_size(type, packet->address));
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+  /* Check swapping below */
+  uint8_t under_swapping = check_request(*packet, type);
+  switch (under_swapping)
+  {
+  case 0: // this address is under swapping.
+    return int(ReturnValue::Full); // queue is full, note Ramulator doesn't merge requests.
+    break;
+  case 1: // this address is not under swapping.
+    break;
+  case 2: // though this address is under swapping, we can service its request because the data is in the swapping buffer.
+  {
+    for (auto ret : packet->to_return)
+      ret->return_data(packet);
+
+    return int(ReturnValue::Forward); // Fast-forward
+  }
+  break;
+  default:
+    break;
+  }
+#endif  // MEMORY_USE_SWAPPING_UNIT
+
+  /* Send memory request below */
+  bool stall = true;
+
+  uint64_t address;
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  address = packet->h_address;
+#else
+  address = packet->address;
+#endif
+
+  // assign the request to the right memory.
+  if (address < memory.max_address)
+  {
+    Request request(address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory_id);
+    stall = !memory.send(request);
+
+    if (stall == false)
+    {
+      read_request_in_memory++;
+    }
+  }
+  else if (address < memory.max_address + memory2.max_address)
+  {
+    // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+    Request request(address - memory.max_address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory2_id);
+    stall = !memory2.send(request);
+
+    if (stall == false)
+    {
+      read_request_in_memory2++;
+    }
+  }
+  else
+  {
+    printf("%s: Error!\n", __FUNCTION__);
+  }
+
+#if (PRINT_MEMORY_TRACE == ENABLE)
+  // output memory trace.
+  output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
+#endif  // PRINT_MEMORY_TRACE
+
+  if (stall == true)
+  {
+    return int(ReturnValue::Full); // queue is full, note Ramulator doesn't merge requests.
+  }
+  else
+  {
+    return get_occupancy(type, packet->address);
+  }
+};
+
+template<class T, class T2>
+int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
+{
+  const static uint8_t type = 2;  // it means the input request is write request.
+
+  if (all_warmup_complete < NUM_CPUS)
+    return int(ReturnValue::Forward); // Fast-forward
+
+  /* Operate research proposals below */
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  os_transparent_management.physical_to_hardware_address(*packet);
+  os_transparent_management.memory_activity_tracking(packet->address, type, float(get_occupancy(type, packet->address)) / get_size(type, packet->address));
+#endif
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+  /* Check swapping below */
+  uint8_t under_swapping = check_request(*packet, type);
+  switch (under_swapping)
+  {
+  case 0: // this address is under swapping.
+    return int(ReturnValue::Full); // queue is full, note Ramulator doesn't merge requests.
+    break;
+  case 1: // this address is not under swapping.
+    break;
+  case 2: // though this address is under swapping, we can service its request because the data is in the swapping buffer.
+  {
+    return int(ReturnValue::Forward); // Fast-forward
+  }
+  break;
+  default:
+    break;
+  }
+#endif  // MEMORY_USE_SWAPPING_UNIT
+
+  /* Send memory request below */
+  bool stall = true;
+
+  uint64_t address;
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  address = packet->h_address;
+#else
+  address = packet->address;
+#endif
+
+  // assign the request to the right memory.
+  if (address < memory.max_address)
+  {
+    Request request(address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory_id);
+    stall = !memory.send(request);
+
+    if (stall == false)
+    {
+      write_request_in_memory++;
+    }
+  }
+  else if (address < memory.max_address + memory2.max_address)
+  {
+    // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+    Request request(address - memory.max_address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory2_id);
+    stall = !memory2.send(request);
+
+    if (stall == false)
+    {
+      write_request_in_memory2++;
+    }
+  }
+  else
+  {
+    printf("%s: Error!\n", __FUNCTION__);
+  }
+
+#if (PRINT_MEMORY_TRACE == ENABLE)
+  // output memory trace.
+  output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
+#endif  // PRINT_MEMORY_TRACE
+
+  if (stall == true)
+  {
+    return int(ReturnValue::Full); // queue is full, note Ramulator doesn't merge requests.
+  }
+  else
+  {
+    return get_occupancy(type, packet->address);
+  }
+};
+
+template<class T, class T2>
+int MEMORY_CONTROLLER<T, T2>::add_pq(PACKET* packet)
+{
+  return add_rq(packet);
+};
+
+template<class T, class T2>
+uint32_t MEMORY_CONTROLLER<T, T2>::get_occupancy(uint8_t queue_type, uint64_t address)
+{
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+  /* Check swapping below */
+  // this part of codes is originally used for cache.cc
+  // uint8_t under_swapping = check_address(address, queue_type);
+  // switch (under_swapping)
+  // {
+  // case 0: // this address is under swapping.
+  //   return get_size(queue_type, address); // pretend that the queue is full
+  //   break;
+  // case 1: // this address is not under swapping.
+  //   break;
+  // case 2: // though this address is under swapping, we can service its request because the data is in the swapping buffer.
+  // {
+  // }
+  // break;
+  // default:
+  //   break;
+  // }
+#endif  // MEMORY_USE_SWAPPING_UNIT
+
+  Request::Type type = Request::Type::READ;
+
+  if (queue_type == 1)
+    type = Request::Type::READ;
+  else if (queue_type == 2)
+    type = Request::Type::WRITE;
+  else if (queue_type == 3)
+    return get_occupancy(1, address);
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  os_transparent_management.physical_to_hardware_address(address);
+#endif
+
+  // assign the request to the right memory.
+  if (address < memory.max_address)
+  {
     Request request(address, type);
-
-    // assign the request to the right memory.
-    if (request.addr < memory.max_address)
-    {
-      return memory.get_queue_occupancy(request);
-    }
-    else if (request.addr < memory.max_address + memory2.max_address)
-    {
-      return memory2.get_queue_occupancy(request);
-    }
-    else
-    {
-      printf("%s: Error!\n", __FUNCTION__);
-    }
-
-    return 0;
-  };
-
-  uint32_t get_size(uint8_t queue_type, uint64_t address) override
+    return memory.get_queue_occupancy(request);
+  }
+  else if (address < memory.max_address + memory2.max_address)
   {
-    Request::Type type = Request::Type::READ;
+    // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+    Request request(address - memory.max_address, type);
+    return memory2.get_queue_occupancy(request);
+  }
+  else
+  {
+    printf("%s: Error!\n", __FUNCTION__);
+  }
 
-    if (queue_type == 1)
-      type = Request::Type::READ;
-    else if (queue_type == 2)
-      type = Request::Type::WRITE;
-    else if (queue_type == 3)
-      return get_size(1, address);
+  return 0;
+};
 
+template<class T, class T2>
+uint32_t MEMORY_CONTROLLER<T, T2>::get_size(uint8_t queue_type, uint64_t address)
+{
+  Request::Type type = Request::Type::READ;
+
+  if (queue_type == 1)
+    type = Request::Type::READ;
+  else if (queue_type == 2)
+    type = Request::Type::WRITE;
+  else if (queue_type == 3)
+    return get_size(1, address);
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  os_transparent_management.physical_to_hardware_address(address);
+#endif
+
+  // assign the request to the right memory.
+  if (address < memory.max_address)
+  {
     Request request(address, type);
-
-    // assign the request to the right memory.
-    if (request.addr < memory.max_address)
-    {
-      return memory.get_queue_size(request);
-    }
-    else if (request.addr < memory.max_address + memory2.max_address)
-    {
-      return memory2.get_queue_size(request);
-    }
-    else
-    {
-      printf("%s: Error!\n", __FUNCTION__);
-    }
-
-    return 0;
-  };
-
-#if (MEMORY_USE_SWAPPING_UNIT) == (ENABLE)
-  // functions for swapping
-  void initialize_swapping()
+    return memory.get_queue_size(request);
+  }
+  else if (address < memory.max_address + memory2.max_address)
   {
-    states = in_idle;
-    for (auto i = 0; i < SWAPPING_BUFFER_ENTRY_NUMBER; i++)
+    // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+    Request request(address - memory.max_address, type);
+    return memory2.get_queue_size(request);
+  }
+  else
+  {
+    printf("%s: Error!\n", __FUNCTION__);
+  }
+
+  return 0;
+};
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+// functions for swapping
+template<class T, class T2>
+void MEMORY_CONTROLLER<T, T2>::initialize_swapping()
+{
+  states = SwappingState::Idle;
+  for (auto i = 0; i < SWAPPING_BUFFER_ENTRY_NUMBER; i++)
+  {
+    buffer[i].finish = false;
+    for (auto j = 0; j < SWAPPING_SEGMENT_NUMBER; j++)
     {
-      buffer[i].finish = false;
-      for (auto j = 0; j < SWAPPING_SEGMENT_NUMBER; j++)
+      for (uint64_t z = 0; z < BLOCK_SIZE; z++)
       {
-        for (uint64_t z = 0; z < BLOCK_SIZE; z++)
+        buffer[i].data[j][z] = 0;
+      }
+      buffer[i].read_issue[j] = false;
+      buffer[i].read[j] = false;
+      buffer[i].write[j] = false;
+      buffer[i].dirty[j] = false;
+    }
+  }
+
+  for (auto i = 0; i < SWAPPING_SEGMENT_NUMBER; i++)
+  {
+    base_address[i] = 0;
+  }
+  active_entry_number = finish_number = 0;
+}
+
+// input address should be hardware address and at byte granularity
+template<class T, class T2>
+bool MEMORY_CONTROLLER<T, T2>::start_swapping_segments(uint64_t address_1, uint64_t address_2, uint8_t size)
+{
+  assert(size <= SWAPPING_BUFFER_ENTRY_NUMBER);
+
+  if (states == SwappingState::Idle)
+  {
+    states = SwappingState::Swapping;   // start swapping.
+    base_address[0] = address_1 >> LOG2_BLOCK_SIZE;  // the single swapping is conducted at cache line granularity.
+    base_address[1] = address_2 >> LOG2_BLOCK_SIZE;
+    active_entry_number = size;
+  }
+  else
+  {
+    return false;   // this swapping unit is busy, it cannot issue new swapping request.
+  }
+  return true;  // new swapping is issued.
+}
+
+template<class T, class T2>
+uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
+{
+  const static int coreid = 0;
+
+  switch (states)
+  {
+  case SwappingState::Idle:
+  {
+    return 0; // Idle
+  }
+  break;
+  case SwappingState::Swapping:
+  {
+    // Issue read requests
+    for (auto i = 0; i < active_entry_number; i++)  // go through the active buffer
+    {
+      if (buffer[i].finish == false)
+      {
+        for (auto j = 0; j < SWAPPING_SEGMENT_NUMBER; j++)
         {
-          buffer[i].data[j][z] = 0;
+          if (buffer[i].read_issue[j] == false)
+          {
+            bool stall = true;
+            uint64_t address = (base_address[j] + i) << LOG2_BLOCK_SIZE;
+
+            // assign the request to the right memory.
+            if (address < memory.max_address)
+            {
+              Request request(address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), coreid, 0);
+              stall = !memory.send(request);
+            }
+            else if (address < memory.max_address + memory2.max_address)
+            {
+              // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+              Request request(address - memory.max_address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), coreid, 1);
+              stall = !memory2.send(request);
+            }
+            else
+            {
+              printf("%s: Error!\n", __FUNCTION__);
+            }
+
+#if (PRINT_MEMORY_TRACE == ENABLE)
+            // output memory trace.
+            output_memory_trace_hexadecimal(outputmemorytrace_one, address, 'R');
+#endif  // PRINT_MEMORY_TRACE
+
+            if (stall == true)
+            {
+              // queue is full
+            }
+            else
+            {
+              buffer[i].read_issue[j] = true;
+            }
+          }
         }
-        buffer[i].read_issue[j] = false;
-        buffer[i].read[j] = false;
-        buffer[i].write[j] = false;
-        buffer[i].dirty[j] = false;
       }
     }
 
-    for (auto i = 0; i < SWAPPING_SEGMENT_NUMBER; i++)
+    // Issue write requests
+    for (auto i = 0; i < active_entry_number; i++)  // go through the active buffer
     {
-      base_address[i] = 0;
-    }
-    active_entry_number = finish_number = 0;
-  }
-
-  bool start_swapping_segments(uint64_t address_1, uint64_t address_2, uint8_t size)
-  {
-    assert(size <= SWAPPING_BUFFER_ENTRY_NUMBER);
-
-    if (states == in_idle)
-    {
-      states = in_swapping;   // start swapping.
-      base_address[0] = address_1;
-      base_address[1] = address_2;
-      active_entry_number = size;
-    }
-    else
-    {
-      return false;   // this swapping unit is busy, it cannot issue new swapping request.
-    }
-    return true;  // new swapping is issued.
-  }
-
-  void operate_swapping()
-  {
-    switch (states)
-    {
-    case in_idle:
-    {
-
-    }
-    break;
-    case in_swapping:
-    {
-      // Issue read requests
-      for (auto i = 0; i < active_entry_number; i++)  // go through the active buffer
+      if (buffer[i].finish == false)
       {
-        if (buffer[i].finish == false)
+        if ((buffer[i].read[0] == true) && (buffer[i].read[1] == true)) // read requests are finished
         {
           for (auto j = 0; j < SWAPPING_SEGMENT_NUMBER; j++)
           {
-            if (buffer[i].read_issue[j] == false)
+            if ((buffer[i].write[j] == false) || (buffer[i].dirty[j] == true))
             {
               bool stall = true;
-              Request request(base_address[j] + i, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1));
+              uint64_t address = (base_address[j] + i) << LOG2_BLOCK_SIZE;
 
               // assign the request to the right memory.
-              if (request.addr < memory.max_address)
+              if (address < memory.max_address)
               {
+                Request request(address, Request::Type::WRITE, NULL, coreid, 0);
+                // get data from buffer
+                request.data = buffer[i].data[j];
                 stall = !memory.send(request);
               }
-              else if (request.addr < memory.max_address + memory2.max_address)
+              else if (address < memory.max_address + memory2.max_address)
               {
-                request.addr = request.addr - memory.max_address; // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+                // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+                Request request(address - memory.max_address, Request::Type::WRITE, NULL, coreid, 1);
+                // get data from buffer
+                request.data = buffer[i].data[j];
                 stall = !memory2.send(request);
               }
               else
@@ -478,7 +722,7 @@ public:
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
               // output memory trace.
-              output_memory_trace_hexadecimal(outputmemorytrace_one, request.addr, 'R');
+              output_memory_trace_hexadecimal(outputmemorytrace_one, address, 'W');
 #endif  // PRINT_MEMORY_TRACE
 
               if (stall == true)
@@ -487,196 +731,231 @@ public:
               }
               else
               {
-                buffer[i].read_issue[j] = true;
-              }
+                if (buffer[i].write[j] == false)
+                {
+                  buffer[i].write[j] = true;
+                }
+                if (buffer[i].dirty[j] == true)
+                {
+                  buffer[i].dirty[j] = false;
+                }
+
+#if (TEST_SWAPPING_UNIT == ENABLE)
+                memory_data[i + j * MEMORY_DATA_NUMBER / 2] = buffer[i].data[j];
+#endif  // TEST_SWAPPING_UNIT
               }
             }
           }
         }
 
-      // Issue write requests
-      for (auto i = 0; i < active_entry_number; i++)  // go through the active buffer
-      {
-        if (buffer[i].finish == false)
+        // finish swapping
+        if ((buffer[i].write[0] == true) && (buffer[i].write[1] == true))
         {
-          if ((buffer[i].read[0] == true) && (buffer[i].read[1] == true)) // read requests are finished
-          {
-            for (auto j = 0; j < SWAPPING_SEGMENT_NUMBER; j++)
-            {
-              if ((buffer[i].write[j] == false) || (buffer[i].dirty[j] == true))
-              {
-                bool stall = true;
-                Request request(base_address[j] + i, Request::Type::WRITE);
-
-                // get data from buffer
-                request.data = buffer[i].data[j];
-
-                // assign the request to the right memory.
-                if (request.addr < memory.max_address)
-                {
-                  stall = !memory.send(request);
-                }
-                else if (request.addr < memory.max_address + memory2.max_address)
-                {
-                  request.addr = request.addr - memory.max_address; // the memory itself doesn't know other memories' space, so we manage the overall mapping.
-                  stall = !memory2.send(request);
-                }
-                else
-                {
-                  printf("%s: Error!\n", __FUNCTION__);
-                }
-
-#if (PRINT_MEMORY_TRACE == ENABLE)
-                // output memory trace.
-                output_memory_trace_hexadecimal(outputmemorytrace_one, request.addr, 'W');
-#endif  // PRINT_MEMORY_TRACE
-
-                if (stall == true)
-                {
-                  // queue is full
-                }
-                else
-                {
-                  if (buffer[i].write[j] == false)
-                  {
-                    buffer[i].write[j] = true;
-                  }
-                  if (buffer[i].dirty[j] == true)
-                  {
-                    buffer[i].dirty[j] = false;
-                  }
-
-                  // test
-                  memory_data[i + j * MEMORY_DATA_NUMBER / 2] = request.data;
-                }
-                }
-              }
-            }
-
-          // finish swapping
-          if ((buffer[i].write[0] == true) && (buffer[i].write[1] == true))
-          {
-            buffer[i].finish = true;
-            finish_number++;
-          }
-          }
+          buffer[i].finish = true;
+          finish_number++;
         }
-
-      // check finish_number
-      if (finish_number == active_entry_number)
-      {
-        initialize_swapping();
       }
+    }
 
-      }
+    // check finish_number
+    if (finish_number == active_entry_number)
+    {
+      initialize_swapping();
+      return 2; // Finished swapping
+    }
+
+    return 1; // Swapping
+  }
+  break;
+  default:
     break;
-    default:
-      break;
-      }
-    }
+  }
 
-  void return_data(Request& request)
+  return 3; // No meaning, it should never come here.
+}
+
+// this function is used by memories, like Ramulator.
+template<class T, class T2>
+void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
+{
+  // sanity check
+  //assert(states == SwappingState::Swapping);
+  if (states == SwappingState::Idle)
   {
-    // sanity check
-    //assert(states == in_swapping);
-    if (states == in_idle)
-    {
-      return;
-    }
+    std::cout << __func__ << ": data is returned while swapping is already finished." << std::endl;
+    return;
+  }
 
-    // calculate entry index in the fashion of little-endian.
-    uint8_t segment_index;
-    uint64_t entry_index;
-    if (request.addr - base_address[SWAPPING_SEGMENT_ONE] < active_entry_number)
-    {
-      segment_index = SWAPPING_SEGMENT_TWO;
-      entry_index = request.addr - base_address[SWAPPING_SEGMENT_ONE];
-
-      // test
-      request.data = memory_data[entry_index];
-    }
-    else if (request.addr - base_address[SWAPPING_SEGMENT_TWO] < active_entry_number)
-    {
-      segment_index = SWAPPING_SEGMENT_ONE;
-      entry_index = request.addr - base_address[SWAPPING_SEGMENT_TWO];
-
-      // test
-      request.data = memory_data[entry_index + MEMORY_DATA_NUMBER / 2];
-    }
-    else
-    {
-      std::cout << __func__ << ": swapping error." << std::endl;
-      assert(0);
-    }
-
-    // Read data
-    if ((buffer[entry_index].finish == false) && (buffer[entry_index].write[segment_index] == false) && (buffer[entry_index].dirty[segment_index] == false))
-    {
-      buffer[entry_index].data[segment_index] = request.data;
-      buffer[entry_index].read[segment_index] = true;
-    }
-  };
-
-  uint8_t check_request(PACKET& packet, uint8_t type)
+  // recover the hardware address to physical address.
+  switch (request.memory_id)
   {
-    // calculate entry index in the fashion of little-endian.
-    uint8_t segment_index;
-    uint64_t entry_index;
-    if (packet.address - base_address[SWAPPING_SEGMENT_ONE] < active_entry_number)
-    {
-      segment_index = SWAPPING_SEGMENT_ONE;
-      entry_index = packet.address - base_address[SWAPPING_SEGMENT_ONE];
-    }
-    else if (packet.address - base_address[SWAPPING_SEGMENT_TWO] < active_entry_number)
-    {
-      segment_index = SWAPPING_SEGMENT_TWO;
-      entry_index = packet.address - base_address[SWAPPING_SEGMENT_TWO];
-    }
-    else
-    {
-      return 1;    // this address is not under swapping.
-    }
+  case 0:
+    // nothing to do
+    break;
+  case 1:
+    request.addr += memory.max_address;
+    break;
+  default:
+  {
+    std::cout << __func__ << ": swapping error." << std::endl;
+    assert(0);
+  }
+  break;
+  }
 
-    if (type == 1)  // for read request
+  uint64_t address = request.addr >> LOG2_BLOCK_SIZE;
+  uint8_t segment_index;
+  uint8_t entry_index;
+  // calculate entry index in the fashion of little-endian.
+  if ((base_address[SWAPPING_SEGMENT_ONE] <= address) && (address < (base_address[SWAPPING_SEGMENT_ONE] + active_entry_number)))
+  {
+    segment_index = SWAPPING_SEGMENT_TWO;
+    entry_index = static_cast<uint8_t>(address - base_address[SWAPPING_SEGMENT_ONE]);
+
+#if (TEST_SWAPPING_UNIT == ENABLE)
+    request.data = memory_data[entry_index];
+#endif  // TEST_SWAPPING_UNIT
+  }
+  else if ((base_address[SWAPPING_SEGMENT_TWO] <= address) && (address < (base_address[SWAPPING_SEGMENT_TWO] + active_entry_number)))
+  {
+    segment_index = SWAPPING_SEGMENT_ONE;
+    entry_index = static_cast<uint8_t>(address - base_address[SWAPPING_SEGMENT_TWO]);
+
+#if (TEST_SWAPPING_UNIT == ENABLE)
+    request.data = memory_data[entry_index + MEMORY_DATA_NUMBER / 2];
+#endif  // TEST_SWAPPING_UNIT
+  }
+  else
+  {
+    std::cout << __func__ << ": swapping error." << std::endl;
+    assert(0);
+  }
+
+  // Read data
+  if ((buffer[entry_index].finish == false) && (buffer[entry_index].write[segment_index] == false) && (buffer[entry_index].dirty[segment_index] == false))
+  {
+    buffer[entry_index].data[segment_index] = request.data;
+    buffer[entry_index].read[segment_index] = true;
+  }
+};
+
+template<class T, class T2>
+uint8_t MEMORY_CONTROLLER<T, T2>::check_request(PACKET& packet, uint8_t type)
+{
+  uint64_t address;
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  address = packet.h_address;
+#else
+  address = packet.address;
+#endif
+
+  address >>= LOG2_BLOCK_SIZE;
+  uint8_t segment_index;
+  uint8_t entry_index;
+  // calculate entry index in the fashion of little-endian.
+  if ((base_address[SWAPPING_SEGMENT_ONE] <= address) && (address < (base_address[SWAPPING_SEGMENT_ONE] + active_entry_number)))
+  {
+    segment_index = SWAPPING_SEGMENT_ONE;
+    entry_index = static_cast<uint8_t>(address - base_address[SWAPPING_SEGMENT_ONE]);
+  }
+  else if ((base_address[SWAPPING_SEGMENT_TWO] <= address) && (address < (base_address[SWAPPING_SEGMENT_TWO] + active_entry_number)))
+  {
+    segment_index = SWAPPING_SEGMENT_TWO;
+    entry_index = static_cast<uint8_t>(address - base_address[SWAPPING_SEGMENT_TWO]);
+  }
+  else
+  {
+    return 1;    // this address is not under swapping.
+  }
+
+  if (type == 1)  // for read request
+  {
+    if ((buffer[entry_index].finish == true) || (buffer[entry_index].read[segment_index] == true) || (buffer[entry_index].write[segment_index] == true) || (buffer[entry_index].dirty[segment_index] == true))
     {
-      if ((buffer[entry_index].finish == true) || (buffer[entry_index].read[segment_index] == true) || (buffer[entry_index].write[segment_index] == true) || (buffer[entry_index].dirty[segment_index] == true))
+      uint64_t& read_data = *((uint64_t*)(&buffer[entry_index].data[segment_index])); // note the PACKET only has 64 bit data.
+      packet.data = read_data;
+
+      return 2;    // though this address is under swapping, we can service its request because the data is in the swapping buffer.
+    }
+  }
+  else if (type == 2) // for write request
+  {
+    if ((buffer[entry_index].read[0] == true) && (buffer[entry_index].read[1] == true))
+    {
+      uint64_t& write_data = *((uint64_t*)(&buffer[entry_index].data[segment_index])); // note the PACKET only has 64 bit data.
+      write_data = packet.data;
+      buffer[entry_index].dirty[segment_index] = true;
+
+      if (buffer[entry_index].finish == true)
       {
-        uint64_t& read_data = *((uint64_t*)(&buffer[entry_index].data[segment_index])); // note the PACKET only has 64 bit data.
-        packet.data = read_data;
-        for (auto ret : packet.to_return)
-          ret->return_data(&packet);
-
-        return 2;    // though this address is under swapping, we can service its request because the data is in the swapping buffer.
+        --finish_number;
       }
+      buffer[entry_index].finish = false;
+
+      return 2;    // though this address is under swapping, we can service its request because the data is in the swapping buffer.
     }
-    else if (type == 2) // for write request
+  }
+  else
+  {
+    std::cout << __func__ << ": type input error." << std::endl;
+    assert(0);
+  }
+
+  return 0;   // this address is under swapping.
+};
+
+template<class T, class T2>
+uint8_t MEMORY_CONTROLLER<T, T2>::check_address(uint64_t address, uint8_t type)
+{
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  os_transparent_management.physical_to_hardware_address(address);
+#else
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+
+  address >>= LOG2_BLOCK_SIZE;
+  uint8_t segment_index;
+  uint8_t entry_index;
+  // calculate entry index in the fashion of little-endian.
+  if ((base_address[SWAPPING_SEGMENT_ONE] <= address) && (address < (base_address[SWAPPING_SEGMENT_ONE] + active_entry_number)))
+  {
+    segment_index = SWAPPING_SEGMENT_ONE;
+    entry_index = static_cast<uint8_t>(address - base_address[SWAPPING_SEGMENT_ONE]);
+  }
+  else if ((base_address[SWAPPING_SEGMENT_TWO] <= address) && (address < (base_address[SWAPPING_SEGMENT_TWO] + active_entry_number)))
+  {
+    segment_index = SWAPPING_SEGMENT_TWO;
+    entry_index = static_cast<uint8_t>(address - base_address[SWAPPING_SEGMENT_TWO]);
+  }
+  else
+  {
+    return 1;    // this address is not under swapping.
+  }
+
+  if (type == 1)  // for read request
+  {
+    if ((buffer[entry_index].finish == true) || (buffer[entry_index].read[segment_index] == true) || (buffer[entry_index].write[segment_index] == true) || (buffer[entry_index].dirty[segment_index] == true))
     {
-      if ((buffer[entry_index].read[0] == true) && (buffer[entry_index].read[1] == true))
-      {
-        uint64_t& write_data = *((uint64_t*)(&buffer[entry_index].data[segment_index])); // note the PACKET only has 64 bit data.
-        write_data = packet.data;
-        buffer[entry_index].dirty[segment_index] = true;
-
-        if (buffer[entry_index].finish == true)
-        {
-          --finish_number;
-        }
-        buffer[entry_index].finish = false;
-
-        return 2;    // though this address is under swapping, we can service its request because the data is in the swapping buffer.
-      }
+      return 2;    // though this address is under swapping, we can service its request because the data is in the swapping buffer.
     }
-    else
+  }
+  else if (type == 2) // for write request
+  {
+    if ((buffer[entry_index].read[0] == true) && (buffer[entry_index].read[1] == true))
     {
-      std::cout << __func__ << ": type input error." << std::endl;
-      assert(0);
+      return 2;    // though this address is under swapping, we can service its request because the data is in the swapping buffer.
     }
+  }
+  else
+  {
+    std::cout << __func__ << ": type input error." << std::endl;
+    assert(0);
+  }
 
-    return 0;   // this address is under swapping.
-  };
+  return 0;   // this address is under swapping.
+};
+
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
-};
 #else
 template<typename T>
 class MEMORY_CONTROLLER : public champsim::operable, public MemoryRequestConsumer
@@ -721,7 +1000,7 @@ public:
     }
 
     bool stall = true;
-    Request request(packet->address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet);
+    Request request(packet->address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet, 0, packet->cpu);
 
     // assign the request to the right memory.
     if (request.addr < memory.max_address)
@@ -754,7 +1033,7 @@ public:
       return -1; // Fast-forward
 
     bool stall = true;
-    Request request(packet->address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet);
+    Request request(packet->address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet, 0, packet->cpu);
 
     // assign the request to the right memory.
     if (request.addr < memory.max_address)
@@ -838,7 +1117,7 @@ public:
     }
 
     return 0;
-    };
+  };
 };
 #endif  // MEMORY_USE_HYBRID
 #else
@@ -914,7 +1193,7 @@ public:
 private:
   void operate_hbm(HBM_CHANNEL& channel);
   void operate_ddr(DDR_CHANNEL& channel);
-  };
+};
 #endif  // RAMULATOR
 
 #else
@@ -972,7 +1251,7 @@ public:
   uint32_t dram_get_bank(uint64_t address);
   uint32_t dram_get_row(uint64_t address);
   uint32_t dram_get_column(uint64_t address);
-  };
+};
 #endif  // USER_CODES
 
 #endif

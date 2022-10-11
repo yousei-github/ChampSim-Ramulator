@@ -126,7 +126,7 @@ public:
 
   int prefetch_code_line(uint64_t pf_v_addr);
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
   /* Definition and declaration for branch predictor */
   // Branch predictor type selection, i.e., bimodal, gshare, hashed_perceptron, perceptron.
   enum class bpred_t { bbranchDbimodal, bbranchDgshare, bbranchDhashed_perceptron, bbranchDperceptron };

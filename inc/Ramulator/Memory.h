@@ -20,7 +20,7 @@
 #include <tuple>
 #include <ProjectConfiguration.h>  // User file
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
 #include "champsim_constants.h"
 #endif
 
@@ -83,7 +83,7 @@ protected:
 
 public:
 #if (USER_CODES == ENABLE)
-    long max_address;
+    uint64_t max_address;
 #endif
 
     enum class Type
@@ -333,7 +333,7 @@ public:
         long addr = req.addr;
         int coreid = req.coreid;
 
-        // Each transaction size is 2^tx_bits, so first clear the lowest tx_bits bits
+        // Each transaction size is 2^tx_bits, so first clear the lowest tx_bits bits. (by shifting to right by tx_bits)
         clear_lower_bits(addr, tx_bits);
 
         if (use_mapping_file)
@@ -383,7 +383,8 @@ public:
         return false;
     }
 
-#if (USER_CODES) == (ENABLE)
+#if (USER_CODES == ENABLE)
+    // get the number of queue's current members.
     uint32_t get_queue_occupancy(Request& req)
     {
         req.addr_vec.resize(addr_bits.size());
@@ -422,6 +423,7 @@ public:
         return ctrls[req.addr_vec[0]]->queue_size(req);
     };
 
+    // get the capacity of this queue.
     uint32_t get_queue_size(Request& req)
     {
         req.addr_vec.resize(addr_bits.size());
@@ -459,7 +461,7 @@ public:
 
         return ctrls[req.addr_vec[0]]->queue_maxsize(req);
     };
-#endif
+#endif  // USER_CODES
 
     void init_mapping_with_file(string filename)
     {
