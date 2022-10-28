@@ -10,11 +10,11 @@
 /* Functionality options */
 #if (USER_CODES == ENABLE)
 #define RAMULATOR                                  (ENABLE) // whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
-#define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system
+#define MEMORY_USE_HYBRID                          (DISABLE) // whether use hybrid memory system
 #define PRINT_STATISTICS_INTO_FILE                 (ENABLE)
 #define PRINT_MEMORY_TRACE                         (DISABLE)
-#define MEMORY_USE_SWAPPING_UNIT                   (ENABLE)
-#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE)
+#define MEMORY_USE_SWAPPING_UNIT                   (DISABLE)
+#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (DISABLE)
 
 // Data block management granularity
 #define DATA_GRANULARITY_64B                (64u)
@@ -90,6 +90,8 @@
 
 #if (MEMORY_USE_HYBRID == ENABLE)
 #define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
+#define MEMORY_NUMBER_ONE    (0u)
+#define MEMORY_NUMBER_TWO    (1u)
 #else
 #define NUMBER_OF_MEMORIES   (1u)
 
@@ -106,6 +108,7 @@
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 #define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
+#define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
 #endif
 
 // Standard libraries

@@ -112,8 +112,8 @@ public:
   ramulator::Memory<T, Controller>& memory;
   ramulator::Memory<T2, Controller>& memory2;
 
-  const uint8_t memory_id = 0;
-  const uint8_t memory2_id = 1;
+  const uint8_t memory_id = MEMORY_NUMBER_ONE;
+  const uint8_t memory2_id = MEMORY_NUMBER_TWO;
 
   // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
   OS_TRANSPARENT_MANAGEMENT& os_transparent_management;
@@ -238,6 +238,74 @@ template<class T, class T2>
 void MEMORY_CONTROLLER<T, T2>::operate()
 {
   /* Operate research proposals below */
+#if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
+  for (size_t i = 0; i < os_transparent_management.incomplete_read_request_queue.size(); i++)
+  {
+    if (os_transparent_management.incomplete_read_request_queue[i].fm_access_finish)  // this read request is ready to access slow memory
+    {
+      PACKET packet = os_transparent_management.incomplete_read_request_queue[i].packet;
+      /* Send memory request below */
+      bool stall = true;
+      uint64_t address = packet.h_address;
+      if ((memory.max_address <= address) && (address < memory.max_address + memory2.max_address))
+      {
+        // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+        Request request(address - memory.max_address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), packet, packet.cpu, memory2_id);
+        stall = !memory2.send(request);
+
+        if (stall == false)
+        {
+          read_request_in_memory2++;
+          os_transparent_management.incomplete_read_request_queue.erase(os_transparent_management.incomplete_read_request_queue.begin() + i);
+        }
+      }
+      else
+      {
+        printf("%s: Error!\n", __FUNCTION__);
+      }
+    }
+  }
+
+  for (size_t i = 0; i < os_transparent_management.incomplete_write_request_queue.size(); i++)
+  {
+    if (os_transparent_management.incomplete_write_request_queue[i].fm_access_finish)  // this write request is ready to write memory (fast or slow)
+    {
+      PACKET packet = os_transparent_management.incomplete_write_request_queue[i].packet;
+      /* Send memory request below */
+      bool stall = true;
+      uint64_t address = packet.h_address;
+
+      // assign the request to the right memory.
+      if (address < memory.max_address)
+      {
+        Request request(address, Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), packet, packet.cpu, memory_id);
+        stall = !memory.send(request);
+
+        if (stall == false)
+        {
+          write_request_in_memory++;
+          os_transparent_management.incomplete_write_request_queue.erase(os_transparent_management.incomplete_write_request_queue.begin() + i);
+        }
+      }
+      else if (address < memory.max_address + memory2.max_address)
+      {
+        // the memory itself doesn't know other memories' space, so we manage the overall mapping.
+        Request request(address - memory.max_address, Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), packet, packet.cpu, memory2_id);
+        stall = !memory2.send(request);
+
+        if (stall == false)
+        {
+          write_request_in_memory2++;
+          os_transparent_management.incomplete_write_request_queue.erase(os_transparent_management.incomplete_write_request_queue.begin() + i);
+        }
+      }
+      else
+      {
+        printf("%s: Error!\n", __FUNCTION__);
+      }
+    }
+  }
+#endif  // COLOCATED_LINE_LOCATION_TABLE
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
   /* Operate swapping below */
@@ -351,9 +419,30 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
   uint64_t address;
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   address = packet->h_address;
+#if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
+  bool is_sm_request = false;       // whether this request is mapped in slow memory according to the LLT.
+  if (memory.max_address <= address)
+  {
+    is_sm_request = true;
+    address = packet->h_address_fm; // pretend to access the Location Entry and Data (LEAD) in fast memory
+
+    if (memory.max_address <= address)
+    {
+      std::cout << __func__ << ": co_located LLT error, h_address_fm is uncorrect." << std::endl;
+      abort();
+    }
+
+    // check incomplete_read_request_queue's size
+    if (os_transparent_management.incomplete_read_request_queue.size() >= INCOMPLETE_READ_REQUEST_QUEUE_LENGTH)
+    {
+      return int(ReturnValue::Full);
+    }
+  }
+#endif  // COLOCATED_LINE_LOCATION_TABLE
+
 #else
   address = packet->address;
-#endif
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
   // assign the request to the right memory.
   if (address < memory.max_address)
@@ -364,6 +453,20 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
     if (stall == false)
     {
       read_request_in_memory++;
+
+#if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
+      if (is_sm_request)
+      {
+        read_request_in_memory--;
+
+        OS_TRANSPARENT_MANAGEMENT::ReadRequest read_request;
+        // create new read_request
+        read_request.packet = *packet;
+        read_request.fm_access_finish = false;
+
+        os_transparent_management.incomplete_read_request_queue.push_back(read_request);
+      }
+#endif  // COLOCATED_LINE_LOCATION_TABLE
     }
   }
   else if (address < memory.max_address + memory2.max_address)
@@ -437,9 +540,37 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   uint64_t address;
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   address = packet->h_address;
+#if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
+  // check incomplete_write_request_queue's size
+  if (os_transparent_management.incomplete_write_request_queue.size() >= INCOMPLETE_WRITE_REQUEST_QUEUE_LENGTH)
+  {
+    return int(ReturnValue::Full);
+  }
+
+  address = packet->h_address_fm; // pretend to access the Location Entry and Data (LEAD) in fast memory
+  Request request(address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), *packet, packet->cpu, memory_id);
+  stall = !memory.send(request);
+
+  if (stall == false)
+  {
+    OS_TRANSPARENT_MANAGEMENT::WriteRequest write_request;
+    // create new write_request
+    write_request.packet = *packet;
+    write_request.fm_access_finish = false;
+
+    os_transparent_management.incomplete_write_request_queue.push_back(write_request);
+
+    return get_occupancy(type, packet->address);
+  }
+  else
+  {
+    return int(ReturnValue::Full);
+  }
+#endif  // COLOCATED_LINE_LOCATION_TABLE
+
 #else
   address = packet->address;
-#endif
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
   // assign the request to the right memory.
   if (address < memory.max_address)
@@ -564,10 +695,62 @@ uint32_t MEMORY_CONTROLLER<T, T2>::get_size(uint8_t queue_type, uint64_t address
 template<class T, class T2>
 void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
 {
+  // recover the hardware address to physical address.
+  switch (request.memory_id)
+  {
+  case MEMORY_NUMBER_ONE:
+    // nothing to do
+    break;
+  case MEMORY_NUMBER_TWO:
+    request.addr += memory.max_address;
+    break;
+  default:
+  {
+    std::cout << __func__ << ": return_data error." << std::endl;
+    assert(0);
+  }
+  break;
+  }
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE) && (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
+  bool finish_return_data = false;
+
+  if (uint64_t(request.addr) < memory.max_address)
+  {
+    // this could be an uncomplete write request
+    bool finish = os_transparent_management.finish_fm_access_in_incomplete_write_request_queue(request.packet.h_address);
+    if (finish)
+    {
+      finish_return_data = true;
+      return;
+    }
+  }
+
+  if ((uint64_t(request.addr) < memory.max_address) && (memory.max_address <= request.packet.h_address))
+  {
+    // this could be an uncomplete read request
+    bool finish = os_transparent_management.finish_fm_access_in_incomplete_read_request_queue(request.packet.h_address);
+
+    if (finish)
+    {
+      finish_return_data = true;
+      return;
+    }
+  }
+
+  if (finish_return_data == false)
+  {
+    // this is a complete read request
+    for (auto ret : request.packet.to_return)
+      ret->return_data(&(request.packet));
+  }
+
+#else
   for (auto ret : request.packet.to_return)
     ret->return_data(&(request.packet));
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT && COLOCATED_LINE_LOCATION_TABLE
 
-}
+};
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
 // functions for swapping
@@ -783,10 +966,10 @@ void MEMORY_CONTROLLER<T, T2>::return_swapping_data(Request& request)
   // recover the hardware address to physical address.
   switch (request.memory_id)
   {
-  case 0:
+  case MEMORY_NUMBER_ONE:
     // nothing to do
     break;
-  case 1:
+  case MEMORY_NUMBER_TWO:
     request.addr += memory.max_address;
     break;
   default:
@@ -989,6 +1172,7 @@ public:
    */
   uint32_t get_size(uint8_t queue_type, uint64_t address) override;
 
+  void return_data(Request& request);
 };
 
 template<class T>
@@ -1054,7 +1238,7 @@ int MEMORY_CONTROLLER<T>::add_rq(PACKET* packet)
   // assign the request to the right memory.
   if (address < memory.max_address)
   {
-    Request request(address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory_id);
+    Request request(address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T>::return_data, this, placeholders::_1), *packet, packet->cpu, memory_id);
     stall = !memory.send(request);
 
     if (stall == false)
@@ -1097,7 +1281,7 @@ int MEMORY_CONTROLLER<T>::add_wq(PACKET* packet)
   // assign the request to the right memory.
   if (address < memory.max_address)
   {
-    Request request(address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory_id);
+    Request request(address, Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T>::return_data, this, placeholders::_1), *packet, packet->cpu, memory_id);
     stall = !memory.send(request);
 
     if (stall == false)
@@ -1181,6 +1365,13 @@ uint32_t MEMORY_CONTROLLER<T>::get_size(uint8_t queue_type, uint64_t address)
   }
 
   return 0;
+};
+
+template<class T>
+void MEMORY_CONTROLLER<T>::return_data(Request& request)
+{
+  for (auto ret : request.packet.to_return)
+    ret->return_data(&(request.packet));
 };
 #endif  // MEMORY_USE_HYBRID
 #else
