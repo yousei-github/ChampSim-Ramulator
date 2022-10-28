@@ -22,7 +22,7 @@ public:
 
   void _operate()
   {
-#if RAMULATOR == ENABLE
+#if (RAMULATOR == ENABLE)
 #else
     // skip periodically
     if (leap_operation >= 1)
@@ -34,7 +34,7 @@ public:
 
     operate();
 
-#if RAMULATOR == ENABLE
+#if (RAMULATOR == ENABLE)
 #else
     leap_operation += CLOCK_SCALE;
 #endif

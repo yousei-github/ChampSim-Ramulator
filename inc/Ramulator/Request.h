@@ -9,7 +9,7 @@
 #include "block.h"
 #include "champsim_constants.h"
 #include <array>
-#endif
+#endif  // USER_CODES
 
 using namespace std;
 
@@ -42,13 +42,8 @@ public:
     long depart = -1;
     function<void(Request&)> callback; // call back with more info
 
+    // ChampSim's memory controller's packet
     PACKET packet;
-    void receive(Request& request)
-    {
-        // Note here no data will be send back to cpu.
-        for (auto ret : request.packet.to_return)
-            ret->return_data(&(request.packet));
-    };
 
     std::array<uint8_t, BLOCK_SIZE> data = {0}; // a cache line
     uint8_t memory_id = NUMBER_OF_MEMORIES;
@@ -70,12 +65,7 @@ public:
     {
     }
 
-    // Request(long addr, Type type, PACKET packet, int coreid = 0, uint8_t memory_id = 0)
-    //     : is_first_command(true), addr(addr), coreid(coreid), type(type), packet(packet), memory_id(memory_id)
-    // {
-    //     callback = std::bind(&Request::receive, this, placeholders::_1);
-    // }
-
+    // This instructor is used for ChampSim's memory controller
     Request(long addr, Type type, function<void(Request&)> callback, PACKET packet, int coreid, uint8_t memory_id)
         : is_first_command(true), addr(addr), coreid(coreid), type(type), callback(callback), packet(packet), memory_id(memory_id)
     {

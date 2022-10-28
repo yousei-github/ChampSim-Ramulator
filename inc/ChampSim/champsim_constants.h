@@ -32,8 +32,7 @@
  *  The unit of DRAM_IO_FREQ is MHz. Here if DRAM_IO_FREQ is 3200ul, the DRAM is DDR4 (800-1600 MHz). DDR5's I/O clock rate ranges
  *  between 2400-3600 MHz, so its data rate can be 4800-7200 MT/s.
  */
-#define DRAM_IO_FREQ      (3200ul)
-#define DRAM_IO_DATA_RATE (3200ul)  // MT/s
+#define DRAM_IO_FREQ      (3200ul)  // MT/s, it should be data rate
 
 #define DDR_CHANNELS (1ul)
 #define DDR_RANKS    (1ul)
@@ -58,31 +57,31 @@
   *  | row address | rank index | column address (bank index) | channel | block offset |
   *  |   15 bits   |    0 bit   |            9 bits (3 bits)  |  0 bit  |    6 bits    |
   *  e.g., DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 32768, DDR_COLUMNS = 64 (9 - 3) for (512, 1024] MB DDR capacity.
- */
+  */
 
- /** @note
-  *  Below are parameters for 3D-stacked DRAM (or High Bandwidth Memory (HBM)).
-  *  HBM uses the same IO frequency as DRAM.
- */
+  /** @note
+   *  Below are parameters for 3D-stacked DRAM (or High Bandwidth Memory (HBM)).
+   *  HBM uses the same IO frequency as DRAM.
+  */
 #define HBM_CHANNELS (8ul)
 #define HBM_BANKS    (8ul)
 #define HBM_ROWS     (1024ul)
 #define HBM_COLUMNS  (64ul)
 #define HBM_CAPACITY (0*MB) // 0*MB / 256*MB
- /** @note
-  *  Physical address (30 bit for 1 GB HBM capacity)
-  *  | row address | rank index | column address (bank index) | channel | block offset |
-  *  |   11 bits   |    0 bit   |           10 bits (3 bits)  |  3 bits |    6 bits    |
-  *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 2048, HBM_COLUMNS = 128 (10 - 3) for 1 GB HBM capacity.
-  *
-  *  Physical address (28 bit for 256 MB HBM capacity)
-  *  | row address | rank index | column address (bank index) | channel | block offset |
-  *  |   10 bits   |    0 bit   |            9 bits (3 bits)  |  3 bits |    6 bits    |
-  *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 1024, HBM_COLUMNS = 64 (9 - 3) for 256 MB HBM capacity.
- */
+  /** @note
+   *  Physical address (30 bit for 1 GB HBM capacity)
+   *  | row address | rank index | column address (bank index) | channel | block offset |
+   *  |   11 bits   |    0 bit   |           10 bits (3 bits)  |  3 bits |    6 bits    |
+   *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 2048, HBM_COLUMNS = 128 (10 - 3) for 1 GB HBM capacity.
+   *
+   *  Physical address (28 bit for 256 MB HBM capacity)
+   *  | row address | rank index | column address (bank index) | channel | block offset |
+   *  |   10 bits   |    0 bit   |            9 bits (3 bits)  |  3 bits |    6 bits    |
+   *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 1024, HBM_COLUMNS = 64 (9 - 3) for 256 MB HBM capacity.
+  */
 
- // The unit of DRAM_CHANNEL_WIDTH is byte
-#define DRAM_CHANNEL_WIDTH           (8ul)
+
+#define DRAM_CHANNEL_WIDTH           (8ul)  // The unit of DRAM_CHANNEL_WIDTH is byte
 #define DRAM_WQ_SIZE                 (64ul)
 #define DRAM_RQ_SIZE                 (64ul)
 #define tRP_DRAM_NANOSECONDS         (12.5)
@@ -283,7 +282,12 @@
 
 
 // Clock scale
+#if (RAMULATOR == ENABLE)
+#define MEMORY_CONTROLLER_CLOCK_SCALE (1.0)
+#else
 #define MEMORY_CONTROLLER_CLOCK_SCALE (CPU_FREQUENCY / DRAM_IO_FREQ)  // 4000 MHz / 3200 MHz = 1.25
+#endif
+
 #define CACHE_CLOCK_SCALE             (1.0)
 #define O3_CPU_CLOCK_SCALE            (1.0)
 #define PAGETABLEWALKER_CLOCK_SCALE   (1.0)

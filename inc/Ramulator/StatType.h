@@ -94,12 +94,14 @@ class StatList
 protected:
   std::vector<StatBase*> list;
   std::ofstream stat_output;
+
 #if (USER_CODES == ENABLE)
   double read_latency_sum = 0;
   double write_latency_sum = 0;
   double read_requests = 0;
   double write_requests = 0;
-#endif
+#endif  // USER_CODES
+
 public:
   void add(StatBase* stat)
   {
@@ -139,7 +141,8 @@ public:
     stat_output << "write_requests: " << write_requests << std::endl;
     stat_output << "read_latency: " << read_latency_sum / read_requests << std::endl;
     stat_output << "write_latency: " << write_latency_sum / write_requests << std::endl;
-#endif
+#endif  // USER_CODES
+
   }
 
 #if (USER_CODES == ENABLE)
@@ -159,7 +162,8 @@ public:
   {
     write_requests += value;
   }
-#endif
+#endif  // USER_CODES
+
   ~StatList()
   {
     stat_output.close();

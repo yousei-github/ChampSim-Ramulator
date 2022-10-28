@@ -35,7 +35,7 @@
 #define LOCATION_TABLE_ENTRY_DEFAULT_VALUE  (0x0538)
 #define LOCATION_TABLE_ENTRY_MSB            (UINT16_WIDTH - 1)  // MSB -> most significant bit
 
-#define REMAPPING_REQUEST_QUEUE_LENGTH      (1024)  // 1024/4096
+#define REMAPPING_REQUEST_QUEUE_LENGTH      (64)  // 1024/4096
 #define QUEUE_BUSY_DEGREE_THRESHOLD         (0.8f)
 
 class OS_TRANSPARENT_MANAGEMENT
@@ -87,7 +87,7 @@ public:
         }
         else
         {
-            std::cout << "Number in Congruence group: " << expected_number_in_congruence_group << std::endl;
+            printf("Number in Congruence group: %ld.\n", expected_number_in_congruence_group);
         }
 
     };

@@ -31,7 +31,7 @@ constexpr int32_t ceil(float num)
 #include <cstdint>
 #include <cassert>
 
-#if  (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE)
 #include "Memory.h"
 #include "Request.h"
 using namespace ramulator;
@@ -175,6 +175,8 @@ public:
    */
   uint32_t get_size(uint8_t queue_type, uint64_t address) override;
 
+  void return_data(Request& request);
+
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
 public:
   // input address should be hardware address and at byte granularity
@@ -187,7 +189,7 @@ private:
   uint8_t operate_swapping();
 
   // this function is used by memories, like Ramulator.
-  void return_data(Request& request);
+  void return_swapping_data(Request& request);
 
   // this function is used by memory controller in add_rq() and add_wq().
   uint8_t check_request(PACKET& packet, uint8_t type);    // packet needs to prepare its hardware address.
@@ -203,6 +205,8 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
   clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2),
   os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(HOTNESS_THRESHOLD, memory.max_address + memory2.max_address, memory.max_address)))
 {
+  printf("clock_scale: %f, clock_scale2: %f.\n", clock_scale, clock_scale2);
+
   read_request_in_memory = read_request_in_memory2 = 0;
   write_request_in_memory = write_request_in_memory2 = 0;
 
@@ -294,7 +298,9 @@ void MEMORY_CONTROLLER<T, T2>::operate()
 template<class T, class T2>
 void MEMORY_CONTROLLER<T, T2>::print_deadlock()
 {
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
   printf("base_address[0]: %ld, base_address[1]: %ld.\n", base_address[0], base_address[1]);
+#endif  // MEMORY_USE_SWAPPING_UNIT
 };
 
 template<class T, class T2>
@@ -352,7 +358,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
   // assign the request to the right memory.
   if (address < memory.max_address)
   {
-    Request request(address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory_id);
+    Request request(address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), *packet, packet->cpu, memory_id);
     stall = !memory.send(request);
 
     if (stall == false)
@@ -363,7 +369,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
   else if (address < memory.max_address + memory2.max_address)
   {
     // the memory itself doesn't know other memories' space, so we manage the overall mapping.
-    Request request(address - memory.max_address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory2_id);
+    Request request(address - memory.max_address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), *packet, packet->cpu, memory2_id);
     stall = !memory2.send(request);
 
     if (stall == false)
@@ -438,7 +444,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   // assign the request to the right memory.
   if (address < memory.max_address)
   {
-    Request request(address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory_id);
+    Request request(address, Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), *packet, packet->cpu, memory_id);
     stall = !memory.send(request);
 
     if (stall == false)
@@ -449,7 +455,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   else if (address < memory.max_address + memory2.max_address)
   {
     // the memory itself doesn't know other memories' space, so we manage the overall mapping.
-    Request request(address - memory.max_address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory2_id);
+    Request request(address - memory.max_address, Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), *packet, packet->cpu, memory2_id);
     stall = !memory2.send(request);
 
     if (stall == false)
@@ -486,26 +492,6 @@ int MEMORY_CONTROLLER<T, T2>::add_pq(PACKET* packet)
 template<class T, class T2>
 uint32_t MEMORY_CONTROLLER<T, T2>::get_occupancy(uint8_t queue_type, uint64_t address)
 {
-#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
-  /* Check swapping below */
-  // this part of codes is originally used for cache.cc
-  // uint8_t under_swapping = check_address(address, queue_type);
-  // switch (under_swapping)
-  // {
-  // case 0: // this address is under swapping.
-  //   return get_size(queue_type, address); // pretend that the queue is full
-  //   break;
-  // case 1: // this address is not under swapping.
-  //   break;
-  // case 2: // though this address is under swapping, we can service its request because the data is in the swapping buffer.
-  // {
-  // }
-  // break;
-  // default:
-  //   break;
-  // }
-#endif  // MEMORY_USE_SWAPPING_UNIT
-
   Request::Type type = Request::Type::READ;
 
   if (queue_type == 1)
@@ -574,6 +560,14 @@ uint32_t MEMORY_CONTROLLER<T, T2>::get_size(uint8_t queue_type, uint64_t address
 
   return 0;
 };
+
+template<class T, class T2>
+void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
+{
+  for (auto ret : request.packet.to_return)
+    ret->return_data(&(request.packet));
+
+}
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
 // functions for swapping
@@ -653,13 +647,13 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
             // assign the request to the right memory.
             if (address < memory.max_address)
             {
-              Request request(address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), coreid, 0);
+              Request request(address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, placeholders::_1), coreid, memory_id);
               stall = !memory.send(request);
             }
             else if (address < memory.max_address + memory2.max_address)
             {
               // the memory itself doesn't know other memories' space, so we manage the overall mapping.
-              Request request(address - memory.max_address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), coreid, 1);
+              Request request(address - memory.max_address, Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, placeholders::_1), coreid, memory2_id);
               stall = !memory2.send(request);
             }
             else
@@ -702,7 +696,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
               // assign the request to the right memory.
               if (address < memory.max_address)
               {
-                Request request(address, Request::Type::WRITE, NULL, coreid, 0);
+                Request request(address, Request::Type::WRITE, NULL, coreid, memory_id);
                 // get data from buffer
                 request.data = buffer[i].data[j];
                 stall = !memory.send(request);
@@ -710,7 +704,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
               else if (address < memory.max_address + memory2.max_address)
               {
                 // the memory itself doesn't know other memories' space, so we manage the overall mapping.
-                Request request(address - memory.max_address, Request::Type::WRITE, NULL, coreid, 1);
+                Request request(address - memory.max_address, Request::Type::WRITE, NULL, coreid, memory2_id);
                 // get data from buffer
                 request.data = buffer[i].data[j];
                 stall = !memory2.send(request);
@@ -776,7 +770,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
 
 // this function is used by memories, like Ramulator.
 template<class T, class T2>
-void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
+void MEMORY_CONTROLLER<T, T2>::return_swapping_data(Request& request)
 {
   // sanity check
   //assert(states == SwappingState::Swapping);
@@ -961,163 +955,232 @@ template<typename T>
 class MEMORY_CONTROLLER : public champsim::operable, public MemoryRequestConsumer
 {
 public:
+  /* General part */
   double clock_scale = MEMORY_CONTROLLER_CLOCK_SCALE;
 
   // Note here they are the references to escape memory deallocation here.
   ramulator::Memory<T, Controller>& memory;
 
-  MEMORY_CONTROLLER(double freq_scale, double clock_scale, Memory<T, Controller>& memory)
-    : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
-    clock_scale(clock_scale), memory(memory)
+  const uint8_t memory_id = 0;
+
+  uint64_t read_request_in_memory;
+  uint64_t write_request_in_memory;
+
+  /* Member functions */
+  MEMORY_CONTROLLER(double freq_scale, double clock_scale, Memory<T, Controller>& memory);
+  ~MEMORY_CONTROLLER();
+
+  void operate() override;
+  void print_deadlock() override;
+
+  int add_rq(PACKET* packet) override;
+  int add_wq(PACKET* packet) override;
+  int add_pq(PACKET* packet) override;
+
+  /** @brief
+   *  Get the number of valid(active) member in the write/read queue.
+   *  The address is physical address.
+   */
+  uint32_t get_occupancy(uint8_t queue_type, uint64_t address) override;
+
+  /** @brief
+   *  Get the capacity of the write/read queue.
+   *  The address is physical address.
+   */
+  uint32_t get_size(uint8_t queue_type, uint64_t address) override;
+
+};
+
+template<class T>
+MEMORY_CONTROLLER<T>::MEMORY_CONTROLLER(double freq_scale, double clock_scale, Memory<T, Controller>& memory)
+  : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
+  clock_scale(clock_scale), memory(memory)
+{
+  read_request_in_memory = 0;
+  write_request_in_memory = 0;
+};
+
+template<class T>
+MEMORY_CONTROLLER<T>::~MEMORY_CONTROLLER()
+{
+  // print some information to outputchampsimstatistics
+  outputchampsimstatistics.read_request_in_memory = read_request_in_memory;
+  outputchampsimstatistics.write_request_in_memory = write_request_in_memory;
+};
+
+template<class T>
+void MEMORY_CONTROLLER<T>::operate()
+{
+  /* Operate memories below */
+  static double leap_operation = 0;
+  // skip periodically
+  if (leap_operation >= 1)
   {
+    leap_operation -= 1;
+  }
+  else
+  {
+    memory.tick();
+    leap_operation += clock_scale;
   }
 
-  void operate() override
+  Stats::curTick++; // processor clock, global, for Statistics
+};
+
+template<class T>
+void MEMORY_CONTROLLER<T>::print_deadlock()
+{
+  printf("MEMORY_CONTROLLER print_deadlock().\n");
+};
+
+template<class T>
+int MEMORY_CONTROLLER<T>::add_rq(PACKET* packet)
+{
+  const static uint8_t type = 1;  // it means the input request is read request.
+
+  if (all_warmup_complete < NUM_CPUS)
   {
-    static double leap_operation = 0;
-    // skip periodically
-    if (leap_operation >= 1)
-    {
-      leap_operation -= 1;
-    }
-    else
-    {
-      memory.tick();
-      leap_operation += clock_scale;
-    }
+    for (auto ret : packet->to_return)
+      ret->return_data(packet);
 
-    Stats::curTick++; // processor clock, global, for Statistics
-  };
+    return int(ReturnValue::Forward); // Fast-forward
+  }
 
-  int add_rq(PACKET* packet) override
+  /* Send memory request below */
+  bool stall = true;
+
+  uint64_t address = packet->address;
+
+  // assign the request to the right memory.
+  if (address < memory.max_address)
   {
-    if (all_warmup_complete < NUM_CPUS)
-    {
-      for (auto ret : packet->to_return)
-        ret->return_data(packet);
+    Request request(address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory_id);
+    stall = !memory.send(request);
 
-      return -1; // Fast-forward
-    }
-
-    bool stall = true;
-    Request request(packet->address, Request::Type::READ, std::bind(&Request::receive, &request, placeholders::_1), *packet, 0, packet->cpu);
-
-    // assign the request to the right memory.
-    if (request.addr < memory.max_address)
+    if (stall == false)
     {
-      stall = !memory.send(request);
+      read_request_in_memory++;
     }
-    else
-    {
-      printf("%s: Error!\n", __FUNCTION__);
-    }
+  }
+  else
+  {
+    printf("%s: Error!\n", __FUNCTION__);
+  }
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
-    // output memory trace.
-    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
+  // output memory trace.
+  output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
 #endif  // PRINT_MEMORY_TRACE
 
-    if (stall == true)
-    {
-      return 0; // queue is full
-    }
-    else
-    {
-      return 1;
-    }
-  };
-
-  int add_wq(PACKET* packet) override
+  if (stall == true)
   {
-    if (all_warmup_complete < NUM_CPUS)
-      return -1; // Fast-forward
+    return int(ReturnValue::Full); // queue is full, note Ramulator doesn't merge requests.
+  }
+  else
+  {
+    return get_occupancy(type, packet->address);
+  }
+};
 
-    bool stall = true;
-    Request request(packet->address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet, 0, packet->cpu);
+template<class T>
+int MEMORY_CONTROLLER<T>::add_wq(PACKET* packet)
+{
+  const static uint8_t type = 2;  // it means the input request is write request.
 
-    // assign the request to the right memory.
-    if (request.addr < memory.max_address)
+  if (all_warmup_complete < NUM_CPUS)
+    return int(ReturnValue::Forward); // Fast-forward
+
+  bool stall = true;
+
+  uint64_t address = packet->address;
+
+  // assign the request to the right memory.
+  if (address < memory.max_address)
+  {
+    Request request(address, Request::Type::WRITE, std::bind(&Request::receive, &request, placeholders::_1), *packet, packet->cpu, memory_id);
+    stall = !memory.send(request);
+
+    if (stall == false)
     {
-      stall = !memory.send(request);
+      write_request_in_memory++;
     }
-    else
-    {
-      printf("%s: Error!\n", __FUNCTION__);
-    }
+  }
+  else
+  {
+    printf("%s: Error!\n", __FUNCTION__);
+  }
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
-    // output memory trace.
-    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
+  // output memory trace.
+  output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
 #endif  // PRINT_MEMORY_TRACE
 
-    if (stall == true)
-    {
-      return -2; // queue is full
-    }
-    else
-    {
-      return 1;
-    }
-  };
-
-  int add_pq(PACKET* packet) override
+  if (stall == true)
   {
-    return add_rq(packet);
-  };
-
-  /** @note get the number of valid(active) member in the write/read queue.
-   */
-  uint32_t get_occupancy(uint8_t queue_type, uint64_t address) override
+    return int(ReturnValue::Full); // queue is full, note Ramulator doesn't merge requests.
+  }
+  else
   {
-    Request::Type type = Request::Type::READ;
+    return get_occupancy(type, packet->address);
+  }
+};
 
-    if (queue_type == 1)
-      type = Request::Type::READ;
-    else if (queue_type == 2)
-      type = Request::Type::WRITE;
-    else if (queue_type == 3)
-      return get_occupancy(1, address);
+template<class T>
+int MEMORY_CONTROLLER<T>::add_pq(PACKET* packet)
+{
+  return add_rq(packet);
+};
 
+template<class T>
+uint32_t MEMORY_CONTROLLER<T>::get_occupancy(uint8_t queue_type, uint64_t address)
+{
+  Request::Type type = Request::Type::READ;
+
+  if (queue_type == 1)
+    type = Request::Type::READ;
+  else if (queue_type == 2)
+    type = Request::Type::WRITE;
+  else if (queue_type == 3)
+    return get_occupancy(1, address);
+
+  // assign the request to the right memory.
+  if (address < memory.max_address)
+  {
     Request request(address, type);
-
-    // assign the request to the right memory.
-    if (request.addr < memory.max_address)
-    {
-      return memory.get_queue_occupancy(request);
-    }
-    else
-    {
-      printf("%s: Error!\n", __FUNCTION__);
-    }
-
-    return 0;
-  };
-
-  uint32_t get_size(uint8_t queue_type, uint64_t address) override
+    return memory.get_queue_occupancy(request);
+  }
+  else
   {
-    Request::Type type = Request::Type::READ;
+    printf("%s: Error!\n", __FUNCTION__);
+  }
 
-    if (queue_type == 1)
-      type = Request::Type::READ;
-    else if (queue_type == 2)
-      type = Request::Type::WRITE;
-    else if (queue_type == 3)
-      return get_size(1, address);
+  return 0;
+};
 
+template<class T>
+uint32_t MEMORY_CONTROLLER<T>::get_size(uint8_t queue_type, uint64_t address)
+{
+  Request::Type type = Request::Type::READ;
+
+  if (queue_type == 1)
+    type = Request::Type::READ;
+  else if (queue_type == 2)
+    type = Request::Type::WRITE;
+  else if (queue_type == 3)
+    return get_size(1, address);
+
+  // assign the request to the right memory.
+  if (address < memory.max_address)
+  {
     Request request(address, type);
+    return memory.get_queue_size(request);
+  }
+  else
+  {
+    printf("%s: Error!\n", __FUNCTION__);
+  }
 
-    // assign the request to the right memory.
-    if (request.addr < memory.max_address)
-    {
-      return memory.get_queue_size(request);
-    }
-    else
-    {
-      printf("%s: Error!\n", __FUNCTION__);
-    }
-
-    return 0;
-  };
+  return 0;
 };
 #endif  // MEMORY_USE_HYBRID
 #else
