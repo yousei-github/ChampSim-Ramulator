@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 
 #if (USER_CODES == ENABLE)
   uint64_t start_position_of_traces = 0;
-#if  (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE)
   uint64_t start_position_of_configs = 0;
   string stats_out;
   uint8_t stats_flag = 0;
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
       }
     }
 
-#if  (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE)
     if (strcmp(argv[i], "--stats") == 0)
     {
       if (i + 1 < argc)
@@ -1255,7 +1255,7 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory, const 
   VirtualMemory vmem(memory.max_address + memory2.max_address, PAGE_SIZE, PAGE_TABLE_LEVELS, 1, MINOR_FAULT_PENALTY);
 
   std::array<O3_CPU*, NUM_CPUS> ooo_cpu{};
-  MEMORY_CONTROLLER<T, T2> memory_controller(MEMORY_CONTROLLER_CLOCK_SCALE, double(configs.get_cpu_tick()) / configs.get_mem_tick(), double(configs2.get_cpu_tick()) / configs2.get_mem_tick(), memory, memory2);
+  MEMORY_CONTROLLER<T, T2> memory_controller(MEMORY_CONTROLLER_CLOCK_SCALE, CPU_FREQUENCY / memory.spec->speed_entry.freq, CPU_FREQUENCY / memory2.spec->speed_entry.freq, memory, memory2);
   CACHE LLC("LLC", CACHE_CLOCK_SCALE, LLC_LEVEL, LLC_SETS, LLC_WAYS, LLC_WQ_SIZE, LLC_RQ_SIZE, LLC_PQ_SIZE, LLC_MSHR_SIZE, LLC_LATENCY - 1, LLC_FILL_LATENCY, LLC_MAX_READ, LLC_MAX_WRITE, LOG2_BLOCK_SIZE, LLC_PREFETCH_AS_LOAD, LLC_WQ_FULL_ADDRESS, LLC_VIRTUAL_PREFETCH,
             LLC_PREF_ACTIVATE_MASK, &memory_controller, LLC_PREFETCHER, LLC_REPLACEMENT_POLICY, ooo_cpu, vmem);
   CACHE cpu0_L2C("cpu0_L2C", CACHE_CLOCK_SCALE, L2C_LEVEL, L2C_SETS, L2C_WAYS, L2C_WQ_SIZE, L2C_RQ_SIZE, L2C_PQ_SIZE, L2C_MSHR_SIZE, L2C_LATENCY - 1, L2C_FILL_LATENCY, L2C_MAX_READ, L2C_MAX_WRITE, LOG2_BLOCK_SIZE, L2C_PREFETCH_AS_LOAD, L2C_WQ_FULL_ADDRESS, L2C_VIRTUAL_PREFETCH,
@@ -1703,7 +1703,7 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory)
   VirtualMemory vmem(memory.max_address, PAGE_SIZE, PAGE_TABLE_LEVELS, 1, MINOR_FAULT_PENALTY);
 
   std::array<O3_CPU*, NUM_CPUS> ooo_cpu{};
-  MEMORY_CONTROLLER<T> memory_controller(MEMORY_CONTROLLER_CLOCK_SCALE, double(configs.get_cpu_tick()) / configs.get_mem_tick(), memory);
+  MEMORY_CONTROLLER<T> memory_controller(MEMORY_CONTROLLER_CLOCK_SCALE, CPU_FREQUENCY / memory.spec->speed_entry.freq, memory);
   CACHE LLC("LLC", CACHE_CLOCK_SCALE, LLC_LEVEL, LLC_SETS, LLC_WAYS, LLC_WQ_SIZE, LLC_RQ_SIZE, LLC_PQ_SIZE, LLC_MSHR_SIZE, LLC_LATENCY - 1, LLC_FILL_LATENCY, LLC_MAX_READ, LLC_MAX_WRITE, LOG2_BLOCK_SIZE, LLC_PREFETCH_AS_LOAD, LLC_WQ_FULL_ADDRESS, LLC_VIRTUAL_PREFETCH,
             LLC_PREF_ACTIVATE_MASK, &memory_controller, LLC_PREFETCHER, LLC_REPLACEMENT_POLICY, ooo_cpu, vmem);
   CACHE cpu0_L2C("cpu0_L2C", CACHE_CLOCK_SCALE, L2C_LEVEL, L2C_SETS, L2C_WAYS, L2C_WQ_SIZE, L2C_RQ_SIZE, L2C_PQ_SIZE, L2C_MSHR_SIZE, L2C_LATENCY - 1, L2C_FILL_LATENCY, L2C_MAX_READ, L2C_MAX_WRITE, LOG2_BLOCK_SIZE, L2C_PREFETCH_AS_LOAD, L2C_WQ_FULL_ADDRESS, L2C_VIRTUAL_PREFETCH,
