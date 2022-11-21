@@ -12,10 +12,13 @@
 #include "os_transparent_management.h"
 #include "ProjectConfiguration.h" // user file
 
+#if (RAMULATOR == ENABLE)
+#else
 // these values control when to send out a burst of writes
 constexpr std::size_t DRAM_WRITE_HIGH_WM = ((DRAM_WQ_SIZE * 7) >> 3);         // 7/8th
 constexpr std::size_t DRAM_WRITE_LOW_WM = ((DRAM_WQ_SIZE * 6) >> 3);          // 6/8th
 constexpr std::size_t MIN_DRAM_WRITES_PER_SWITCH = ((DRAM_WQ_SIZE * 1) >> 2); // 1/4
+#endif  // RAMULATOR
 
 namespace detail
 {
@@ -115,8 +118,9 @@ public:
   const uint8_t memory_id = MEMORY_NUMBER_ONE;
   const uint8_t memory2_id = MEMORY_NUMBER_TWO;
 
-  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   OS_TRANSPARENT_MANAGEMENT& os_transparent_management;
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
   /* Swapping unit */
@@ -201,9 +205,14 @@ private:
 
 template<class T, class T2>
 MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scale, double clock_scale2, Memory<T, Controller>& memory, Memory<T2, Controller>& memory2)
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
   clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2),
   os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(HOTNESS_THRESHOLD, memory.max_address + memory2.max_address, memory.max_address)))
+#else
+  : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
+  clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2)
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 {
   printf("clock_scale: %f, clock_scale2: %f.\n", clock_scale, clock_scale2);
 
@@ -231,13 +240,18 @@ MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
   outputchampsimstatistics.write_request_in_memory = write_request_in_memory;
   outputchampsimstatistics.write_request_in_memory2 = write_request_in_memory2;
 
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   delete& os_transparent_management;
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 };
 
 template<class T, class T2>
 void MEMORY_CONTROLLER<T, T2>::operate()
 {
   /* Operate research proposals below */
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  os_transparent_management.cold_data_detection();
+
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
   for (size_t i = 0; i < os_transparent_management.incomplete_read_request_queue.size(); i++)
   {
@@ -306,6 +320,8 @@ void MEMORY_CONTROLLER<T, T2>::operate()
     }
   }
 #endif  // COLOCATED_LINE_LOCATION_TABLE
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
   /* Operate swapping below */
@@ -319,9 +335,11 @@ void MEMORY_CONTROLLER<T, T2>::operate()
     bool issue = os_transparent_management.issue_remapping_request(remapping_request);
     if (issue == true)  // get a new remapping request.
     {
-      start_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, DATA_GRANULARITY_IN_CACHE_LINE);
-    }
-#endif
+#if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
+      start_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+  }
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
   }
   break;
   case 1: // the swapping unit is busy
@@ -330,12 +348,23 @@ void MEMORY_CONTROLLER<T, T2>::operate()
   {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management.finish_remapping_request();
-#endif
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
   }
   break;
   default:
     break;
   }
+#else
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+  // Since we don't consider data swapping overhead here, the data swapping is finished immediately
+  OS_TRANSPARENT_MANAGEMENT::RemappingRequest remapping_request;
+  bool issue = os_transparent_management.issue_remapping_request(remapping_request);
+  if (issue == true)  // get a new remapping request.
+  {
+    os_transparent_management.finish_remapping_request();
+}
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
   /* Operate memories below */
@@ -436,7 +465,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
     if (os_transparent_management.incomplete_read_request_queue.size() >= INCOMPLETE_READ_REQUEST_QUEUE_LENGTH)
     {
       return int(ReturnValue::Full);
-    }
+}
   }
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
@@ -465,10 +494,10 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
         read_request.fm_access_finish = false;
 
         os_transparent_management.incomplete_read_request_queue.push_back(read_request);
-      }
-#endif  // COLOCATED_LINE_LOCATION_TABLE
     }
+#endif  // COLOCATED_LINE_LOCATION_TABLE
   }
+      }
   else if (address < memory.max_address + memory2.max_address)
   {
     // the memory itself doesn't know other memories' space, so we manage the overall mapping.
@@ -498,7 +527,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
   {
     return get_occupancy(type, packet->address);
   }
-};
+  };
 
 template<class T, class T2>
 int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
@@ -512,7 +541,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   os_transparent_management.physical_to_hardware_address(*packet);
   os_transparent_management.memory_activity_tracking(packet->address, type, float(get_occupancy(type, packet->address)) / get_size(type, packet->address));
-#endif
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
   /* Check swapping below */
@@ -565,7 +594,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   else
   {
     return int(ReturnValue::Full);
-  }
+}
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
 #else
@@ -612,7 +641,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   {
     return get_occupancy(type, packet->address);
   }
-};
+  };
 
 template<class T, class T2>
 int MEMORY_CONTROLLER<T, T2>::add_pq(PACKET* packet)
@@ -634,7 +663,7 @@ uint32_t MEMORY_CONTROLLER<T, T2>::get_occupancy(uint8_t queue_type, uint64_t ad
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   os_transparent_management.physical_to_hardware_address(address);
-#endif
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
   // assign the request to the right memory.
   if (address < memory.max_address)
@@ -670,7 +699,7 @@ uint32_t MEMORY_CONTROLLER<T, T2>::get_size(uint8_t queue_type, uint64_t address
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   os_transparent_management.physical_to_hardware_address(address);
-#endif
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
   // assign the request to the right memory.
   if (address < memory.max_address)
@@ -743,7 +772,7 @@ void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
     // this is a complete read request
     for (auto ret : request.packet.to_return)
       ret->return_data(&(request.packet));
-  }
+}
 
 #else
   for (auto ret : request.packet.to_return)
@@ -1447,7 +1476,7 @@ public:
 private:
   void operate_hbm(HBM_CHANNEL& channel);
   void operate_ddr(DDR_CHANNEL& channel);
-};
+  };
 #endif  // RAMULATOR
 
 #else
@@ -1505,7 +1534,7 @@ public:
   uint32_t dram_get_bank(uint64_t address);
   uint32_t dram_get_row(uint64_t address);
   uint32_t dram_get_column(uint64_t address);
-};
+  };
 #endif  // USER_CODES
 
 #endif

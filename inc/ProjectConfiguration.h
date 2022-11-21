@@ -9,12 +9,52 @@
 
 /* Functionality options */
 #if (USER_CODES == ENABLE)
+#define USE_OPENMP                                 (ENABLE) // whether use OpenMP to speedup the simulation
 #define RAMULATOR                                  (ENABLE) // whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
-#define MEMORY_USE_HYBRID                          (DISABLE) // whether use hybrid memory system
-#define PRINT_STATISTICS_INTO_FILE                 (ENABLE)
-#define PRINT_MEMORY_TRACE                         (DISABLE)
-#define MEMORY_USE_SWAPPING_UNIT                   (DISABLE)
-#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (DISABLE)
+#define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system
+#define PRINT_STATISTICS_INTO_FILE                 (ENABLE) // whether print simulation statistics into files
+#define PRINT_MEMORY_TRACE                         (DISABLE) // whether print memory trace into files
+#define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
+#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system
+
+#if (MEMORY_USE_HYBRID == ENABLE)
+#define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
+#define MEMORY_NUMBER_ONE    (0u)
+#define MEMORY_NUMBER_TWO    (1u)
+#else
+#define NUMBER_OF_MEMORIES   (1u)
+
+#endif  // MEMORY_USE_HYBRID
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
+#define SWAPPING_BUFFER_ENTRY_NUMBER    (64)
+#define SWAPPING_SEGMENT_ONE            (0)
+#define SWAPPING_SEGMENT_TWO            (1)
+#define SWAPPING_SEGMENT_NUMBER         (2)
+
+#define TEST_SWAPPING_UNIT        (DISABLE)
+#endif  // MEMORY_USE_SWAPPING_UNIT
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+#define IDEAL_LINE_LOCATION_TABLE             (ENABLE)
+#define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
+#define IDEAL_MULTIPLE_GRANULARITY            (DISABLE)
+
+#define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
+
+#if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
+#define HOTNESS_THRESHOLD                     (1u)
+#elif (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
+#define HOTNESS_THRESHOLD                     (4u)
+#define DATA_EVICTION                         (ENABLE)
+#else
+#define HOTNESS_THRESHOLD                     (1u)
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_MULTIPLE_GRANULARITY
+
+#if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_MULTIPLE_GRANULARITY == DISABLE)
+#error OS-transparent management designs need to be enabled.
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
 // Data block management granularity
 #define DATA_GRANULARITY_64B                (64u)
@@ -24,12 +64,18 @@
 #define DATA_GRANULARITY_1024B              (1024u)
 #define DATA_GRANULARITY_2048B              (2048u)
 #define DATA_GRANULARITY_4096B              (4096u)
+
+#if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
 #define DATA_MANAGEMENT_GRANULARITY         (DATA_GRANULARITY_64B)
+#elif (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
+#define DATA_MANAGEMENT_GRANULARITY         (DATA_GRANULARITY_4096B)
+#define DATA_LINE_OFFSET_BITS               (lg2(DATA_GRANULARITY_64B))
+#else
+#define DATA_MANAGEMENT_GRANULARITY         (DATA_GRANULARITY_64B)
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_MULTIPLE_GRANULARITY
 
-#define DATA_MANAGEMENT_OFFSET_BITS         (lg2(DATA_MANAGEMENT_GRANULARITY))
+#define DATA_MANAGEMENT_OFFSET_BITS         (lg2(DATA_MANAGEMENT_GRANULARITY))  // data management granularity means how the hardware cluster the data
 #define DATA_GRANULARITY_IN_CACHE_LINE      (DATA_MANAGEMENT_GRANULARITY / DATA_GRANULARITY_64B)
-
-#define HOTNESS_THRESHOLD                   (1u)
 
 // CPU setting for branch_predictor (bimodal, gshare, hashed_perceptron, perceptron)
 #define BRANCH_USE_BIMODAL             (O3_CPU::bpred_t::bbranchDbimodal)
@@ -88,29 +134,6 @@
 #define MB (KB*KB)
 #define GB (MB*KB)
 
-#if (MEMORY_USE_HYBRID == ENABLE)
-#define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
-#define MEMORY_NUMBER_ONE    (0u)
-#define MEMORY_NUMBER_TWO    (1u)
-#else
-#define NUMBER_OF_MEMORIES   (1u)
-
-#endif  // MEMORY_USE_HYBRID
-
-#if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
-#define SWAPPING_BUFFER_ENTRY_NUMBER    (64)
-#define SWAPPING_SEGMENT_ONE            (0)
-#define SWAPPING_SEGMENT_TWO            (1)
-#define SWAPPING_SEGMENT_NUMBER         (2)
-
-#define TEST_SWAPPING_UNIT        (DISABLE)
-#endif
-
-#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-#define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
-#define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
-#endif
-
 // Standard libraries
 
 /* Includes */
@@ -121,6 +144,10 @@
 #include <cstdio>
 #include <cassert>
 #include <array>
+
+#if (USE_OPENMP == ENABLE)
+#include <omp.h>
+#endif  // USE_OPENMP
 
 /* Defines (C style) */
 typedef enum
