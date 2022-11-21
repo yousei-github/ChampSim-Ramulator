@@ -9,7 +9,7 @@ This project is based on the master branch of [ChampSim](https://github.com/yous
 - Set the preprocessor `PRINT_STATISTICS_INTO_FILE` to `ENABLE` for printing statistics into `.statistics` file.
 - Set the preprocessor `PRINT_MEMORY_TRACE` to `ENABLE` for printing memory trace into `.trace` file. Each line in the trace file represents a memory request, with the hexadecimal address followed by 'R' or 'W' for read or write.
 - Set the preprocessor `MEMORY_USE_SWAPPING_UNIT` to `ENABLE` for enabling data swapping function in memory controller. (Currently only support hybrid memory systems).
-- Set the preprocessor `MEMORY_USE_OS_TRANSPARENT_MANAGEMENT` to `ENABLE` for enabling os transparent data management of hybrid memory systems, (Currently part of paper [CAMEO](https://doi.org/10.1109/MICRO.2014.63) is implemented).
+- Set the preprocessor `MEMORY_USE_OS_TRANSPARENT_MANAGEMENT` to `ENABLE` for enabling os transparent data management of hybrid memory systems, (Currently part of paper [CAMEO](https://doi.org/10.1109/MICRO.2014.63) is implemented, and Multiple-G).
 - Set the preprocessor `BRANCH_PREDICTOR` to `BRANCH_USE_BIMODAL` for using bimodal branch predictor. Similarly, there have gshare, hashed_perceptron, perceptron branch predictors. Following this logic, you can also modify other preprocessors, such as `INSTRUCTION_PREFETCHER`, `LLC_REPLACEMENT_POLICY`, `LLC_PREFETCHER`, and so on.
 
 The CPU's parameters are defined in the `champsim_constants.h` file.
@@ -80,7 +80,7 @@ Build methods are explained below.
 ### 2. Command line-based method.
 By referring the contents of `tasks.json` file in the `.vscode` directory, input the below command,
 ```
-$ [COMPILER] -g -Wall -std=c++17 -I project_directory/inc/ -I project_directory/inc/ChampSim/ -I project_directory/inc/Ramulator/ 
+$ [COMPILER] -O3 -g -Wall -fopenmp -std=c++17 -I project_directory/inc/ -I project_directory/inc/ChampSim/ -I project_directory/inc/Ramulator/ 
 project_directory/src/ChampSim/*.cc project_directory/src/ChampSim/branch/bimodal/*.cc project_directory/src/ChampSim/branch/gshare/*.cc project_directory/src/ChampSim/branch/hashed_perceptron/*.cc project_directory/src/ChampSim/branch/perceptron/*.cc project_directory/src/ChampSim/prefetcher/no/*.cc project_directory/src/ChampSim/prefetcher/next_line/*.cc project_directory/src/ChampSim/prefetcher/ip_stride/*.cc project_directory/src/ChampSim/prefetcher/no_instr/*.cc project_directory/src/ChampSim/prefetcher/next_line_instr/*.cc project_directory/src/ChampSim/replacement/lru/*.cc project_directory/src/ChampSim/replacement/ship/*.cc project_directory/src/ChampSim/replacement/srrip/*.cc project_directory/src/ChampSim/replacement/drrip/*.cc project_directory/src/ChampSim/btb/basic_btb/*.cc project_directory/src/Ramulator/*.cpp project_directory/src/*.cc
 -o project_directory/bin/champsim_plus_ramulator
 ```
