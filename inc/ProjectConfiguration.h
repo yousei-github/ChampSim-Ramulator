@@ -36,16 +36,16 @@
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-#define IDEAL_LINE_LOCATION_TABLE             (ENABLE)
+#define IDEAL_LINE_LOCATION_TABLE             (DISABLE)
 #define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
-#define IDEAL_MULTIPLE_GRANULARITY            (DISABLE)
+#define IDEAL_MULTIPLE_GRANULARITY            (ENABLE)
 
 #define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
 
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
 #define HOTNESS_THRESHOLD                     (1u)
 #elif (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
-#define HOTNESS_THRESHOLD                     (4u)
+#define HOTNESS_THRESHOLD                     (1u)
 #define DATA_EVICTION                         (ENABLE)
 #else
 #define HOTNESS_THRESHOLD                     (1u)
