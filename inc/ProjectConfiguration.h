@@ -11,11 +11,11 @@
 #if (USER_CODES == ENABLE)
 #define USE_OPENMP                                 (ENABLE) // whether use OpenMP to speedup the simulation
 #define RAMULATOR                                  (ENABLE) // whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
-#define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system
+#define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE                 (ENABLE) // whether print simulation statistics into files
 #define PRINT_MEMORY_TRACE                         (DISABLE) // whether print memory trace into files
 #define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
-#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system
+#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static methods
 
 #if (MEMORY_USE_HYBRID == ENABLE)
 #define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
@@ -184,6 +184,9 @@ typedef struct
     uint64_t write_request_in_memory, write_request_in_memory2;
 
     uint64_t remapping_request_queue_congestion;
+    uint64_t no_free_space_for_migration;
+    uint64_t unexpandable_since_start_address;
+    uint64_t unexpandable_since_invalid_group;
 
 } OutputChampSimStatisticsFileType;
 

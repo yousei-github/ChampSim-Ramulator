@@ -126,8 +126,9 @@
 #define MINOR_FAULT_PENALTY   (200ul)
 
 /* LLC */
-#define LLC_SETS                    (2048)
+#define LLC_CAPACITY                (1*MB)  // Default: 2 MiB
 #define LLC_WAYS                    (16)
+#define LLC_SETS                    (LLC_CAPACITY / BLOCK_SIZE / LLC_WAYS)
 #define LLC_WQ_SIZE                 (32)
 #define LLC_RQ_SIZE                 (32)
 #define LLC_PQ_SIZE                 (32)
@@ -142,8 +143,9 @@
 #define LLC_PREF_ACTIVATE_MASK      (5) // "LOAD,PREFETCH" = (1 << static_cast<int>(LOAD)) | (1 << static_cast<int>(PREFETCH))
 
 /* L2C */
-#define L2C_SETS                    (1024)
+#define L2C_CAPACITY                (256*KB)  // Default: 512 KiB
 #define L2C_WAYS                    (8)
+#define L2C_SETS                    (L2C_CAPACITY / BLOCK_SIZE / L2C_WAYS)
 #define L2C_WQ_SIZE                 (32)
 #define L2C_RQ_SIZE                 (32)
 #define L2C_PQ_SIZE                 (16)
@@ -158,8 +160,9 @@
 #define L2C_PREF_ACTIVATE_MASK      (5) // "LOAD,PREFETCH" = (1 << static_cast<int>(LOAD)) | (1 << static_cast<int>(PREFETCH))
 
 /* L1D */
-#define L1D_SETS                    (64)
-#define L1D_WAYS                    (12)
+#define L1D_CAPACITY                (32*KB)  // Default: 48 KiB
+#define L1D_WAYS                    (16)  // Default: 12
+#define L1D_SETS                    (L1D_CAPACITY / BLOCK_SIZE / L1D_WAYS)
 #define L1D_WQ_SIZE                 (64)
 #define L1D_RQ_SIZE                 (64)
 #define L1D_PQ_SIZE                 (8)

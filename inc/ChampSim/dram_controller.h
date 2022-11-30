@@ -338,7 +338,7 @@ void MEMORY_CONTROLLER<T, T2>::operate()
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
       start_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
 #endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
-  }
+    }
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
   }
   break;
@@ -363,7 +363,7 @@ void MEMORY_CONTROLLER<T, T2>::operate()
   if (issue == true)  // get a new remapping request.
   {
     os_transparent_management.finish_remapping_request();
-}
+  }
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
@@ -465,7 +465,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
     if (os_transparent_management.incomplete_read_request_queue.size() >= INCOMPLETE_READ_REQUEST_QUEUE_LENGTH)
     {
       return int(ReturnValue::Full);
-}
+    }
   }
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
@@ -494,10 +494,10 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
         read_request.fm_access_finish = false;
 
         os_transparent_management.incomplete_read_request_queue.push_back(read_request);
-    }
-#endif  // COLOCATED_LINE_LOCATION_TABLE
-  }
       }
+#endif  // COLOCATED_LINE_LOCATION_TABLE
+    }
+  }
   else if (address < memory.max_address + memory2.max_address)
   {
     // the memory itself doesn't know other memories' space, so we manage the overall mapping.
@@ -527,7 +527,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
   {
     return get_occupancy(type, packet->address);
   }
-  };
+};
 
 template<class T, class T2>
 int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
@@ -594,7 +594,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   else
   {
     return int(ReturnValue::Full);
-}
+  }
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
 #else
@@ -641,7 +641,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   {
     return get_occupancy(type, packet->address);
   }
-  };
+};
 
 template<class T, class T2>
 int MEMORY_CONTROLLER<T, T2>::add_pq(PACKET* packet)
@@ -772,7 +772,7 @@ void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
     // this is a complete read request
     for (auto ret : request.packet.to_return)
       ret->return_data(&(request.packet));
-}
+  }
 
 #else
   for (auto ret : request.packet.to_return)
@@ -1476,7 +1476,7 @@ public:
 private:
   void operate_hbm(HBM_CHANNEL& channel);
   void operate_ddr(DDR_CHANNEL& channel);
-  };
+};
 #endif  // RAMULATOR
 
 #else
@@ -1534,7 +1534,7 @@ public:
   uint32_t dram_get_bank(uint64_t address);
   uint32_t dram_get_row(uint64_t address);
   uint32_t dram_get_column(uint64_t address);
-  };
+};
 #endif  // USER_CODES
 
 #endif

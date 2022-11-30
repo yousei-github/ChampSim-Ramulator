@@ -218,7 +218,6 @@ public:
     // address is physical address and at byte granularity
     bool memory_activity_tracking(uint64_t address, uint8_t type, float queue_busy_degree);
 
-
     // translate the physical address to hardware address
     void physical_to_hardware_address(PACKET& packet);
     void physical_to_hardware_address(uint64_t& address);
@@ -229,8 +228,12 @@ public:
     // detect cold data block
     void cold_data_detection();
 
+private:
     // evict cold data block
     bool cold_data_eviction(uint64_t source_address, float queue_busy_degree);
+
+    // add new remapping request into the remapping_request_queue
+    bool enqueue_remapping_request(RemappingRequest& remapping_request);
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     bool finish_fm_access_in_incomplete_read_request_queue(uint64_t h_address);
@@ -239,6 +242,9 @@ public:
 #if (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
     // calculate the migration granularity based on start_address and end_address.
     MIGRATION_GRANULARITY_WIDTH calculate_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address);
+
+    // check whether this migration granularity is beyond the block's range and adjust it to a proper value, this function returns updated end_address
+    START_ADDRESS_WIDTH adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
 #endif  // IDEAL_MULTIPLE_GRANULARITY
 
 };
