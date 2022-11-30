@@ -90,13 +90,6 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
     // this data block is hot and belongs to slow memory
     if ((hotness_table.at(data_block_address) == true) && (tag != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero)))
     {
-        // check whether there have enough invalid groups in placement table entry for new migration
-        if (placement_table.at(placement_table_index).cursor >= NUMBER_OF_BLOCK)
-        {
-            // no enough invalid groups for new migration
-            return true;
-        }
-
         // calculate the free space in fast memory (this action can be optimized to [bool is_migrated = false;])
         MIGRATION_GRANULARITY_WIDTH free_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4);
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
@@ -105,17 +98,12 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
             free_space -= placement_table.at(placement_table_index).granularity[i];
         }
 
-        if (free_space == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
+        // sanity check
+        if (free_space > MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4))
         {
-            // no enough free space for new migration
-            return true;
+            std::cout << __func__ << ": free_space calculation error." << std::endl;
+            assert(0);
         }
-
-        // if (free_space > MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4))
-        // {
-        //     std::cout << __func__ << ": free_space calculation error." << std::endl;
-        //     assert(0);
-        // }
 
         // calculate the start address
         START_ADDRESS_WIDTH start_address = START_ADDRESS_WIDTH(StartAddress::Zero);
@@ -141,48 +129,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
 
         MIGRATION_GRANULARITY_WIDTH migration_granularity = calculate_migration_granularity(start_address, end_address);
 
-        // check whether this migration granularity is beyond the block's range
-        while (true)
-        {
-            if ((start_address + migration_granularity - 1) >= START_ADDRESS_WIDTH(StartAddress::Max))
-            {
-                if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4)))
-                {
-                    migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2);
-                }
-                else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2)))
-                {
-                    migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1);
-                }
-                else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1)))
-                {
-                    migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512);
-                }
-                else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512)))
-                {
-                    migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256);
-                }
-                else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256)))
-                {
-                    migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128);
-                }
-                else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_64) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128)))
-                {
-                    migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_64);
-                }
-                else
-                {
-                    std::cout << __func__ << ": migration granularity calculation error." << std::endl;
-                    assert(0);
-                }
-            }
-            else
-            {
-                // this migration granularity is within the block's range.
-                end_address = start_address + migration_granularity - 1;
-                break;
-            }
-        }
+        end_address = adjust_migration_granularity(start_address, end_address, migration_granularity);
 
         // check placement metadata to find if this data block is already in fast memory
         bool is_migrated = false;
@@ -203,22 +150,37 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
             // check whether this existing group can be expanded
             if ((placement_table.at(placement_table_index).cursor - 1) == data_block_position)
             {
-                if (placement_table.at(placement_table_index).start_address[data_block_position] == start_address)  // their start addresses are same
+                if (placement_table.at(placement_table_index).start_address[data_block_position] <= start_address)
                 {
-                    if (placement_table.at(placement_table_index).granularity[data_block_position] < migration_granularity)
+                    // they can be combined
+                    if ((placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position] - 1) < end_address)
                     {
-                        MIGRATION_GRANULARITY_WIDTH remain_hot_data = migration_granularity - placement_table.at(placement_table_index).granularity[data_block_position];
-                        if (remain_hot_data <= free_space)
-                        {
-                            migration_granularity = remain_hot_data;
+                        // new hot data are needed to migrate
+                        // check whether this new migration_granularity is possible to track in the remapping table
+                        migration_granularity = calculate_migration_granularity(placement_table.at(placement_table_index).start_address[data_block_position], end_address);
+                        end_address = adjust_migration_granularity(placement_table.at(placement_table_index).start_address[data_block_position], end_address, migration_granularity);
 
-                            // this should be equal to placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position]
-                            start_address = (end_address + 1) - remain_hot_data;
+                        if (placement_table.at(placement_table_index).granularity[data_block_position] < migration_granularity)
+                        {
+                            MIGRATION_GRANULARITY_WIDTH remain_hot_data = migration_granularity - placement_table.at(placement_table_index).granularity[data_block_position];
+                            if (remain_hot_data <= free_space)
+                            {
+                                migration_granularity = remain_hot_data;
+
+                                // this should be equal to placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position]
+                                start_address = (end_address + 1) - remain_hot_data;
+                            }
+                            else
+                            {
+                                // no enough free space for data migration. Data eviction is necessary.
+                                cold_data_eviction(address, queue_busy_degree);
+                                outputchampsimstatistics.no_free_space_for_migration++;
+                                return true;
+                            }
                         }
                         else
                         {
-                            // no enough free space for data migration. Data eviction is necessary.
-                            cold_data_eviction(address, queue_busy_degree);
+                            // not need to migrate hot data because no proper migration_granularity to use. (hit in fast/slow memory)
                             return true;
                         }
                     }
@@ -230,7 +192,8 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                 }
                 else
                 {
-                    // this existing group can not be expanded because their start addresses are different (to reduce complexity)
+                    // this existing group can not be expanded because the new start_address is smaller than the existing group's start_address
+                    outputchampsimstatistics.unexpandable_since_start_address++;
                     return true;
                 }
             }
@@ -238,6 +201,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
             {
                 // this existing group can not be expanded because no invalid groups behind it (i.e., no continuous free space). Data eviction is necessary.
                 cold_data_eviction(address, queue_busy_degree);
+                outputchampsimstatistics.unexpandable_since_invalid_group++;
                 return true;
             }
         }
@@ -246,24 +210,25 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
             // this data block is new to the placement table entry.
             if (migration_granularity <= free_space)
             {
-                /* code */
-                // no code here currently
+                // check whether there have enough invalid groups in placement table entry for new migration
+                if (placement_table.at(placement_table_index).cursor >= NUMBER_OF_BLOCK)
+                {
+                    // no enough invalid groups for new migration
+                    return true;
+                }
             }
             else
             {
                 // no enough free space for data migration. Data eviction is necessary.
                 cold_data_eviction(address, queue_busy_degree);
+                outputchampsimstatistics.no_free_space_for_migration++;
                 return true;
             }
         }
 
         // this should be RemappingLocation::Zero.
-        REMAPPING_LOCATION_WIDTH fm_location = placement_table.at(placement_table_index).tag[placement_table.at(placement_table_index).cursor];
-        if (fm_location != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
-        {
-            std::cout << __func__ << ": fm_location calculation error." << std::endl;
-            assert(0);
-        }
+        REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
+
         // follow rule 2 (data blocks belonging to NM are recovered to the original locations)
         START_ADDRESS_WIDTH start_address_in_fm = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4) - free_space;
 
@@ -329,19 +294,6 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
             accumulated_group_end_address += placement_table.at(placement_table_index).granularity[i] - 1;
             used_space += placement_table.at(placement_table_index).granularity[i];
 
-            /*if (placement_table.at(placement_table_index).granularity[i] != MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
-            {
-                accumulated_group_end_address += placement_table.at(placement_table_index).granularity[i] - 1;
-                used_space += placement_table.at(placement_table_index).granularity[i];
-            }
-            else
-            {
-                // arrive the invalid group (assume the groups after the first invalid group are all invalid)
-                // this cache line is already in fast memory
-                in_fm = true;
-                break;
-            }*/
-
             if (start_address <= accumulated_group_end_address)
             {
                 if (placement_table.at(placement_table_index).tag[i] == tag)
@@ -389,41 +341,9 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         return true;
     }
 
-    // check duplicated remapping request in remapping_request_queue
-    // if duplicated remapping requests exist, we won't add this new remapping request into the remapping_request_queue.
-    bool duplicated_remapping_request = false;
-    for (uint64_t i = 0; i < remapping_request_queue.size(); i++)
+    if (queue_busy_degree <= QUEUE_BUSY_DEGREE_THRESHOLD)
     {
-        if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm) || (remapping_request_queue[i].address_in_sm == remapping_request.address_in_fm))
-        {
-            duplicated_remapping_request = true;    // find a duplicated remapping request
-            break;
-        }
-        if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_sm) || (remapping_request_queue[i].address_in_sm == remapping_request.address_in_sm))
-        {
-            duplicated_remapping_request = true;    // find a duplicated remapping request
-            break;
-        }
-    }
-
-    // add new remapping request to queue
-    if ((duplicated_remapping_request == false) && (queue_busy_degree <= QUEUE_BUSY_DEGREE_THRESHOLD))
-    {
-        if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
-        {
-            if (remapping_request.address_in_fm == remapping_request.address_in_sm)    // check
-            {
-                std::cout << __func__ << ": add new remapping request error." << std::endl;
-                abort();
-            }
-
-            // enqueue a remapping request
-            remapping_request_queue.push_back(remapping_request);
-        }
-        else
-        {
-            remapping_request_queue_congestion++;
-        }
+        enqueue_remapping_request(remapping_request);
     }
 
     return true;
@@ -496,19 +416,6 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(PACKET& packet)
 
             accumulated_group_end_address += placement_table.at(placement_table_index).granularity[i] - 1;
             used_space += placement_table.at(placement_table_index).granularity[i];
-
-            /*if (placement_table.at(placement_table_index).granularity[i] != MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
-            {
-                accumulated_group_end_address += placement_table.at(placement_table_index).granularity[i] - 1;
-                used_space += placement_table.at(placement_table_index).granularity[i];
-            }
-            else
-            {
-                // arrive the invalid group (assume the groups after the first invalid group are all invalid)
-                // this cache line is already in fast memory
-                in_fm = true;
-                break;
-            }*/
 
             if (start_address <= accumulated_group_end_address)
             {
@@ -694,22 +601,58 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
 
             if (is_migrated)
             {
-                // no code here
+                // expand this existing group
+
+                // fill granularity in placement table entry
+                placement_table.at(placement_table_index).granularity[data_block_position] += remapping_request.size;
+
+                // sanity check
+                if (placement_table.at(placement_table_index).granularity[data_block_position] == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128))
+                {
+                    /* code */
+                }
+                else if (placement_table.at(placement_table_index).granularity[data_block_position] == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256))
+                {
+                    /* code */
+                }
+                else if (placement_table.at(placement_table_index).granularity[data_block_position] == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512))
+                {
+                    /* code */
+                }
+                else if (placement_table.at(placement_table_index).granularity[data_block_position] == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1))
+                {
+                    /* code */
+                }
+                else if (placement_table.at(placement_table_index).granularity[data_block_position] == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2))
+                {
+                    /* code */
+                }
+                else if (placement_table.at(placement_table_index).granularity[data_block_position] == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4))
+                {
+                    /* code */
+                }
+                else
+                {
+                    printf("placement_table.at(%ld).granularity[%d] is %d.\n", placement_table_index, data_block_position, placement_table.at(placement_table_index).granularity[data_block_position]);
+                    printf("remapping_request.size is %d.\n", remapping_request.size);
+                    printf("tag is %d.\n", tag);
+                    assert(0);
+                }
             }
             else
             {
                 data_block_position = placement_table.at(placement_table_index).cursor;
+
+                // fill tag in placement table entry
+                placement_table.at(placement_table_index).tag[data_block_position] = remapping_request.sm_location;
+
+                START_ADDRESS_WIDTH start_address = (remapping_request.address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
+                // fill start_address in placement table entry
+                placement_table.at(placement_table_index).start_address[data_block_position] = start_address;
+
+                // fill granularity in placement table entry
+                placement_table.at(placement_table_index).granularity[data_block_position] = remapping_request.size;
             }
-
-            // fill tag in placement table entry
-            placement_table.at(placement_table_index).tag[data_block_position] = remapping_request.sm_location;
-
-            START_ADDRESS_WIDTH start_address = (remapping_request.address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
-            // fill start_address in placement table entry
-            placement_table.at(placement_table_index).start_address[data_block_position] = start_address;
-
-            // fill granularity in placement table entry
-            placement_table.at(placement_table_index).granularity[data_block_position] = remapping_request.size;
 
             if (data_block_position == placement_table.at(placement_table_index).cursor)
             {
@@ -907,52 +850,96 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
 
         remapping_request.size = placement_table.at(placement_table_index).granularity[occupied_group_number];
 
-        // check duplicated remapping request in remapping_request_queue
-        // if duplicated remapping requests exist, we won't add this new remapping request into the remapping_request_queue.
-        bool duplicated_remapping_request = false;
-        for (uint64_t i = 0; i < remapping_request_queue.size(); i++)
+        bool enqueue = false;
+        if (queue_busy_degree <= QUEUE_BUSY_DEGREE_THRESHOLD)
         {
-            if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm) || (remapping_request_queue[i].address_in_sm == remapping_request.address_in_fm))
-            {
-                duplicated_remapping_request = true;    // find a duplicated remapping request
-                break;
-            }
-            if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_sm) || (remapping_request_queue[i].address_in_sm == remapping_request.address_in_sm))
-            {
-                duplicated_remapping_request = true;    // find a duplicated remapping request
-                break;
-            }
+            enqueue = enqueue_remapping_request(remapping_request);
         }
 
-        // add new remapping request to queue
-        if ((duplicated_remapping_request == false) && (queue_busy_degree <= QUEUE_BUSY_DEGREE_THRESHOLD))
+        if (enqueue)
         {
-            if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
-            {
-                if (remapping_request.address_in_fm == remapping_request.address_in_sm)    // check
-                {
-                    std::cout << __func__ << ": add new remapping request error." << std::endl;
-                    abort();
-                }
-
-                // enqueue a remapping request
-                remapping_request_queue.push_back(remapping_request);
-            }
-            else
-            {
-                remapping_request_queue_congestion++;
-            }
+            // new eviction request is issued.
+            return true;
         }
         else
         {
             return false;
         }
-        // new eviction request is issued.
-        return true;
     }
 #endif  // DATA_EVICTION
 
     return false;
+}
+
+bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& remapping_request)
+{
+    uint64_t data_block_address = remapping_request.address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
+    uint64_t placement_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;
+
+    // check duplicated remapping request in remapping_request_queue
+    // if duplicated remapping requests exist, we won't add this new remapping request into the remapping_request_queue.
+    bool duplicated_remapping_request = false;
+    for (uint64_t i = 0; i < remapping_request_queue.size(); i++)
+    {
+        uint64_t data_block_address_to_check = remapping_request_queue[i].address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
+        uint64_t placement_table_index_to_check = data_block_address_to_check % fast_memory_capacity_at_data_block_granularity;
+
+        if (placement_table_index_to_check == placement_table_index)
+        {
+            duplicated_remapping_request = true;    // find a duplicated remapping request
+
+            // check whether the remapping_request moves block 0's data into fast memory
+            if (remapping_request.fm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
+            {
+                // this remapping_request moves block 0's data into slow memory
+
+                if (remapping_request_queue[i].sm_location == remapping_request.sm_location)
+                {
+                    // update migration granularity
+                    remapping_request_queue[i].size = remapping_request.size;
+                    // new remapping request won't be issued, but the duplicated one is updated.
+                    return true;
+                }
+            }
+            else if (remapping_request.sm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
+            {
+                // this remapping_request moves block 0's data into fast memory
+            }
+            else
+            {
+                std::cout << __func__ << ": fm_location calculation error 2." << std::endl;
+                assert(0);
+            }
+
+            break;
+        }
+    }
+
+    // add new remapping request to queue
+    if (duplicated_remapping_request == false)
+    {
+        if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
+        {
+            if (remapping_request.address_in_fm == remapping_request.address_in_sm)    // check
+            {
+                std::cout << __func__ << ": add new remapping request error." << std::endl;
+                abort();
+            }
+
+            // enqueue a remapping request
+            remapping_request_queue.push_back(remapping_request);
+        }
+        else
+        {
+            remapping_request_queue_congestion++;
+        }
+    }
+    else
+    {
+        return false;
+    }
+    // new remapping request is issued.
+    return true;
 }
 
 MIGRATION_GRANULARITY_WIDTH OS_TRANSPARENT_MANAGEMENT::calculate_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address)
@@ -1002,6 +989,56 @@ MIGRATION_GRANULARITY_WIDTH OS_TRANSPARENT_MANAGEMENT::calculate_migration_granu
     }
 
     return migration_granularity;
+}
+
+START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity)
+{
+    START_ADDRESS_WIDTH updated_end_address = end_address;
+
+    // check whether this migration granularity is beyond the block's range
+    while (true)
+    {
+        if ((start_address + migration_granularity - 1) >= START_ADDRESS_WIDTH(StartAddress::Max))
+        {
+            if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_64) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_64);
+            }
+            else
+            {
+                std::cout << __func__ << ": migration granularity calculation error." << std::endl;
+                assert(0);
+            }
+        }
+        else
+        {
+            // this migration granularity is within the block's range.
+            updated_end_address = start_address + migration_granularity - 1;
+            break;
+        }
+    }
+
+    return updated_end_address;
 }
 
 #endif  // IDEAL_MULTIPLE_GRANULARITY

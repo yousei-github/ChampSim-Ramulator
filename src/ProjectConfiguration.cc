@@ -89,6 +89,9 @@ void output_champsim_statistics_initialization(const char* string)
     outputchampsimstatistics.write_request_in_memory2 = 0;
 
     outputchampsimstatistics.remapping_request_queue_congestion = 0;
+    outputchampsimstatistics.no_free_space_for_migration = 0;
+    outputchampsimstatistics.unexpandable_since_start_address = 0;
+    outputchampsimstatistics.unexpandable_since_invalid_group = 0;
 }
 
 void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileType& outputchampsimstatistics)
@@ -106,6 +109,9 @@ void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileTyp
     fprintf(outputchampsimstatistics.trace_file, "hit rate: %f.\n", (outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.write_request_in_memory) / float(outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.read_request_in_memory2 + outputchampsimstatistics.write_request_in_memory + outputchampsimstatistics.write_request_in_memory2));
 
     fprintf(outputchampsimstatistics.trace_file, "remapping_request_queue_congestion: %ld.\n", outputchampsimstatistics.remapping_request_queue_congestion);
+    fprintf(outputchampsimstatistics.trace_file, "no_free_space_for_migration: %ld (%f).\n", outputchampsimstatistics.no_free_space_for_migration, outputchampsimstatistics.no_free_space_for_migration / float(outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.read_request_in_memory2 + outputchampsimstatistics.write_request_in_memory + outputchampsimstatistics.write_request_in_memory2));
+    fprintf(outputchampsimstatistics.trace_file, "unexpandable_since_start_address: %ld (%f).\n", outputchampsimstatistics.unexpandable_since_start_address, outputchampsimstatistics.unexpandable_since_start_address / float(outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.read_request_in_memory2 + outputchampsimstatistics.write_request_in_memory + outputchampsimstatistics.write_request_in_memory2));
+    fprintf(outputchampsimstatistics.trace_file, "unexpandable_since_invalid_group: %ld (%f).\n", outputchampsimstatistics.unexpandable_since_invalid_group, outputchampsimstatistics.unexpandable_since_invalid_group / float(outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.read_request_in_memory2 + outputchampsimstatistics.write_request_in_memory + outputchampsimstatistics.write_request_in_memory2));
 
     fclose(outputchampsimstatistics.trace_file);
     printf("Output ChampSim statistics into %s.\n", outputchampsimstatistics.trace_string);

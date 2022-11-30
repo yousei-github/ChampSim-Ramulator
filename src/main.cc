@@ -132,13 +132,13 @@ int main(int argc, char** argv)
         start_position_of_traces = i + 1;
 #endif  // RAMULATOR
         continue;
-    }
+      }
       else
       {
         std::cout << __func__ << ": Need parameter behind --warmup_instructions." << std::endl;
         abort_flag++;
       }
-  }
+    }
 
     if (strcmp(argv[i], "--simulation_instructions") == 0)
     {
@@ -153,13 +153,13 @@ int main(int argc, char** argv)
         start_position_of_traces = i + 1;
 #endif  // RAMULATOR
         continue;
-    }
+      }
       else
       {
         std::cout << __func__ << ": Need parameter behind --simulation_instructions." << std::endl;
         abort_flag++;
       }
-}
+    }
 
 #if (RAMULATOR == ENABLE)
     if (strcmp(argv[i], "--stats") == 0)
@@ -444,7 +444,7 @@ uint64_t champsim::deprecated_clock_cycle::operator[](std::size_t cpu_idx)
     deprecate_printed = true;
   }
   return ooo_cpu[cpu_idx]->current_cycle;
-  }
+}
 #endif  // USER_CODES
 
 void record_roi_stats(uint32_t cpu, CACHE* cache)
@@ -776,7 +776,7 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
 #else
   std::cout << "Average memory access time: " << std::setw(10) << memory_controller.get_average_memory_access_time() << " cycle. " << std::endl;
 #endif
-  }
+}
 #endif  // RAMULATOR
 
 void print_configuration_details(VirtualMemory& vmem)
@@ -918,7 +918,7 @@ void print_dram_stats()
       std::cout << "-";
 
     std::cout << std::endl;
-}
+  }
 }
 #endif  // USER_CODES
 
@@ -1038,7 +1038,7 @@ void finish_warmup(std::array<O3_CPU*, NUM_CPUS>& ooo_cpu, std::array<CACHE*, NU
     memory_controller.dram_channels[i].RQ_ROW_BUFFER_MISS = 0;
   }
 #endif  // USER_CODES
-  }
+}
 
 void signal_handler(int signal)
 {
@@ -1418,7 +1418,7 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory, const 
     {
       exit(0);
     }
-}
+  }
 #endif  // MEMORY_USE_SWAPPING_UNIT && TEST_SWAPPING_UNIT
 
   // simulation entry point

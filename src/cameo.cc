@@ -144,14 +144,13 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         bool duplicated_remapping_request = false;
         for (uint64_t i = 0; i < remapping_request_queue.size(); i++)
         {
-            if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm) || (remapping_request_queue[i].address_in_sm == remapping_request.address_in_fm))
+            uint64_t data_block_address_to_check = remapping_request_queue[i].address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
+            uint64_t line_location_table_index_to_check = data_block_address_to_check % fast_memory_capacity_at_data_block_granularity;
+
+            if (line_location_table_index_to_check == line_location_table_index)
             {
                 duplicated_remapping_request = true;    // find a duplicated remapping request
-                break;
-            }
-            if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_sm) || (remapping_request_queue[i].address_in_sm == remapping_request.address_in_sm))
-            {
-                duplicated_remapping_request = true;    // find a duplicated remapping request
+
                 break;
             }
         }
@@ -267,6 +266,11 @@ void OS_TRANSPARENT_MANAGEMENT::cold_data_detection()
 }
 
 bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, float queue_busy_degree)
+{
+    return false;
+}
+
+bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& remapping_request)
 {
     return false;
 }

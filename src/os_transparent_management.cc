@@ -81,5 +81,10 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
     return false;
 }
 
+bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& remapping_request)
+{
+    return false;
+}
+
 #endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
