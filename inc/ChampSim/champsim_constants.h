@@ -161,13 +161,13 @@
 
 /* L1D */
 #define L1D_CAPACITY                (32*KB)  // Default: 48 KiB
-#define L1D_WAYS                    (16)  // Default: 12
+#define L1D_WAYS                    (8)      // Default: 12
 #define L1D_SETS                    (L1D_CAPACITY / BLOCK_SIZE / L1D_WAYS)
 #define L1D_WQ_SIZE                 (64)
 #define L1D_RQ_SIZE                 (64)
 #define L1D_PQ_SIZE                 (8)
 #define L1D_MSHR_SIZE               (16)
-#define L1D_LATENCY                 (5)
+#define L1D_LATENCY                 (4) // Default: 5
 #define L1D_FILL_LATENCY            (1)
 #define L1D_MAX_READ                (2)
 #define L1D_MAX_WRITE               (2)
@@ -209,8 +209,9 @@
 #define STLB_PREF_ACTIVATE_MASK      (5) // "LOAD,PREFETCH" = (1 << static_cast<int>(LOAD)) | (1 << static_cast<int>(PREFETCH))
 
 /* L1I */
-#define L1I_SETS                    (64)
+#define L1I_CAPACITY                (32*KB) // Default: 32 KiB
 #define L1I_WAYS                    (8)
+#define L1I_SETS                    (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS)
 #define L1I_WQ_SIZE                 (64)
 #define L1I_RQ_SIZE                 (64)
 #define L1I_PQ_SIZE                 (32)

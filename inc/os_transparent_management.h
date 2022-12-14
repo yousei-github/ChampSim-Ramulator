@@ -63,7 +63,7 @@
 #define REMAPPING_REQUEST_QUEUE_LENGTH      (64)  // 1024/4096
 #define QUEUE_BUSY_DEGREE_THRESHOLD         (0.8f)
 
-#define INTERVAL_FOR_DECREMENT              (1000000)
+#define INTERVAL_FOR_DECREMENT              (1000000)   // 1000000
 
 #else
 #define COUNTER_WIDTH                   uint8_t
@@ -245,6 +245,8 @@ private:
 
     // check whether this migration granularity is beyond the block's range and adjust it to a proper value, this function returns updated end_address
     START_ADDRESS_WIDTH adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
+    // check whether this migration granularity is beyond the block's end address and adjust it to a proper value, this function returns updated end_address
+    START_ADDRESS_WIDTH round_down_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
 #endif  // IDEAL_MULTIPLE_GRANULARITY
 
 };
