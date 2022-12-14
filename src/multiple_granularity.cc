@@ -47,8 +47,8 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
     uint64_t data_block_address = address >> DATA_MANAGEMENT_OFFSET_BITS;   // calculate the data block address
     uint64_t placement_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;   // calculate the index in placement table
     uint64_t base_remapping_address = placement_table_index << DATA_MANAGEMENT_OFFSET_BITS;
-    REMAPPING_LOCATION_WIDTH tag = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity); // calculate the block number of the data block address
-    uint64_t first_address = data_block_address << DATA_MANAGEMENT_OFFSET_BITS; // the first address in the page of this address
+    REMAPPING_LOCATION_WIDTH tag = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity); // calculate the tag of the data block address
+    uint64_t first_address = data_block_address << DATA_MANAGEMENT_OFFSET_BITS; // the first address in the page granularity of this address
     START_ADDRESS_WIDTH data_line_positon = START_ADDRESS_WIDTH((address >> DATA_LINE_OFFSET_BITS) - (first_address >> DATA_LINE_OFFSET_BITS));
 
     // mark accessed data line
@@ -90,8 +90,8 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
     // this data block is hot and belongs to slow memory
     if ((hotness_table.at(data_block_address) == true) && (tag != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero)))
     {
-        // calculate the free space in fast memory (this action can be optimized to [bool is_migrated = false;])
-        MIGRATION_GRANULARITY_WIDTH free_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4);
+        // calculate the free space in fast memory for this set
+        int16_t free_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4);
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
         {
             // traverse the placement entry to calculate the free space in fast memory.
@@ -99,9 +99,15 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         }
 
         // sanity check
-        if (free_space > MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4))
+        if (free_space < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
         {
             std::cout << __func__ << ": free_space calculation error." << std::endl;
+            for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
+            {
+                printf("tag[%d]: %d, ", i, placement_table.at(placement_table_index).tag[i]);
+                printf("start_address[%d]: %d, ", i, placement_table.at(placement_table_index).start_address[i]);
+                printf("granularity[%d]: %d.\n", i, placement_table.at(placement_table_index).granularity[i]);
+            }
             assert(0);
         }
 
@@ -132,88 +138,178 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         end_address = adjust_migration_granularity(start_address, end_address, migration_granularity);
 
         // check placement metadata to find if this data block is already in fast memory
-        bool is_migrated = false;
-        REMAPPING_LOCATION_WIDTH data_block_position = 0;
+        bool is_expanded = false;
+        bool is_limited = false; // existing groups could limit end_address and/or start_address
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
         {
-            // traverse the placement entry to find its block number if it exists.
+            REMAPPING_LOCATION_WIDTH data_block_position = 0;
+            START_ADDRESS_WIDTH existing_group_start_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+            START_ADDRESS_WIDTH existing_group_end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+
+            // traverse the placement entry to find its tag if it exists. (checking multiple groups with same tag is possible)
             if (placement_table.at(placement_table_index).tag[i] == tag)
             {
-                is_migrated = true;
+                // record the information of this existing group
                 data_block_position = i;
-                break;
-            }
-        }
+                existing_group_start_address = placement_table.at(placement_table_index).start_address[data_block_position];
+                existing_group_end_address = placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position] - 1;
 
-        if (is_migrated)    // this data block is already in fast memory
-        {
-            // check whether this existing group can be expanded
-            if ((placement_table.at(placement_table_index).cursor - 1) == data_block_position)
-            {
-                if (placement_table.at(placement_table_index).start_address[data_block_position] <= start_address)
+                // check the position of this existing group, note here the cursor won't be zero
+                if ((placement_table.at(placement_table_index).cursor - 1) != data_block_position)
                 {
-                    // they can be combined
-                    if ((placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position] - 1) < end_address)
+#if (FLEXIBLE_DATA_PLACEMENT == ENABLE)
+                    if ((start_address <= existing_group_end_address) && (existing_group_end_address < end_address))
                     {
-                        // new hot data are needed to migrate
-                        // check whether this new migration_granularity is possible to track in the remapping table
-                        migration_granularity = calculate_migration_granularity(placement_table.at(placement_table_index).start_address[data_block_position], end_address);
-                        end_address = adjust_migration_granularity(placement_table.at(placement_table_index).start_address[data_block_position], end_address, migration_granularity);
-
-                        if (placement_table.at(placement_table_index).granularity[data_block_position] < migration_granularity)
+                        // case one:
+                        start_address = existing_group_end_address + 1;
+                        if (is_limited)
                         {
-                            MIGRATION_GRANULARITY_WIDTH remain_hot_data = migration_granularity - placement_table.at(placement_table_index).granularity[data_block_position];
-                            if (remain_hot_data <= free_space)
-                            {
-                                migration_granularity = remain_hot_data;
+                            end_address = round_down_migration_granularity(start_address, end_address, migration_granularity);
+                        }
+                        else
+                        {
+                            end_address = adjust_migration_granularity(start_address, end_address, migration_granularity);
+                        }
+                    }
+                    else if ((start_address < existing_group_start_address) && (existing_group_end_address < end_address))
+                    {
+                        // case two:
+                        is_limited = true;
+                        end_address = existing_group_start_address - 1; // throw the rear part of the new hot data
 
-                                // this should be equal to placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position]
-                                start_address = (end_address + 1) - remain_hot_data;
+                        end_address = round_down_migration_granularity(start_address, end_address, migration_granularity);
+                    }
+                    else if ((existing_group_start_address <= start_address) && (end_address <= existing_group_end_address))
+                    {
+                        // case three: hit in fast memory
+                        return true;
+                    }
+                    else if ((start_address < existing_group_start_address) && (existing_group_start_address <= end_address))
+                    {
+                        // case four:
+                        is_limited = true;
+                        end_address = existing_group_start_address - 1;
+
+                        end_address = round_down_migration_granularity(start_address, end_address, migration_granularity);
+                    }
+                    else
+                    {
+                        // case five: no data overlapping
+                    }
+
+                    // this existing group can not be expanded because no invalid groups behind it (i.e., no continuous free space).
+                    outputchampsimstatistics.unexpandable_since_no_invalid_group++;
+#else
+                    // this existing group can not be expanded because no invalid groups behind it (i.e., no continuous free space).
+                    cold_data_eviction(address, queue_busy_degree);
+                    outputchampsimstatistics.unexpandable_since_no_invalid_group++;
+                    return true;
+#endif  // FLEXIBLE_DATA_PLACEMENT
+
+                }
+                else
+                {
+                    // right in the front of the position pointed by the cursor
+
+                    if (start_address < existing_group_start_address)
+                    {
+#if (FLEXIBLE_DATA_PLACEMENT == ENABLE)
+                        // case one: this existing group can't be expanded
+                        is_limited = true;
+                        end_address = existing_group_start_address - 1; // throw the rear part of the new hot data
+
+                        end_address = round_down_migration_granularity(start_address, end_address, migration_granularity);
+                        break;
+#else
+                        // this existing group can not be expanded because the new start_address is smaller than the existing group's start_address
+                        outputchampsimstatistics.unexpandable_since_start_address++;
+                        return true;
+#endif  // FLEXIBLE_DATA_PLACEMENT
+                    }
+                    else
+                    {
+                        // case two: this existing group can be expanded
+                        // synchronize their start addresses, which could throw the front part of the new hot data that exceeds the existing group if exists
+                        start_address = existing_group_start_address;
+
+                        if (existing_group_end_address < end_address)
+                        {
+                            // new hot data are needed to migrate
+                            // check whether this new migration_granularity is possible to track in the remapping table
+                            migration_granularity = calculate_migration_granularity(start_address, end_address);
+
+                            if (is_limited)
+                            {
+                                end_address = round_down_migration_granularity(start_address, end_address, migration_granularity);
                             }
                             else
                             {
-                                // no enough free space for data migration. Data eviction is necessary.
-                                cold_data_eviction(address, queue_busy_degree);
-                                outputchampsimstatistics.no_free_space_for_migration++;
+                                end_address = adjust_migration_granularity(start_address, end_address, migration_granularity);
+                            }
+
+                            if (placement_table.at(placement_table_index).granularity[data_block_position] < migration_granularity)
+                            {
+                                MIGRATION_GRANULARITY_WIDTH remain_hot_data = migration_granularity - placement_table.at(placement_table_index).granularity[data_block_position];
+
+                                // chech whether there has enough free space
+                                if (remain_hot_data <= free_space)
+                                {
+                                    // this existing group is needed to be expanded
+                                    is_expanded = true;
+                                    migration_granularity = remain_hot_data;
+
+                                    // this should be equal to placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position]
+                                    start_address = (end_address + 1) - remain_hot_data;
+                                    break;
+                                }
+                                else
+                                {
+                                    // no enough free space for data migration. Data eviction is necessary.
+                                    cold_data_eviction(address, queue_busy_degree);
+                                    outputchampsimstatistics.no_free_space_for_migration++;
+                                    return true;
+                                }
+                            }
+                            else
+                            {
+                                // not need to migrate hot data because no need to update the migration_granularity. (hit in fast/slow memory)
                                 return true;
                             }
                         }
                         else
                         {
-                            // not need to migrate hot data because no proper migration_granularity to use. (hit in fast/slow memory)
+                            // not need to migrate hot data because the data are already in fast memory. (hit in fast memory)
                             return true;
                         }
                     }
-                    else
-                    {
-                        // not need to migrate hot data because the data are already in fast memory. (hit in fast memory)
-                        return true;
-                    }
-                }
-                else
-                {
-                    // this existing group can not be expanded because the new start_address is smaller than the existing group's start_address
-                    outputchampsimstatistics.unexpandable_since_start_address++;
-                    return true;
                 }
             }
-            else
-            {
-                // this existing group can not be expanded because no invalid groups behind it (i.e., no continuous free space). Data eviction is necessary.
-                cold_data_eviction(address, queue_busy_degree);
-                outputchampsimstatistics.unexpandable_since_invalid_group++;
-                return true;
-            }
+        }
+
+        // sanity check
+        if (migration_granularity == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
+        {
+            std::cout << __func__ << ": migration granularity calculation error." << std::endl;
+            assert(0);
+        }
+
+        if (is_expanded)    // this data block can be expanded in fast memory
+        {
+            // no need to chech whether there has enough free space
+            // no need to check the cursor
         }
         else
         {
-            // this data block is new to the placement table entry.
+            // this data block can not be expanded in fast memory (new to or part of it is in fast memory)
+            // chech whether there has enough free space
             if (migration_granularity <= free_space)
             {
                 // check whether there have enough invalid groups in placement table entry for new migration
-                if (placement_table.at(placement_table_index).cursor >= NUMBER_OF_BLOCK)
+                if (placement_table.at(placement_table_index).cursor == NUMBER_OF_BLOCK)
                 {
-                    // no enough invalid groups for new migration
+                    // no enough invalid groups for data migration. Data eviction is necessary.
+                    cold_data_eviction(address, queue_busy_degree);
+                    outputchampsimstatistics.no_invalid_group_for_migration++;
                     return true;
                 }
             }
@@ -245,31 +341,35 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
     {
         // this data block is cold and belongs to slow memory
 
-        // check placement metadata to find if this data block is already in fast memory
-        bool is_migrated = false;
-        REMAPPING_LOCATION_WIDTH data_block_position = 0;
+        // check placement metadata to find if the data of this data block is already in fast memory
+        bool is_hit = false;    // hit in fast memory
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
         {
-            // traverse the placement entry to find its block number if it exists.
+            REMAPPING_LOCATION_WIDTH data_block_position = 0;
+            START_ADDRESS_WIDTH existing_group_start_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+            START_ADDRESS_WIDTH existing_group_end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+
+            // traverse the placement entry to find its tag if it exists. (checking multiple groups with same tag is possible)
             if (placement_table.at(placement_table_index).tag[i] == tag)
             {
-                is_migrated = true;
+                // record the information of this existing group
                 data_block_position = i;
-                break;
+                existing_group_start_address = placement_table.at(placement_table_index).start_address[data_block_position];
+                existing_group_end_address = placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position] - 1;
+
+                if ((existing_group_start_address <= data_line_positon) && (data_line_positon <= existing_group_end_address))
+                {
+                    // hit in fast memory
+                    is_hit = true;
+                    break;
+                }
             }
         }
 
-        if (is_migrated)    // this data block is already in fast memory
+        if (is_hit)    // the data of this data block is already in fast memory
         {
-            if ((placement_table.at(placement_table_index).start_address[data_block_position] <= data_line_positon) && (data_line_positon < (placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position])))
-            {
-                // hit in fast memory
-            }
-            else
-            {
-                // hit in slow memory
-                cold_data_eviction(address, queue_busy_degree);
-            }
+            // hit in fast memory
+            /* no code here */
         }
         else
         {
@@ -289,10 +389,8 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         MIGRATION_GRANULARITY_WIDTH used_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None);
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
         {
-            static START_ADDRESS_WIDTH accumulated_group_end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
-
-            accumulated_group_end_address += placement_table.at(placement_table_index).granularity[i] - 1;
             used_space += placement_table.at(placement_table_index).granularity[i];
+            START_ADDRESS_WIDTH accumulated_group_end_address = used_space - 1;
 
             if (start_address <= accumulated_group_end_address)
             {
@@ -307,7 +405,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                     // this cache line is in slow memory
                     in_fm = false;
                     occupied_group_number = i;
-                    used_space -= placement_table.at(placement_table_index).granularity[i];
+                    used_space -= placement_table.at(placement_table_index).granularity[occupied_group_number];
                     break;
                 }
             }
@@ -361,38 +459,41 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(PACKET& packet)
     if (tag != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
     {
         // this data block belongs to slow memory
-        // check placement metadata to find if this data block is already in fast memory
-        bool is_migrated = false;
+        // check placement metadata to find if the data of this data block is already in fast memory
+        bool is_hit = false;    // hit in fast memory
         REMAPPING_LOCATION_WIDTH data_block_position = 0;
         MIGRATION_GRANULARITY_WIDTH used_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None);
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
         {
-            // traverse the placement entry to find its block number if it exists.
+            START_ADDRESS_WIDTH existing_group_start_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+            START_ADDRESS_WIDTH existing_group_end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+
+            // traverse the placement entry to find its tag if it exists. (checking multiple groups with same tag is possible)
             if (placement_table.at(placement_table_index).tag[i] == tag)
             {
-                is_migrated = true;
+                // record the information of this existing group
                 data_block_position = i;
-                break;
+                existing_group_start_address = placement_table.at(placement_table_index).start_address[data_block_position];
+                existing_group_end_address = placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position] - 1;
+
+                if ((existing_group_start_address <= data_line_positon) && (data_line_positon <= existing_group_end_address))
+                {
+                    // hit in fast memory
+                    is_hit = true;
+                    break;
+                }
             }
 
             used_space += placement_table.at(placement_table_index).granularity[i];
         }
 
-        if (is_migrated)
+        if (is_hit)
         {
-            if ((placement_table.at(placement_table_index).start_address[data_block_position] <= data_line_positon) && (data_line_positon < (placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position])))
-            {
-                // the data of this physical address is in fast memory
-                // calculate the start address
-                START_ADDRESS_WIDTH start_address = used_space + data_line_positon - placement_table.at(placement_table_index).start_address[data_block_position];
-                REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
-                packet.h_address = replace_bits(replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), packet.address, DATA_LINE_OFFSET_BITS - 1);
-            }
-            else
-            {
-                // the data of this physical address is in slow memory, no need for translation
-                packet.h_address = packet.address;
-            }
+            // the data of this physical address is in fast memory
+            // calculate the start address
+            START_ADDRESS_WIDTH start_address = used_space + data_line_positon - placement_table.at(placement_table_index).start_address[data_block_position];
+            REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
+            packet.h_address = replace_bits(replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), packet.address, DATA_LINE_OFFSET_BITS - 1);
         }
         else
         {
@@ -412,10 +513,8 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(PACKET& packet)
         MIGRATION_GRANULARITY_WIDTH used_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None);
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
         {
-            static START_ADDRESS_WIDTH accumulated_group_end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
-
-            accumulated_group_end_address += placement_table.at(placement_table_index).granularity[i] - 1;
             used_space += placement_table.at(placement_table_index).granularity[i];
+            START_ADDRESS_WIDTH accumulated_group_end_address = used_space - 1;
 
             if (start_address <= accumulated_group_end_address)
             {
@@ -430,7 +529,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(PACKET& packet)
                     // this cache line is in slow memory
                     in_fm = false;
                     occupied_group_number = i;
-                    used_space -= placement_table.at(placement_table_index).granularity[i];
+                    used_space -= placement_table.at(placement_table_index).granularity[occupied_group_number];
                     break;
                 }
             }
@@ -464,38 +563,41 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
     if (tag != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
     {
         // this data block belongs to slow memory
-        // check placement metadata to find if this data block is already in fast memory
-        bool is_migrated = false;
+        // check placement metadata to find if the data of this data block is already in fast memory
+        bool is_hit = false;    // hit in fast memory
         REMAPPING_LOCATION_WIDTH data_block_position = 0;
         MIGRATION_GRANULARITY_WIDTH used_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None);
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
         {
-            // traverse the placement entry to find its block number if it exists.
+            START_ADDRESS_WIDTH existing_group_start_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+            START_ADDRESS_WIDTH existing_group_end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+
+            // traverse the placement entry to find its tag if it exists. (checking multiple groups with same tag is possible)
             if (placement_table.at(placement_table_index).tag[i] == tag)
             {
-                is_migrated = true;
+                // record the information of this existing group
                 data_block_position = i;
-                break;
+                existing_group_start_address = placement_table.at(placement_table_index).start_address[data_block_position];
+                existing_group_end_address = placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position] - 1;
+
+                if ((existing_group_start_address <= data_line_positon) && (data_line_positon <= existing_group_end_address))
+                {
+                    // hit in fast memory
+                    is_hit = true;
+                    break;
+                }
             }
 
             used_space += placement_table.at(placement_table_index).granularity[i];
         }
 
-        if (is_migrated)
+        if (is_hit)
         {
-            if ((placement_table.at(placement_table_index).start_address[data_block_position] <= data_line_positon) && (data_line_positon < (placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position])))
-            {
-                // the data of this physical address is in fast memory
-                // calculate the start address
-                START_ADDRESS_WIDTH start_address = used_space + data_line_positon - placement_table.at(placement_table_index).start_address[data_block_position];
-                REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
-                address = replace_bits(replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), address, DATA_LINE_OFFSET_BITS - 1);
-            }
-            else
-            {
-                // the data of this physical address is in slow memory, no need for translation
-                address = address;
-            }
+            // the data of this physical address is in fast memory
+            // calculate the start address
+            START_ADDRESS_WIDTH start_address = used_space + data_line_positon - placement_table.at(placement_table_index).start_address[data_block_position];
+            REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
+            address = replace_bits(replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), address, DATA_LINE_OFFSET_BITS - 1);
         }
         else
         {
@@ -515,10 +617,8 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
         MIGRATION_GRANULARITY_WIDTH used_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None);
         for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
         {
-            static START_ADDRESS_WIDTH accumulated_group_end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
-
-            accumulated_group_end_address += placement_table.at(placement_table_index).granularity[i] - 1;
             used_space += placement_table.at(placement_table_index).granularity[i];
+            START_ADDRESS_WIDTH accumulated_group_end_address = used_space - 1;
 
             if (start_address <= accumulated_group_end_address)
             {
@@ -533,7 +633,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
                     // this cache line is in slow memory
                     in_fm = false;
                     occupied_group_number = i;
-                    used_space -= placement_table.at(placement_table_index).granularity[i];
+                    used_space -= placement_table.at(placement_table_index).granularity[occupied_group_number];
                     break;
                 }
             }
@@ -584,22 +684,37 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
 
             data_block_address = remapping_request.address_in_sm >> DATA_MANAGEMENT_OFFSET_BITS;
             REMAPPING_LOCATION_WIDTH tag = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity);
+            START_ADDRESS_WIDTH start_address = (remapping_request.address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
 
-            // check placement metadata to find if this data block is already in fast memory
-            bool is_migrated = false;
+            // check whether part of this data block can be expanded in fast memory
             REMAPPING_LOCATION_WIDTH data_block_position = 0;
-            for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
+            bool is_expanded = false;
+            if (placement_table.at(placement_table_index).cursor > 0)
             {
-                // traverse the placement entry to find its block number if it exists.
-                if (placement_table.at(placement_table_index).tag[i] == tag)
+                if (placement_table.at(placement_table_index).tag[placement_table.at(placement_table_index).cursor - 1] == tag)
                 {
-                    is_migrated = true;
-                    data_block_position = i;
-                    break;
+                    // record the information of this existing group
+                    data_block_position = placement_table.at(placement_table_index).cursor - 1;
+                    START_ADDRESS_WIDTH existing_group_start_address = placement_table.at(placement_table_index).start_address[data_block_position];
+
+                    if (existing_group_start_address <= start_address)
+                    {
+                        is_expanded = true;
+                    }
+                    else
+                    {
+#if (FLEXIBLE_DATA_PLACEMENT == ENABLE)
+#else
+                        std::cout << __func__ << ": start address calculation error." << std::endl;
+                        printf("existing_group_start_address: %d, ", existing_group_start_address);
+                        printf("start_address: %d.\n", start_address);
+                        assert(0);
+#endif  // FLEXIBLE_DATA_PLACEMENT
+                    }
                 }
             }
 
-            if (is_migrated)
+            if (is_expanded)
             {
                 // expand this existing group
 
@@ -646,16 +761,12 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                 // fill tag in placement table entry
                 placement_table.at(placement_table_index).tag[data_block_position] = remapping_request.sm_location;
 
-                START_ADDRESS_WIDTH start_address = (remapping_request.address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
                 // fill start_address in placement table entry
                 placement_table.at(placement_table_index).start_address[data_block_position] = start_address;
 
                 // fill granularity in placement table entry
                 placement_table.at(placement_table_index).granularity[data_block_position] = remapping_request.size;
-            }
 
-            if (data_block_position == placement_table.at(placement_table_index).cursor)
-            {
                 // remember to update the cursor
                 if (placement_table.at(placement_table_index).cursor < NUMBER_OF_BLOCK)
                 {
@@ -666,32 +777,82 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                     std::cout << __func__ << ": cursor calculation error." << std::endl;
                     assert(0);
                 }
+
+                // calculate the free space in fast memory for this set
+                int16_t free_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4);
+                for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
+                {
+                    // traverse the placement entry to calculate the free space in fast memory.
+                    free_space -= placement_table.at(placement_table_index).granularity[i];
+                }
+
+                // sanity check
+                if (free_space < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
+                {
+                    std::cout << __func__ << ": free_space calculation error." << std::endl;
+                    for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
+                    {
+                        printf("tag[%d]: %d, ", i, placement_table.at(placement_table_index).tag[i]);
+                        printf("start_address[%d]: %d, ", i, placement_table.at(placement_table_index).start_address[i]);
+                        printf("granularity[%d]: %d.\n", i, placement_table.at(placement_table_index).granularity[i]);
+                    }
+                    assert(0);
+                }
             }
         }
         else if (remapping_request.sm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
         {
             // this remapping_request moves block 0's data into fast memory
-            REMAPPING_LOCATION_WIDTH occupied_group_number = 0;
+            START_ADDRESS_WIDTH start_address_in_fm = (remapping_request.address_in_fm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
+            START_ADDRESS_WIDTH start_address = (remapping_request.address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
+
             bool find_occupied_group = false;
+            REMAPPING_LOCATION_WIDTH occupied_group_number = 0;
+            MIGRATION_GRANULARITY_WIDTH used_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None);
             for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
             {
-                if (placement_table.at(placement_table_index).tag[i] == remapping_request.fm_location)
+                used_space += placement_table.at(placement_table_index).granularity[i];
+                START_ADDRESS_WIDTH accumulated_group_end_address = used_space - 1;
+
+                // find the group in correct position
+                if (start_address_in_fm <= accumulated_group_end_address)
                 {
-                    find_occupied_group = true;
-                    occupied_group_number = i;
-                    break;
+                    if (placement_table.at(placement_table_index).tag[i] == remapping_request.fm_location)
+                    {
+                        // sanity check
+                        if (placement_table.at(placement_table_index).granularity[i] != remapping_request.size)
+                        {
+                            std::cout << __func__ << ": migration granularity calculation error." << std::endl;
+                            assert(0);
+                        }
+
+                        find_occupied_group = true;
+                        occupied_group_number = i;
+                        break;
+                    }
                 }
             }
 
             if (find_occupied_group == false)
             {
                 std::cout << __func__ << ": occupied_group_number calculation error." << std::endl;
+                for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
+                {
+                    printf("tag[%d]: %d, ", i, placement_table.at(placement_table_index).tag[i]);
+                    printf("start_address[%d]: %d, ", i, placement_table.at(placement_table_index).start_address[i]);
+                    printf("granularity[%d]: %d.\n", i, placement_table.at(placement_table_index).granularity[i]);
+                }
+                printf("\nfm_location: %d, ", remapping_request.fm_location);
+                printf("sm_location: %d, ", remapping_request.sm_location);
+                printf("size: %d.\n", remapping_request.size);
+                printf("start_address_in_fm: %d, ", start_address_in_fm);
+                printf("start_address: %d.\n", start_address);
                 assert(0);
             }
+
             // fill tag in placement table entry
             placement_table.at(placement_table_index).tag[occupied_group_number] = remapping_request.sm_location;
 
-            START_ADDRESS_WIDTH start_address_in_fm = (remapping_request.address_in_fm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
             // fill start_address in placement table entry
             placement_table.at(placement_table_index).start_address[occupied_group_number] = start_address_in_fm;
 
@@ -721,6 +882,27 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                         break;
                     }
                 }
+            }
+
+            // calculate the free space in fast memory for this set
+            int16_t free_space = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4);
+            for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
+            {
+                // traverse the placement entry to calculate the free space in fast memory.
+                free_space -= placement_table.at(placement_table_index).granularity[i];
+            }
+
+            // sanity check
+            if (free_space < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
+            {
+                std::cout << __func__ << ": free_space calculation error 2." << std::endl;
+                for (REMAPPING_LOCATION_WIDTH i = 0; i < placement_table.at(placement_table_index).cursor; i++)
+                {
+                    printf("tag[%d]: %d, ", i, placement_table.at(placement_table_index).tag[i]);
+                    printf("start_address[%d]: %d, ", i, placement_table.at(placement_table_index).start_address[i]);
+                    printf("granularity[%d]: %d.\n", i, placement_table.at(placement_table_index).granularity[i]);
+                }
+                assert(0);
             }
         }
         else
@@ -789,7 +971,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
     uint64_t data_block_address = source_address >> DATA_MANAGEMENT_OFFSET_BITS;   // calculate the data block address
     uint64_t placement_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;   // calculate the index in placement table
     uint64_t base_remapping_address = placement_table_index << DATA_MANAGEMENT_OFFSET_BITS;
-    REMAPPING_LOCATION_WIDTH tag = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity); // calculate the block number of the data block address
+    REMAPPING_LOCATION_WIDTH tag = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity); // calculate the tag of the data block address
     //uint64_t first_address = data_block_address << DATA_MANAGEMENT_OFFSET_BITS;
     //START_ADDRESS_WIDTH data_line_positon = START_ADDRESS_WIDTH((source_address >> DATA_LINE_OFFSET_BITS) - (first_address >> DATA_LINE_OFFSET_BITS));
 
@@ -809,7 +991,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
 
         if (placement_table.at(placement_table_index).tag[i] == tag)
         {
-            // don't evict the data block which has same block number.
+            // don't evict the data block which has same tag.
             continue;
         }
         else if (placement_table.at(placement_table_index).tag[i] != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
@@ -823,7 +1005,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
             {
                 is_cold = true;
                 occupied_group_number = i;
-                used_space -= placement_table.at(placement_table_index).granularity[i];
+                used_space -= placement_table.at(placement_table_index).granularity[occupied_group_number];
                 break;
             }
         }
@@ -859,15 +1041,14 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
         if (enqueue)
         {
             // new eviction request is issued.
+            outputchampsimstatistics.data_eviction_success++;
             return true;
-        }
-        else
-        {
-            return false;
         }
     }
 #endif  // DATA_EVICTION
 
+    // no eviction request is issued.
+    outputchampsimstatistics.data_eviction_failure++;
     return false;
 }
 
@@ -893,13 +1074,28 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
             {
                 // this remapping_request moves block 0's data into slow memory
 
-                if (remapping_request_queue[i].sm_location == remapping_request.sm_location)
+#if (ENQUEUE_POLICY_ONE == ENABLE)
+                if ((remapping_request_queue[i].address_in_sm == remapping_request.address_in_sm) && (remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm))
                 {
                     // update migration granularity
                     remapping_request_queue[i].size = remapping_request.size;
+
                     // new remapping request won't be issued, but the duplicated one is updated.
                     return true;
                 }
+#elif (ENQUEUE_POLICY_TWO == ENABLE)
+                if (remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm) 
+                {
+                    // update this remapping_request
+                    remapping_request_queue[i].address_in_sm = remapping_request.address_in_sm;
+                    remapping_request_queue[i].sm_location = remapping_request.sm_location;
+                    remapping_request_queue[i].size = remapping_request.size;
+
+                    // new remapping request won't be issued, but the duplicated one is updated.
+                    return true;
+                }
+#endif  // ENQUEUE_POLICY_ONE, ENQUEUE_POLICY_TWO
+                
             }
             else if (remapping_request.sm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
             {
@@ -1033,6 +1229,56 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(cons
         else
         {
             // this migration granularity is within the block's range.
+            updated_end_address = start_address + migration_granularity - 1;
+            break;
+        }
+    }
+
+    return updated_end_address;
+}
+
+START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::round_down_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity)
+{
+    START_ADDRESS_WIDTH updated_end_address = end_address;
+
+    // check whether this migration granularity is beyond the block's end address
+    while (true)
+    {
+        if ((start_address + migration_granularity - 1) > end_address)
+        {
+            if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128);
+            }
+            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_64) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128)))
+            {
+                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_64);
+            }
+            else
+            {
+                std::cout << __func__ << ": migration granularity calculation error." << std::endl;
+                assert(0);
+            }
+        }
+        else
+        {
+            // this migration granularity is within the block's end address.
             updated_end_address = start_address + migration_granularity - 1;
             break;
         }

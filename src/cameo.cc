@@ -109,7 +109,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
 
             if (fm_remapping_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
             {
-                // found the fm_location in the entry of line_location_table
+                // found the location of fm_remapping_location in the entry of line_location_table
                 fm_location = i;
                 break;
             }
@@ -139,40 +139,10 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         remapping_request.sm_location = location;
 
         remapping_request.size = DATA_GRANULARITY_IN_CACHE_LINE;
-        // check duplicated remapping request in remapping_request_queue
-        // if duplicated remapping requests exist, we won't add this new remapping request into the remapping_request_queue.
-        bool duplicated_remapping_request = false;
-        for (uint64_t i = 0; i < remapping_request_queue.size(); i++)
+
+        if (queue_busy_degree <= QUEUE_BUSY_DEGREE_THRESHOLD)
         {
-            uint64_t data_block_address_to_check = remapping_request_queue[i].address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
-            uint64_t line_location_table_index_to_check = data_block_address_to_check % fast_memory_capacity_at_data_block_granularity;
-
-            if (line_location_table_index_to_check == line_location_table_index)
-            {
-                duplicated_remapping_request = true;    // find a duplicated remapping request
-
-                break;
-            }
-        }
-
-        if ((duplicated_remapping_request == false) && (queue_busy_degree <= QUEUE_BUSY_DEGREE_THRESHOLD))
-        {
-            if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
-            {
-                if (remapping_request.address_in_fm == remapping_request.address_in_sm)    // check
-                {
-                    std::cout << __func__ << ": add new remapping request error 2." << std::endl;
-                    abort();
-                }
-
-                // enqueue a remapping request
-                remapping_request_queue.push_back(remapping_request);
-            }
-            else
-            {
-                //std::cout << __func__ << ": remapping_request_queue is full." << std::endl;
-                remapping_request_queue_congestion++;
-            }
+            enqueue_remapping_request(remapping_request);
         }
     }
 
@@ -244,11 +214,30 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         line_location_table.at(line_location_table_index) = replace_bits(line_location_table.at(line_location_table_index), uint64_t(fm_remapping_location) << sm_lsb_in_location_table_entry, sm_msb_in_location_table_entry, sm_lsb_in_location_table_entry);
         line_location_table.at(line_location_table_index) = replace_bits(line_location_table.at(line_location_table_index), uint64_t(sm_remapping_location) << fm_lsb_in_location_table_entry, fm_msb_in_location_table_entry, fm_lsb_in_location_table_entry);
 
+        // sanity check
         if (fm_remapping_location == sm_remapping_location)
         {
             std::cout << __func__ << ": read remapping location error." << std::endl;
             abort();
         }
+
+        REMAPPING_LOCATION_WIDTH sum_of_remapping_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
+        for (REMAPPING_LOCATION_WIDTH i = 0; i < REMAPPING_LOCATION_WIDTH(RemappingLocation::Max); i++)
+        {
+            uint8_t msb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - REMAPPING_LOCATION_WIDTH_BITS * i;
+            uint8_t lsb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - (REMAPPING_LOCATION_WIDTH_BITS + REMAPPING_LOCATION_WIDTH_BITS * i - 1);
+
+            sum_of_remapping_location += get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
+        }
+        REMAPPING_LOCATION_WIDTH correct_result = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero) + REMAPPING_LOCATION_WIDTH(RemappingLocation::One) + REMAPPING_LOCATION_WIDTH(RemappingLocation::Two) + REMAPPING_LOCATION_WIDTH(RemappingLocation::Three) + REMAPPING_LOCATION_WIDTH(RemappingLocation::Four);
+        
+        if (sum_of_remapping_location != correct_result)
+        {
+            std::cout << __func__ << ": sum_of_remapping_location verification error." << std::endl;
+            printf("sum_of_remapping_location: %d, correct_result: %d.\n", sum_of_remapping_location, correct_result);
+            abort();
+        }
+        
     }
     else
     {
@@ -272,7 +261,51 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
 
 bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& remapping_request)
 {
-    return false;
+    uint64_t data_block_address = remapping_request.address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
+    uint64_t line_location_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;
+
+    // check duplicated remapping request in remapping_request_queue
+    // if duplicated remapping requests exist, we won't add this new remapping request into the remapping_request_queue.
+    bool duplicated_remapping_request = false;
+    for (uint64_t i = 0; i < remapping_request_queue.size(); i++)
+    {
+        uint64_t data_block_address_to_check = remapping_request_queue[i].address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
+        uint64_t line_location_table_index_to_check = data_block_address_to_check % fast_memory_capacity_at_data_block_granularity;
+
+        if (line_location_table_index_to_check == line_location_table_index)
+        {
+            duplicated_remapping_request = true;    // find a duplicated remapping request
+
+            break;
+        }
+    }
+
+    if (duplicated_remapping_request == false)
+    {
+        if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
+        {
+            if (remapping_request.address_in_fm == remapping_request.address_in_sm)    // check
+            {
+                std::cout << __func__ << ": add new remapping request error 2." << std::endl;
+                abort();
+            }
+
+            // enqueue a remapping request
+            remapping_request_queue.push_back(remapping_request);
+        }
+        else
+        {
+            //std::cout << __func__ << ": remapping_request_queue is full." << std::endl;
+            remapping_request_queue_congestion++;
+        }
+    }
+    else
+    {
+        return false;
+    }
+
+    // new remapping request is issued.
+    return true;
 }
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
