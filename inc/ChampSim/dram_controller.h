@@ -104,7 +104,7 @@ struct DDR_CHANNEL
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
 template<class T, class T2>
-class MEMORY_CONTROLLER : public champsim::operable, public MemoryRequestConsumer
+class MEMORY_CONTROLLER: public champsim::operable, public MemoryRequestConsumer
 {
 public:
   /* General part */
@@ -133,7 +133,6 @@ public:
     bool read[SWAPPING_SEGMENT_NUMBER];          // whether a read request is finished
     bool write[SWAPPING_SEGMENT_NUMBER];         // whether a write request is finished
     bool dirty[SWAPPING_SEGMENT_NUMBER];         // whether a "new" write request is received
-
   };
   std::array<BUFFER_ENTRY, SWAPPING_BUFFER_ENTRY_NUMBER> buffer = {};
   uint64_t base_address[SWAPPING_SEGMENT_NUMBER];    // base_address[0] for segment 1, base_address[1] for segment 2. Address is hardware address and at cache line granularity.
@@ -141,7 +140,7 @@ public:
   uint8_t finish_number;
 
   // scoped enumerations
-  enum class SwappingState : uint8_t
+  enum class SwappingState: uint8_t
   {
     Idle, Swapping
   };
@@ -185,6 +184,9 @@ public:
 public:
   // input address should be hardware address and at byte granularity
   bool start_swapping_segments(uint64_t address_1, uint64_t address_2, uint8_t size);
+
+  // input address should be hardware address and at byte granularity
+  bool update_swapping_segments(uint64_t address_1, uint64_t address_2, uint8_t size);
 
 private:
   /* Member functions for swapping */
@@ -343,11 +345,52 @@ void MEMORY_CONTROLLER<T, T2>::operate()
   }
   break;
   case 1: // the swapping unit is busy
-    break;
+  {
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+    OS_TRANSPARENT_MANAGEMENT::RemappingRequest remapping_request;
+    bool issue = os_transparent_management.issue_remapping_request(remapping_request);
+    if (issue == true)  // get a remapping request.
+    {
+      // in case the swapping segments are updated
+#if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
+      update_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+    }
+    else
+    {
+      std::cout << __func__ << ": issue_remapping_request error." << std::endl;
+      assert(0);
+    }
+#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+  }
+  break;
   case 2: // the swapping unit finishes a swapping request
   {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    os_transparent_management.finish_remapping_request();
+    bool is_updated = false;
+    OS_TRANSPARENT_MANAGEMENT::RemappingRequest remapping_request;
+    bool issue = os_transparent_management.issue_remapping_request(remapping_request);
+    if (issue == true)  // get a remapping request.
+    {
+      // in case the swapping segments are updated
+#if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
+      is_updated = update_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+    }
+    else
+    {
+      std::cout << __func__ << ": issue_remapping_request error 2." << std::endl;
+      assert(0);
+    }
+
+    if (is_updated == false)
+    {
+      os_transparent_management.finish_remapping_request();
+      initialize_swapping();
+    }
+#else
+
+    initialize_swapping();
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
   }
   break;
@@ -830,6 +873,36 @@ bool MEMORY_CONTROLLER<T, T2>::start_swapping_segments(uint64_t address_1, uint6
   return true;  // new swapping is issued.
 }
 
+// input address should be hardware address and at byte granularity
+template<class T, class T2>
+bool MEMORY_CONTROLLER<T, T2>::update_swapping_segments(uint64_t address_1, uint64_t address_2, uint8_t size)
+{
+  assert(size <= SWAPPING_BUFFER_ENTRY_NUMBER);
+
+  uint64_t input_base_address[SWAPPING_SEGMENT_NUMBER];
+
+  input_base_address[0] = address_1 >> LOG2_BLOCK_SIZE;
+  input_base_address[1] = address_2 >> LOG2_BLOCK_SIZE;
+
+  if ((input_base_address[0] == base_address[0]) && (input_base_address[1] == base_address[1]))
+  {
+    // they are same swapping segments
+    if (size > active_entry_number)
+    {
+      // there have new data to swap
+      active_entry_number = size;
+      if (states == SwappingState::Idle)
+      {
+        states = SwappingState::Swapping;   // start swapping.
+      }
+
+      return true;  // update swapping segments
+    }
+  }
+
+  return false;
+}
+
 template<class T, class T2>
 uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
 {
@@ -966,7 +1039,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
     // check finish_number
     if (finish_number == active_entry_number)
     {
-      initialize_swapping();
+      states = SwappingState::Idle;
       return 2; // Finished swapping
     }
 
@@ -1164,7 +1237,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::check_address(uint64_t address, uint8_t type)
 
 #else
 template<typename T>
-class MEMORY_CONTROLLER : public champsim::operable, public MemoryRequestConsumer
+class MEMORY_CONTROLLER: public champsim::operable, public MemoryRequestConsumer
 {
 public:
   /* General part */
@@ -1404,7 +1477,7 @@ void MEMORY_CONTROLLER<T>::return_data(Request& request)
 };
 #endif  // MEMORY_USE_HYBRID
 #else
-class MEMORY_CONTROLLER : public champsim::operable, public MemoryRequestConsumer
+class MEMORY_CONTROLLER: public champsim::operable, public MemoryRequestConsumer
 {
 public:
   /** @note
@@ -1441,7 +1514,7 @@ public:
   std::array<DDR_CHANNEL, DDR_CHANNELS> ddr_channels;
   std::array<HBM_CHANNEL, HBM_CHANNELS> hbm_channels;
 
-  MEMORY_CONTROLLER(double freq_scale) : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()) {}
+  MEMORY_CONTROLLER(double freq_scale): champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()) {}
 
   void operate() override;
 
@@ -1506,7 +1579,7 @@ struct DRAM_CHANNEL
   unsigned WQ_ROW_BUFFER_HIT = 0, WQ_ROW_BUFFER_MISS = 0, RQ_ROW_BUFFER_HIT = 0, RQ_ROW_BUFFER_MISS = 0, WQ_FULL = 0;
 };
 
-class MEMORY_CONTROLLER : public champsim::operable, public MemoryRequestConsumer
+class MEMORY_CONTROLLER: public champsim::operable, public MemoryRequestConsumer
 {
 public:
   // DRAM_IO_FREQ defined in champsim_constants.h
@@ -1518,7 +1591,7 @@ public:
 
   std::array<DRAM_CHANNEL, DRAM_CHANNELS> channels;
 
-  MEMORY_CONTROLLER(double freq_scale) : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()) {}
+  MEMORY_CONTROLLER(double freq_scale): champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()) {}
 
   int add_rq(PACKET* packet) override;
   int add_wq(PACKET* packet) override;

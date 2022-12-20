@@ -14,7 +14,7 @@
 #define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE                 (ENABLE) // whether print simulation statistics into files
 #define PRINT_MEMORY_TRACE                         (DISABLE) // whether print memory trace into files
-#define MEMORY_USE_SWAPPING_UNIT                   (DISABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
+#define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
 #define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
 
 #if (MEMORY_USE_HYBRID == ENABLE)
@@ -48,8 +48,8 @@
 #define HOTNESS_THRESHOLD                     (1u)
 #define DATA_EVICTION                         (ENABLE)
 #define FLEXIBLE_DATA_PLACEMENT               (DISABLE)
-#define ENQUEUE_POLICY_ONE                    (DISABLE)  // merging is preferable
-#define ENQUEUE_POLICY_TWO                    (ENABLE) // newest request is preferable
+#define ENQUEUE_POLICY_ONE                    (ENABLE)  // merging is preferable
+#define ENQUEUE_POLICY_TWO                    (DISABLE) // newest request is preferable
 #else
 #define HOTNESS_THRESHOLD                     (1u)
 #endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_MULTIPLE_GRANULARITY
@@ -69,7 +69,7 @@
 #define DATA_GRANULARITY_4096B              (4096u)
 
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
-#define DATA_MANAGEMENT_GRANULARITY         (DATA_GRANULARITY_4096B)  // default: DATA_GRANULARITY_64B
+#define DATA_MANAGEMENT_GRANULARITY         (DATA_GRANULARITY_64B)  // default: DATA_GRANULARITY_64B
 #elif (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
 #define DATA_MANAGEMENT_GRANULARITY         (DATA_GRANULARITY_4096B)
 #define DATA_LINE_OFFSET_BITS               (lg2(DATA_GRANULARITY_64B))
