@@ -32,54 +32,56 @@
  *  The unit of DRAM_IO_FREQ is MHz. Here if DRAM_IO_FREQ is 3200ul, the DRAM is DDR4 (800-1600 MHz). DDR5's I/O clock rate ranges
  *  between 2400-3600 MHz, so its data rate can be 4800-7200 MT/s.
  */
-#define DRAM_IO_FREQ      (3200ul)  // MT/s, it should be data rate
 
-#define DDR_CHANNELS (1ul)
-#define DDR_RANKS    (1ul)
-#define DDR_BANKS    (8ul)
-#define DDR_ROWS     (65536ul)
-#define DDR_COLUMNS  (128ul)
-#define DDR_CAPACITY (4*GB) // 1*GB / 768*MB
- /** @note
-  *  Note if you modify its capacity, its corresponding parameters (e.g., channel, bank, ...) need to be modified too.
-  *  if DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 65536, DDR_COLUMNS = 128,
-  *  then width of DDR_CHANNELS is 0 bit, width of DDR_RANKS is 0 bit, width of DDR_BANKS is 3 bit,
-  *  width of DDR_ROWS is 16 bit, and width of DDR_COLUMNS is 7 bit,
-  *  so, the width of physical address is 0 + 0 + 3 + 16 + 7 + 6 (block offset) = 32 bit,
-  *  thus, the maximum physical memory capacity is 4 GB.
-  *
-  *  Physical address (32 bit for 4 GB DDR capacity)
-  *  | row address | rank index | column address (bank index) | channel | block offset |
-  *  |   16 bits   |    0 bit   |           10 bits (3 bits)  |  0 bit  |    6 bits    |
-  *  e.g., DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 65536, DDR_COLUMNS = 128 (10 - 3) for 4 GB DDR capacity.
-  *
-  *  Physical address (30 bit for (512, 1024] MB DDR capacity)
-  *  | row address | rank index | column address (bank index) | channel | block offset |
-  *  |   15 bits   |    0 bit   |            9 bits (3 bits)  |  0 bit  |    6 bits    |
-  *  e.g., DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 32768, DDR_COLUMNS = 64 (9 - 3) for (512, 1024] MB DDR capacity.
-  */
+#define DRAM_IO_FREQ    (3200ul)  // MT/s, it should be data rate
+#define DDR_CHANNELS    (1ul)
+#define DDR_RANKS       (1ul)
+#define DDR_BANKS       (8ul)
+#define DDR_ROWS        (65536ul)
+#define DDR_COLUMNS     (128ul)
+#define DDR_CAPACITY    (4*GB)  // 1*GB / 768*MB
 
-  /** @note
-   *  Below are parameters for 3D-stacked DRAM (or High Bandwidth Memory (HBM)).
-   *  HBM uses the same IO frequency as DRAM.
-  */
+/** @note
+ *  Note if you modify its capacity, its corresponding parameters (e.g., channel, bank, ...) need to be modified too.
+ *  if DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 65536, DDR_COLUMNS = 128,
+ *  then width of DDR_CHANNELS is 0 bit, width of DDR_RANKS is 0 bit, width of DDR_BANKS is 3 bit,
+ *  width of DDR_ROWS is 16 bit, and width of DDR_COLUMNS is 7 bit,
+ *  so, the width of physical address is 0 + 0 + 3 + 16 + 7 + 6 (block offset) = 32 bit,
+ *  thus, the maximum physical memory capacity is 4 GB.
+ *
+ *  Physical address (32 bit for 4 GB DDR capacity)
+ *  | row address | rank index | column address (bank index) | channel | block offset |
+ *  |   16 bits   |    0 bit   |           10 bits (3 bits)  |  0 bit  |    6 bits    |
+ *  e.g., DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 65536, DDR_COLUMNS = 128 (10 - 3) for 4 GB DDR capacity.
+ *
+ *  Physical address (30 bit for (512, 1024] MB DDR capacity)
+ *  | row address | rank index | column address (bank index) | channel | block offset |
+ *  |   15 bits   |    0 bit   |            9 bits (3 bits)  |  0 bit  |    6 bits    |
+ *  e.g., DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 32768, DDR_COLUMNS = 64 (9 - 3) for (512, 1024] MB DDR capacity.
+ */
+
+/** @note
+ *  Below are parameters for 3D-stacked DRAM (or High Bandwidth Memory (HBM)).
+ *  HBM uses the same IO frequency as DRAM.
+ */
+
 #define HBM_CHANNELS (8ul)
 #define HBM_BANKS    (8ul)
 #define HBM_ROWS     (1024ul)
 #define HBM_COLUMNS  (64ul)
 #define HBM_CAPACITY (0*MB) // 0*MB / 256*MB
-  /** @note
-   *  Physical address (30 bit for 1 GB HBM capacity)
-   *  | row address | rank index | column address (bank index) | channel | block offset |
-   *  |   11 bits   |    0 bit   |           10 bits (3 bits)  |  3 bits |    6 bits    |
-   *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 2048, HBM_COLUMNS = 128 (10 - 3) for 1 GB HBM capacity.
-   *
-   *  Physical address (28 bit for 256 MB HBM capacity)
-   *  | row address | rank index | column address (bank index) | channel | block offset |
-   *  |   10 bits   |    0 bit   |            9 bits (3 bits)  |  3 bits |    6 bits    |
-   *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 1024, HBM_COLUMNS = 64 (9 - 3) for 256 MB HBM capacity.
-  */
 
+/** @note
+ *  Physical address (30 bit for 1 GB HBM capacity)
+ *  | row address | rank index | column address (bank index) | channel | block offset |
+ *  |   11 bits   |    0 bit   |           10 bits (3 bits)  |  3 bits |    6 bits    |
+ *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 2048, HBM_COLUMNS = 128 (10 - 3) for 1 GB HBM capacity.
+ *
+ *  Physical address (28 bit for 256 MB HBM capacity)
+ *  | row address | rank index | column address (bank index) | channel | block offset |
+ *  |   10 bits   |    0 bit   |            9 bits (3 bits)  |  3 bits |    6 bits    |
+ *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 1024, HBM_COLUMNS = 64 (9 - 3) for 256 MB HBM capacity.
+ */
 
 #define DRAM_CHANNEL_WIDTH           (8ul)  // The unit of DRAM_CHANNEL_WIDTH is byte
 #define DRAM_WQ_SIZE                 (64ul)
