@@ -1084,7 +1084,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
                     return true;
                 }
 #elif (ENQUEUE_POLICY_TWO == ENABLE)
-                if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm))
+                if (remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm)
                 {
                     // update this remapping_request
                     remapping_request_queue[i].address_in_sm = remapping_request.address_in_sm;
