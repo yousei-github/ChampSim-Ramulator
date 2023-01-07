@@ -8,18 +8,18 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bin/champsim_plus_ramulator_O3", // the executable file's name for debugging
+            "program": "${workspaceFolder}/bin/champsim_plus_ramulator", // the executable file's name for debugging
             // Below are parmeters input into the executable file
             "args": [
                 "--warmup_instructions",
-                "1000000",  // 1000000
+                "1000000", // 1000000
                 "--simulation_instructions",
                 "1990000000",
                 "--stats",
-                "623.xalancbmk_s-700B.champsimtrace.xz.HBM_DDR4.stats",
+                "649.fotonik3d_s-1176B.champsimtrace.xz.HBM_DDR4.stats",
                 "configs/HBM-config.cfg",
                 "configs/DDR4-config.cfg",
-                "../dpc3_traces/623.xalancbmk_s-700B.champsimtrace.xz"
+                "../dpc3_traces/649.fotonik3d_s-1176B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",

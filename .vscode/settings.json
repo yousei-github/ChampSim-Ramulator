@@ -51,6 +51,13 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "typeinfo": "cpp",
-        "cstring": "cpp"
-    }
+        "cstring": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "numbers": "cpp",
+        "cassert": "cpp",
+        "queue": "cpp"
+    },
+    "editor.tabSize": 2,
+    "editor.indentSize": "tabSize"
 }
