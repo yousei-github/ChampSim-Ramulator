@@ -94,6 +94,7 @@ void output_champsim_statistics_initialization(const char* string)
     outputchampsimstatistics.unexpandable_since_start_address = 0;
     outputchampsimstatistics.unexpandable_since_no_invalid_group = 0;
     outputchampsimstatistics.data_eviction_success = outputchampsimstatistics.data_eviction_failure = 0;
+    outputchampsimstatistics.uncertain_counter = 0;
 }
 
 void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileType& outputchampsimstatistics)
@@ -119,6 +120,7 @@ void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileTyp
     fprintf(outputchampsimstatistics.trace_file, "unexpandable_since_no_invalid_group: %ld (%f).\n", outputchampsimstatistics.unexpandable_since_no_invalid_group, outputchampsimstatistics.unexpandable_since_no_invalid_group / float(total_access_request_in_memory));
     fprintf(outputchampsimstatistics.trace_file, "data_eviction_success: %ld (%f).\n", outputchampsimstatistics.data_eviction_success, outputchampsimstatistics.data_eviction_success / float(total_access_request_in_memory));
     fprintf(outputchampsimstatistics.trace_file, "data_eviction_failure: %ld (%f).\n", outputchampsimstatistics.data_eviction_failure, outputchampsimstatistics.data_eviction_failure / float(total_access_request_in_memory));
+    fprintf(outputchampsimstatistics.trace_file, "uncertain_counter: %ld (%f).\n", outputchampsimstatistics.uncertain_counter, outputchampsimstatistics.uncertain_counter / float(total_access_request_in_memory));
 
     fclose(outputchampsimstatistics.trace_file);
     printf("Output ChampSim statistics into %s.\n", outputchampsimstatistics.trace_string);
