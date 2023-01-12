@@ -41,7 +41,7 @@
 
 #define INCOMPLETE_READ_REQUEST_QUEUE_LENGTH    (128)
 #define INCOMPLETE_WRITE_REQUEST_QUEUE_LENGTH   (128)
-#elif (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
+#elif (IDEAL_VARIABLE_GRANULARITY == ENABLE)
 #define COUNTER_WIDTH                       uint8_t
 #define COUNTER_MAX_VALUE                   (UINT8_MAX)
 #define COUNTER_DEFAULT_VALUE               (0)
@@ -49,7 +49,8 @@
 #define HOTNESS_WIDTH                       bool
 #define HOTNESS_DEFAULT_VALUE               (false)
 
-#define REMAPPING_LOCATION_WIDTH            uint8_t
+#define REMAPPING_LOCATION_WIDTH            uint8_t // default: uint8_t
+#define REMAPPING_LOCATION_WIDTH_SIGN       int8_t // default: int8_t
 #define REMAPPING_LOCATION_WIDTH_BITS       (3)
 
 #define START_ADDRESS_WIDTH                 uint8_t
@@ -58,7 +59,7 @@
 #define MIGRATION_GRANULARITY_WIDTH         uint8_t
 #define MIGRATION_GRANULARITY_WIDTH_BITS    (3)
 
-#define NUMBER_OF_BLOCK                     (5)
+#define NUMBER_OF_BLOCK                     (5) // default: 5
 
 #define REMAPPING_REQUEST_QUEUE_LENGTH      (64)  // 1024/4096
 #define QUEUE_BUSY_DEGREE_THRESHOLD         (0.8f)
@@ -76,7 +77,7 @@
 #define REMAPPING_LOCATION_WIDTH            uint8_t
 #define REMAPPING_LOCATION_WIDTH_BITS       (3)
 
-#endif  // IDEAL_MULTIPLE_GRANULARITY
+#endif  // IDEAL_VARIABLE_GRANULARITY
 
 class OS_TRANSPARENT_MANAGEMENT
 {
@@ -141,7 +142,7 @@ public:
     std::vector<WriteRequest> incomplete_write_request_queue;
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
-#if (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
+#if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
     // scoped enumerations
     /** @brief
      *  it is used to store the migrated page's block number, which is to represent the location in a set.
@@ -209,7 +210,7 @@ public:
     };
     /* Remapping table */
     std::vector<PlacementEntry>& placement_table;
-#endif  // IDEAL_MULTIPLE_GRANULARITY
+#endif  // IDEAL_VARIABLE_GRANULARITY
 
     /* Member functions */
     OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, uint64_t max_address, uint64_t fast_memory_max_address);
@@ -240,7 +241,7 @@ private:
     // add new remapping request into the remapping_request_queue
     bool enqueue_remapping_request(RemappingRequest& remapping_request);
 
-#if (IDEAL_MULTIPLE_GRANULARITY == ENABLE)
+#if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
     // calculate the migration granularity based on start_address and end_address.
     MIGRATION_GRANULARITY_WIDTH calculate_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address);
 
@@ -248,7 +249,7 @@ private:
     START_ADDRESS_WIDTH adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
     // check whether this migration granularity is beyond the block's end address and adjust it to a proper value, this function returns updated end_address
     START_ADDRESS_WIDTH round_down_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
-#endif  // IDEAL_MULTIPLE_GRANULARITY
+#endif  // IDEAL_VARIABLE_GRANULARITY
 
 };
 
