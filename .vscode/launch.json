@@ -15,11 +15,79 @@
                 "1000000", // 1000000
                 "--simulation_instructions",
                 "1990000000",
+                "../dpc3_traces/648.exchange2_s-1699B.champsimtrace.xz",
+                "../dpc3_traces/648.exchange2_s-1699B.champsimtrace.xz"
+            ],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            //"preLaunchTask": "C/C++: g++ build all files",
+            "miDebuggerPath": "/usr/local/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
+        },
+        {
+            "name": "(gdb) Launch for champsim_plus_ramulator with single cores",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/champsim_plus_ramulator", // the executable file's name for debugging
+            // Below are parmeters input into the executable file
+            "args": [
+                "--warmup_instructions",
+                "1000000", // 1000000
+                "--simulation_instructions",
+                "1990000000",
                 "--stats",
                 "649.fotonik3d_s-1176B.champsimtrace.xz.HBM_DDR4.stats",
                 "configs/HBM-config.cfg",
                 "configs/DDR4-config.cfg",
                 "../dpc3_traces/649.fotonik3d_s-1176B.champsimtrace.xz"
+            ],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            //"preLaunchTask": "C/C++: g++ build all files",
+            "miDebuggerPath": "/usr/local/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
+        },
+        {
+            "name": "(gdb) Launch for champsim with multiple cores",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/champsim_plus_ramulator", // the executable file's name for debugging
+            // Below are parmeters input into the executable file
+            "args": [
+                "--warmup_instructions",
+                "1000000", // 1000000
+                "--simulation_instructions",
+                "1990000000",
+                "../dpc3_traces/648.exchange2_s-1699B.champsimtrace.xz",
+                "../dpc3_traces/648.exchange2_s-1699B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
