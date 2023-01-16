@@ -3,16 +3,17 @@
 </p>
 
 # About This Project
-This project is based on the master branch of [ChampSim](https://github.com/yousei-github/ChampSim) and [Ramulator](https://github.com/yousei-github/ramulator), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
+This project is based on the master branch of [ChampSim](https://github.com/yousei-github/ChampSim) and [Ramulator](https://github.com/yousei-github/ramulator), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `./inc/ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
 - Set the preprocessor `RAMULATOR` to `ENABLE` for enabling Ramulator or to `DISABLE` for just using ChampSim.
 - Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` for enabling hybrid memory systems or to `DISABLE` for enabling single memory systems.
 - Set the preprocessor `PRINT_STATISTICS_INTO_FILE` to `ENABLE` for printing statistics into `.statistics` file.
 - Set the preprocessor `PRINT_MEMORY_TRACE` to `ENABLE` for printing memory trace into `.trace` file. Each line in the trace file represents a memory request, with the hexadecimal address followed by 'R' or 'W' for read or write.
 - Set the preprocessor `MEMORY_USE_SWAPPING_UNIT` to `ENABLE` for enabling data swapping function in memory controller. (Currently only support hybrid memory systems).
 - Set the preprocessor `MEMORY_USE_OS_TRANSPARENT_MANAGEMENT` to `ENABLE` for enabling os transparent data management of hybrid memory systems, (Currently part of paper [CAMEO](https://doi.org/10.1109/MICRO.2014.63) is implemented, and variable granularity).
+- Set the preprocessor `CPU_USE_MULTIPLE_CORES` to `ENABLE` for enabling multiple cores to run simulation. Note you also need to add multiple trace paths to execute this simulator.
 - Set the preprocessor `BRANCH_PREDICTOR` to `BRANCH_USE_BIMODAL` for using bimodal branch predictor. Similarly, there have gshare, hashed_perceptron, perceptron branch predictors. Following this logic, you can also modify other preprocessors, such as `INSTRUCTION_PREFETCHER`, `LLC_REPLACEMENT_POLICY`, `LLC_PREFETCHER`, and so on.
 
-The CPU's parameters are defined in the `champsim_constants.h` file.
+The CPU's parameters are defined in the `./inc/ChampSim/champsim_constants.h` file.
 
 ## ChampSim
 [ChampSim](https://github.com/ChampSim/ChampSim) is a trace-based simulator for a microarchitecture study. You can sign up to the public mailing list by sending an empty mail to champsim+subscribe@googlegroups.com. If you have questions about how to use ChampSim, you can often receive a quicker response on the mailing list. Please reserve GitHub Issues for bugs. Traces for the 3rd Data Prefetching Championship (DPC-3) can be found from here (https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/). A set of traces used for the 2nd Cache Replacement Championship (CRC-2) can be found from this link. (http://bit.ly/2t2nkUj)
@@ -68,7 +69,7 @@ $ ./download_dpc3_traces.sh
 
 # Build and debug
 
-Before starting to build or debug this project, you might need to be familiar with [the visual studio code tutorial](https://code.visualstudio.com/docs/cpp/config-linux).
+Before starting to build or debug this project, you might need to be familiar with [the visual studio code tutorial](https://code.visualstudio.com/docs/cpp/config-linux). Also, a C++11 compiler is required for compilation.
 
 ## Build
 Build methods are explained below.
