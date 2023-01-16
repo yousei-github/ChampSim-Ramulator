@@ -16,7 +16,7 @@ void O3_CPU::bpred_bbranchDbimodal_initialize()
 #else
   std::cout << "CPU " << cpu << " Bimodal branch predictor" << std::endl;
 #endif
-  
+
   bimodal_table[this] = {};
 }
 
