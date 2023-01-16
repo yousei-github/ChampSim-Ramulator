@@ -4,14 +4,24 @@
 #include "ProjectConfiguration.h" // user file
 
 #if (USER_CODES == ENABLE)
-#define BLOCK_SIZE           (64ul)  // the unit of BLOCK_SIZE is byte
-#define LOG2_BLOCK_SIZE      (lg2(BLOCK_SIZE))
-#define PAGE_SIZE            (4096ul)
-#define LOG2_PAGE_SIZE       (lg2(PAGE_SIZE))
-#define STAT_PRINTING_PERIOD (10000000ul)
-#define NUM_CPUS             (1u)
-#define NUM_CACHES           (7u)
-#define NUM_OPERABLES        (10u)
+#define BLOCK_SIZE            (64ul)  // the unit of BLOCK_SIZE is byte
+#define LOG2_BLOCK_SIZE       (lg2(BLOCK_SIZE))
+#define PAGE_SIZE             (4096ul)
+#define LOG2_PAGE_SIZE        (lg2(PAGE_SIZE))
+#define STAT_PRINTING_PERIOD  (10000000ul)
+#define NUM_CPUS              (1u)
+#define NUM_CACHES            (7u)
+#define NUM_OPERABLES         (10u)
+
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+#undef NUM_CPUS
+#undef NUM_CACHES
+#undef NUM_OPERABLES
+
+#define NUM_CPUS              (2u)
+#define NUM_CACHES            (NUM_CPUS * 6u + 1u)
+#define NUM_OPERABLES         (NUM_CACHES + NUM_CPUS * 2u + 1u)
+#endif  // CPU_USE_MULTIPLE_CORES
 
 /** @note
  *  First, a DRAM chip is the set of all cells on the same silicon die, along with the I/O circuitry which allows
@@ -285,7 +295,9 @@
 #define CPU_SCHEDULE_LATENCY        (0)
 #define CPU_EXECUTE_LATENCY         (0)
 
-
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+#define CPU_1                       (1)      // CPU number
+#endif  // CPU_USE_MULTIPLE_CORES
 
 // Clock scale
 #if (RAMULATOR == ENABLE)

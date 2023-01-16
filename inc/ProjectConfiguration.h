@@ -14,8 +14,9 @@
 #define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE                 (ENABLE) // whether print simulation statistics into files
 #define PRINT_MEMORY_TRACE                         (DISABLE) // whether print memory trace into files
-#define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
-#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
+#define MEMORY_USE_SWAPPING_UNIT                   (DISABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
+#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (DISABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
+#define CPU_USE_MULTIPLE_CORES                     (DISABLE) // whether CPU uses multiple cores to run simulation (go to ./inc/ChampSim/champsim_constants.h to check related parameters)
 
 #if (MEMORY_USE_HYBRID == ENABLE)
 #define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
@@ -100,13 +101,13 @@
 #define REPLACEMENT_USE_SRRIP          (CACHE::repl_t::rreplacementDsrrip)
 #define REPLACEMENT_USE_DRRIP          (CACHE::repl_t::rreplacementDdrrip)
 #define LLC_REPLACEMENT_POLICY         (REPLACEMENT_USE_LRU)
-// For cpu0's private caches:
-#define CPU0_L2C_REPLACEMENT_POLICY    (REPLACEMENT_USE_LRU)
-#define CPU0_L1D_REPLACEMENT_POLICY    (REPLACEMENT_USE_LRU)
-#define CPU0_STLB_REPLACEMENT_POLICY   (REPLACEMENT_USE_LRU)
-#define CPU0_L1I_REPLACEMENT_POLICY    (REPLACEMENT_USE_LRU)
-#define CPU0_ITLB_REPLACEMENT_POLICY   (REPLACEMENT_USE_LRU)
-#define CPU0_DTLB_REPLACEMENT_POLICY   (REPLACEMENT_USE_LRU)
+// For cpu's private caches:
+#define CPU_L2C_REPLACEMENT_POLICY     (REPLACEMENT_USE_LRU)
+#define CPU_L1D_REPLACEMENT_POLICY     (REPLACEMENT_USE_LRU)
+#define CPU_STLB_REPLACEMENT_POLICY    (REPLACEMENT_USE_LRU)
+#define CPU_L1I_REPLACEMENT_POLICY     (REPLACEMENT_USE_LRU)
+#define CPU_ITLB_REPLACEMENT_POLICY    (REPLACEMENT_USE_LRU)
+#define CPU_DTLB_REPLACEMENT_POLICY    (REPLACEMENT_USE_LRU)
 
 // Cache setting for data prefetcher (no, next_line, ip_stride, no_instr, next_line_instr)
 #define PREFETCHER_USE_NO              (CACHE::pref_t::pprefetcherDno)
@@ -116,19 +117,19 @@
 #define PREFETCHER_USE_NEXT_LINE_INSTR (CACHE::pref_t::CPU_REDIRECT_pprefetcherDnext_line_instr_)
 
 #define LLC_PREFETCHER                 (PREFETCHER_USE_NO)
-#define CPU0_L2C_PREFETCHER            (PREFETCHER_USE_NO)
-#define CPU0_L1D_PREFETCHER            (PREFETCHER_USE_NO)
-#define CPU0_STLB_PREFETCHER           (PREFETCHER_USE_NO)
-#define CPU0_ITLB_PREFETCHER           (PREFETCHER_USE_NO)
-#define CPU0_DTLB_PREFETCHER           (PREFETCHER_USE_NO)
+#define CPU_L2C_PREFETCHER             (PREFETCHER_USE_NO)
+#define CPU_L1D_PREFETCHER             (PREFETCHER_USE_NO)
+#define CPU_STLB_PREFETCHER            (PREFETCHER_USE_NO)
+#define CPU_ITLB_PREFETCHER            (PREFETCHER_USE_NO)
+#define CPU_DTLB_PREFETCHER            (PREFETCHER_USE_NO)
 /** @note
- *  Note here you might need to modify the preprocessor "CPU0_L1I_PREFETCHER" manually.
- *  For example, if if INSTRUCTION_PREFETCHER == INSTRUCTION_PREFETCHER_USE_NO_INSTR, define CPU0_L1I_PREFETCHER = PREFETCHER_USE_NO_INSTR.
- *  Or if INSTRUCTION_PREFETCHER == INSTRUCTION_PREFETCHER_USE_NEXT_LINE_INSTR, define CPU0_L1I_PREFETCHER = PREFETCHER_USE_NEXT_LINE_INSTR.
+ *  Note here you might need to modify the preprocessor "CPU_L1I_PREFETCHER" manually.
+ *  For example, if if INSTRUCTION_PREFETCHER == INSTRUCTION_PREFETCHER_USE_NO_INSTR, define CPU_L1I_PREFETCHER = PREFETCHER_USE_NO_INSTR.
+ *  Or if INSTRUCTION_PREFETCHER == INSTRUCTION_PREFETCHER_USE_NEXT_LINE_INSTR, define CPU_L1I_PREFETCHER = PREFETCHER_USE_NEXT_LINE_INSTR.
 */
 #ifdef INSTRUCTION_PREFETCHER
-#define CPU0_L1I_PREFETCHER            (PREFETCHER_USE_NO_INSTR)
-//#define CPU0_L1I_PREFETCHER            (CACHE::pref_t::CPU_REDIRECT_pprefetcherDnext_line_instr_)
+#define CPU_L1I_PREFETCHER             (PREFETCHER_USE_NO_INSTR)
+//#define CPU_L1I_PREFETCHER             (CACHE::pref_t::CPU_REDIRECT_pprefetcherDnext_line_instr_)
 #endif  // INSTRUCTION_PREFETCHER
 
 #define KB (1024ul) // unit is byte
