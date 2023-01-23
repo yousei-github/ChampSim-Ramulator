@@ -16,7 +16,7 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, ui
 {
     remapping_request_queue_congestion = 0;
 
-    uint64_t expected_number_in_congruence_group = total_capacity / fast_memory_capacity;
+    expected_number_in_congruence_group = total_capacity / fast_memory_capacity;
     if (expected_number_in_congruence_group > REMAPPING_LOCATION_WIDTH(RemappingLocation::Max))
     {
         std::cout << __func__ << ": congruence group error." << std::endl;
@@ -30,6 +30,82 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, ui
 OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 {
     outputchampsimstatistics.remapping_request_queue_congestion = remapping_request_queue_congestion;
+
+#if (STATISTICS_INFORMATION == ENABLE)
+    uint64_t granularity_counts[MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max)] = {0};
+    uint64_t granularity_predict_counts[MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max)] = {0};
+
+#if (USE_OPENMP == ENABLE)
+#pragma omp parallel
+    {
+#pragma omp for
+#endif  // USE_OPENMP
+        for (uint64_t i = 0; i < total_capacity >> DATA_MANAGEMENT_OFFSET_BITS; i++)
+        {
+            if (access_table.at(i).access_flag == true)
+            {
+                // calculate the start address
+                START_ADDRESS_WIDTH start_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+                for (START_ADDRESS_WIDTH j = START_ADDRESS_WIDTH(StartAddress::Zero); j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
+                {
+                    if (access_table.at(i).access_stats[j] == true)
+                    {
+                        start_address = j;
+                        break;
+                    }
+                }
+
+                // calculate the end address
+                START_ADDRESS_WIDTH end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+                for (START_ADDRESS_WIDTH j = START_ADDRESS_WIDTH(StartAddress::Max) - 1; j > START_ADDRESS_WIDTH(StartAddress::Zero); j--)
+                {
+                    if (access_table.at(i).access_stats[j] == true)
+                    {
+                        end_address = j;
+                        break;
+                    }
+                }
+
+                access_table.at(i).granularity_stats = end_address - start_address + 1;
+                granularity_counts[access_table.at(i).granularity_stats]++;
+            }
+        }
+#if (USE_OPENMP == ENABLE)
+    }
+#endif  // USE_OPENMP
+
+    fprintf(outputchampsimstatistics.trace_file, "\n\nInformation about variable granularity\n\n");
+
+    fprintf(outputchampsimstatistics.trace_file, "Best granularity distribution:\n");
+    for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
+    {
+        fprintf(outputchampsimstatistics.trace_file, "Granularity [%d] %ld\n", i, granularity_counts[i]);
+    }
+
+    // print out predict granularity
+#if (USE_OPENMP == ENABLE)
+#pragma omp parallel
+    {
+#pragma omp for
+#endif  // USE_OPENMP
+        for (uint64_t i = 0; i < total_capacity >> DATA_MANAGEMENT_OFFSET_BITS; i++)
+        {
+            if (access_table.at(i).granularity_predict_stats != MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
+            {
+                granularity_predict_counts[access_table.at(i).granularity_predict_stats]++;
+            }
+        }
+#if (USE_OPENMP == ENABLE)
+    }
+#endif  // USE_OPENMP
+    fprintf(outputchampsimstatistics.trace_file, "\nPredicted granularity distribution:\n");
+    for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
+    {
+        fprintf(outputchampsimstatistics.trace_file, "Granularity [%d] %ld\n", i, granularity_predict_counts[i]);
+    }
+
+#endif  // STATISTICS_INFORMATION
+
     delete& counter_table;
     delete& hotness_table;
     delete& access_table;
@@ -53,6 +129,15 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
 
     // mark accessed data line
     access_table.at(data_block_address).access[data_line_positon] = true;
+
+#if (STATISTICS_INFORMATION == ENABLE)
+    access_table.at(data_block_address).access_flag = true;
+    access_table.at(data_block_address).access_stats[data_line_positon] = true;
+#endif  // STATISTICS_INFORMATION
+
+#if (COLD_DATA_DETECTION_IN_GROUP == ENABLE)
+    cold_data_detection_in_group(address);
+#endif  // COLD_DATA_DETECTION_IN_GROUP
 
     if (type == 1)  // for read request
     {
@@ -264,10 +349,32 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                                 }
                                 else
                                 {
+#if (FLEXIBLE_GRANULARITY == ENABLE)
+                                    if (free_space)
+                                    {
+                                        // free_space is not empty
+                                        // this existing group is needed to be expanded
+                                        is_expanded = true;
+                                        migration_granularity = free_space;
+
+                                        // this should be equal to placement_table.at(placement_table_index).start_address[data_block_position] + placement_table.at(placement_table_index).granularity[data_block_position]
+                                        start_address = (end_address + 1) - free_space;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        // no enough free space for data migration. Data eviction is necessary.
+                                        cold_data_eviction(address, queue_busy_degree);
+                                        outputchampsimstatistics.no_free_space_for_migration++;
+                                        return true;
+                                    }
+
+#else
                                     // no enough free space for data migration. Data eviction is necessary.
                                     cold_data_eviction(address, queue_busy_degree);
                                     outputchampsimstatistics.no_free_space_for_migration++;
                                     return true;
+#endif  // FLEXIBLE_GRANULARITY
                                 }
                             }
                             else
@@ -315,10 +422,33 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
             }
             else
             {
+#if (FLEXIBLE_GRANULARITY == ENABLE)
+                if (free_space)
+                {
+                    // free_space is not empty
+                    // check whether there have enough invalid groups in placement table entry for new migration
+                    if (placement_table.at(placement_table_index).cursor == NUMBER_OF_BLOCK)
+                    {
+                        // no enough invalid groups for data migration. Data eviction is necessary.
+                        cold_data_eviction(address, queue_busy_degree);
+                        outputchampsimstatistics.no_invalid_group_for_migration++;
+                        return true;
+                    }
+                    migration_granularity = free_space;
+                }
+                else
+                {
+                    // no enough free space for data migration. Data eviction is necessary.
+                    cold_data_eviction(address, queue_busy_degree);
+                    outputchampsimstatistics.no_free_space_for_migration++;
+                    return true;
+                }
+#else
                 // no enough free space for data migration. Data eviction is necessary.
                 cold_data_eviction(address, queue_busy_degree);
                 outputchampsimstatistics.no_free_space_for_migration++;
                 return true;
+#endif  // FLEXIBLE_GRANULARITY
             }
         }
 
@@ -718,9 +848,18 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
             {
                 // expand this existing group
 
+#if (STATISTICS_INFORMATION == ENABLE)
+                if (placement_table.at(placement_table_index).granularity[data_block_position] == access_table.at(data_block_address).granularity_predict_stats)
+                {
+                    access_table.at(data_block_address).granularity_predict_stats += remapping_request.size;
+                }
+#endif  // STATISTICS_INFORMATION
+
                 // fill granularity in placement table entry
                 placement_table.at(placement_table_index).granularity[data_block_position] += remapping_request.size;
 
+#if (FLEXIBLE_GRANULARITY == ENABLE)
+#else
                 // sanity check
                 if (placement_table.at(placement_table_index).granularity[data_block_position] == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128))
                 {
@@ -753,9 +892,17 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                     printf("tag is %d.\n", tag);
                     assert(0);
                 }
+#endif  // FLEXIBLE_GRANULARITY
             }
             else
             {
+#if (STATISTICS_INFORMATION == ENABLE)
+                if (remapping_request.size > access_table.at(data_block_address).granularity_predict_stats)
+                {
+                    access_table.at(data_block_address).granularity_predict_stats = remapping_request.size;
+                }
+#endif  // STATISTICS_INFORMATION
+
                 data_block_position = placement_table.at(placement_table_index).cursor;
 
                 // fill tag in placement table entry
@@ -925,11 +1072,14 @@ void OS_TRANSPARENT_MANAGEMENT::cold_data_detection()
 {
     if ((cycle % INTERVAL_FOR_DECREMENT) == 0)
     {
+#if (IMMEDIATE_EVICTION == ENABLE)
+#else
         // Overhead here is heavy. OpenMP is necessary.
 #if (USE_OPENMP == ENABLE)
 #pragma omp parallel
         {
 #pragma omp for
+#endif  // USE_OPENMP
             for (uint64_t i = 0; i < total_capacity_at_data_block_granularity; i++)
             {
                 counter_table[i] >>= 1; // halve the counter value
@@ -943,27 +1093,45 @@ void OS_TRANSPARENT_MANAGEMENT::cold_data_detection()
                     }
                 }
             }
-        }
-#else
-        for (uint64_t i = 0; i < (total_capacity_at_data_block_granularity); i++)
-        {
-            counter_table[i] >>= 1; // halve the counter value
-            if (counter_table[i] == 0)
-            {
-                hotness_table.at(i) = false;    // mark cold data block
-                for (START_ADDRESS_WIDTH j = 0; j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
-                {
-                    // clear accessed data line
-                    access_table.at(i).access[j] = false;
-                }
-            }
+#if (USE_OPENMP == ENABLE)
         }
 #endif  // USE_OPENMP
-
+#endif  // IMMEDIATE_EVICTION
     }
 
     cycle++;
 }
+
+#if (COLD_DATA_DETECTION_IN_GROUP == ENABLE)
+void OS_TRANSPARENT_MANAGEMENT::cold_data_detection_in_group(uint64_t source_address)
+{
+    uint64_t data_block_address = source_address >> DATA_MANAGEMENT_OFFSET_BITS;   // calculate the data block address
+    uint64_t placement_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;   // calculate the index in placement table
+    uint64_t base_remapping_address = placement_table_index << DATA_MANAGEMENT_OFFSET_BITS;
+    REMAPPING_LOCATION_WIDTH tag = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity); // calculate the tag of the data block address
+
+    for (REMAPPING_LOCATION_WIDTH i = 0; i < expected_number_in_congruence_group; i++)
+    {
+        if (i != tag)
+        {
+            REMAPPING_LOCATION_WIDTH location = i;
+            uint64_t data_base_address_to_evict = replace_bits(base_remapping_address, uint64_t(location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
+            uint64_t data_block_address_to_evict = data_base_address_to_evict >> DATA_MANAGEMENT_OFFSET_BITS;
+
+            counter_table[data_block_address_to_evict] >>= 1; // halve the counter value
+            if (counter_table[data_block_address_to_evict] == 0)
+            {
+                hotness_table.at(data_block_address_to_evict) = false;    // mark cold data block
+                for (START_ADDRESS_WIDTH j = 0; j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
+                {
+                    // clear accessed data line
+                    access_table.at(data_block_address_to_evict).access[j] = false;
+                }
+            }
+        }
+    }
+}
+#endif  // COLD_DATA_DETECTION_IN_GROUP
 
 bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, float queue_busy_degree)
 {
@@ -996,6 +1164,21 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
         }
         else if (placement_table.at(placement_table_index).tag[i] != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
         {
+#if (IMMEDIATE_EVICTION == ENABLE)
+            REMAPPING_LOCATION_WIDTH sm_location = placement_table.at(placement_table_index).tag[i];
+            uint64_t data_base_address_to_evict = replace_bits(base_remapping_address, uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
+            uint64_t data_block_address_to_evict = data_base_address_to_evict >> DATA_MANAGEMENT_OFFSET_BITS;
+            for (START_ADDRESS_WIDTH j = 0; j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
+            {
+                // clear accessed data line
+                access_table.at(data_block_address_to_evict).access[j] = false;
+            }
+
+            is_cold = true;
+            occupied_group_number = i;
+            used_space -= placement_table.at(placement_table_index).granularity[occupied_group_number];
+            break;
+#else
             // check whether this data block is cold
             REMAPPING_LOCATION_WIDTH sm_location = placement_table.at(placement_table_index).tag[i];
             uint64_t data_base_address_to_evict = replace_bits(base_remapping_address, uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
@@ -1008,6 +1191,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
                 used_space -= placement_table.at(placement_table_index).granularity[occupied_group_number];
                 break;
             }
+#endif  // IMMEDIATE_EVICTION
         }
     }
 
@@ -1205,6 +1389,9 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(cons
     {
         if ((start_address + migration_granularity - 1) >= START_ADDRESS_WIDTH(StartAddress::Max))
         {
+#if (FLEXIBLE_GRANULARITY == ENABLE)
+            migration_granularity = end_address - start_address + 1;
+#else
             if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4)))
             {
                 migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2);
@@ -1234,6 +1421,7 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(cons
                 std::cout << __func__ << ": migration granularity calculation error." << std::endl;
                 assert(0);
             }
+#endif  // FLEXIBLE_GRANULARITY
         }
         else
         {
@@ -1255,6 +1443,9 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::round_down_migration_granularity(
     {
         if ((start_address + migration_granularity - 1) > end_address)
         {
+#if (FLEXIBLE_GRANULARITY == ENABLE)
+            migration_granularity = end_address - start_address + 1;
+#else
             if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4)))
             {
                 migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2);
@@ -1284,6 +1475,7 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::round_down_migration_granularity(
                 std::cout << __func__ << ": migration granularity calculation error." << std::endl;
                 assert(0);
             }
+#endif  // FLEXIBLE_GRANULARITY
         }
         else
         {

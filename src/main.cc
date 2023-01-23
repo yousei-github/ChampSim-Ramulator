@@ -116,6 +116,7 @@ int main(int argc, char** argv)
   }
 
 #if (USE_OPENMP == ENABLE)
+  omp_set_num_threads(SET_THREADS_NUMBER);
 #pragma omp parallel
   {
     // show how many cores your computer have

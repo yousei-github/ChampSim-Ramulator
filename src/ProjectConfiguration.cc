@@ -10,8 +10,8 @@ void output_memory_trace_initialization(const char* string)
     strcpy(string2, string);
 
     const char* delimiter = "/";
-    char* token;
-    char* last_token;
+    char* token = NULL;
+    char* last_token = NULL;
 
     /* get the first token */
     token = strtok(string2, delimiter);
