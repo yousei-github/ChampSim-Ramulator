@@ -3,17 +3,17 @@
 	"tasks": [
 		{
 			"type": "cppbuild",
-			"label": "C/C++: g++ build all files in O3",
+			"label": "C/C++: g++ build all files in optimization level 3",
 			"command": "/usr/bin/g++", // The path of compiler
 			"args": [
 				"-fdiagnostics-color=always",
-				"-O3",	// O1/O2/O3
+				"-O3", // O1/O2/O3
 				"-g",
 				"-Wall",
 				// "-MM",
 				// "-MT",
 				"-fopenmp",
-				"-std=c++17",	// c++11/c++17
+				"-std=c++17", // c++11/c++17
 				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
 				"${workspaceFolder}/inc/",
 				"-I",
@@ -22,267 +22,28 @@
 				"${workspaceFolder}/inc/Ramulator/",
 				// Below are input files (can be from multiples folders)
 				"${workspaceFolder}/src/ChampSim/*.cc",
-				// branch
+				// branch:
 				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
 				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
 				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
 				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
-
-				// prefetcher
+				// prefetcher:
 				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
-
-				// replacement
+				// replacement:
 				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
 				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
 				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
 				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
-
 				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
 				"${workspaceFolder}/src/Ramulator/*.cpp",
 				"${workspaceFolder}/src/*.cc",
 				// Below is the executable file's name
 				"-o",
 				"${workspaceFolder}/bin/champsim_plus_ramulator_O3"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
-			},
-			"problemMatcher": [
-				"$gcc"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"detail": "compiler: /usr/bin/g++"
-		},
-		{
-			"type": "cppbuild",
-			"label": "C/C++: g++ build all files in O3 for no research",
-			"command": "/usr/bin/g++", // The path of compiler
-			"args": [
-				"-fdiagnostics-color=always",
-				"-O3",	// O1/O2/O3
-				"-g",
-				"-Wall",
-				// "-MM",
-				// "-MT",
-				"-fopenmp",
-				"-std=c++17",	// c++11/c++17
-				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
-				"${workspaceFolder}/inc/",
-				"-I",
-				"${workspaceFolder}/inc/ChampSim/",
-				"-I",
-				"${workspaceFolder}/inc/Ramulator/",
-				// Below are input files (can be from multiples folders)
-				"${workspaceFolder}/src/ChampSim/*.cc",
-				// branch
-				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
-
-				// prefetcher
-				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
-
-				// replacement
-				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
-
-				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
-				"${workspaceFolder}/src/Ramulator/*.cpp",
-				"${workspaceFolder}/src/*.cc",
-				// Below is the executable file's name
-				"-o",
-				"${workspaceFolder}/bin/champsim_plus_ramulator_O3_no_research"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
-			},
-			"problemMatcher": [
-				"$gcc"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"detail": "compiler: /usr/bin/g++"
-		},
-		{
-			"type": "cppbuild",
-			"label": "C/C++: g++ build all files in O2",
-			"command": "/usr/bin/g++", // The path of compiler
-			"args": [
-				"-fdiagnostics-color=always",
-				"-O2",	// O1/O2/O3
-				"-g",
-				"-Wall",
-				// "-MM",
-				// "-MT",
-				"-fopenmp",
-				"-std=c++17",	// c++11/c++17
-				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
-				"${workspaceFolder}/inc/",
-				"-I",
-				"${workspaceFolder}/inc/ChampSim/",
-				"-I",
-				"${workspaceFolder}/inc/Ramulator/",
-				// Below are input files (can be from multiples folders)
-				"${workspaceFolder}/src/ChampSim/*.cc",
-				// branch
-				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
-
-				// prefetcher
-				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
-
-				// replacement
-				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
-
-				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
-				"${workspaceFolder}/src/Ramulator/*.cpp",
-				"${workspaceFolder}/src/*.cc",
-				// Below is the executable file's name
-				"-o",
-				"${workspaceFolder}/bin/champsim_plus_ramulator_O2"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
-			},
-			"problemMatcher": [
-				"$gcc"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"detail": "compiler: /usr/bin/g++"
-		},
-		{
-			"type": "cppbuild",
-			"label": "C/C++: g++ build all files in O1",
-			"command": "/usr/bin/g++", // The path of compiler
-			"args": [
-				"-fdiagnostics-color=always",
-				"-O1",	// O1/O2/O3
-				"-g",
-				"-Wall",
-				// "-MM",
-				// "-MT",
-				"-fopenmp",
-				"-std=c++17",	// c++11/c++17
-				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
-				"${workspaceFolder}/inc/",
-				"-I",
-				"${workspaceFolder}/inc/ChampSim/",
-				"-I",
-				"${workspaceFolder}/inc/Ramulator/",
-				// Below are input files (can be from multiples folders)
-				"${workspaceFolder}/src/ChampSim/*.cc",
-				// branch
-				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
-
-				// prefetcher
-				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
-
-				// replacement
-				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
-
-				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
-				"${workspaceFolder}/src/Ramulator/*.cpp",
-				"${workspaceFolder}/src/*.cc",
-				// Below is the executable file's name
-				"-o",
-				"${workspaceFolder}/bin/champsim_plus_ramulator_O1"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
-			},
-			"problemMatcher": [
-				"$gcc"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"detail": "compiler: /usr/bin/g++"
-		},
-		{
-			"type": "cppbuild",
-			"label": "C/C++: g++ build all files in O1 for no research",
-			"command": "/usr/bin/g++", // The path of compiler
-			"args": [
-				"-fdiagnostics-color=always",
-				"-O1",	// O1/O2/O3
-				"-g",
-				"-Wall",
-				// "-MM",
-				// "-MT",
-				"-fopenmp",
-				"-std=c++17",	// c++11/c++17
-				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
-				"${workspaceFolder}/inc/",
-				"-I",
-				"${workspaceFolder}/inc/ChampSim/",
-				"-I",
-				"${workspaceFolder}/inc/Ramulator/",
-				// Below are input files (can be from multiples folders)
-				"${workspaceFolder}/src/ChampSim/*.cc",
-				// branch
-				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
-
-				// prefetcher
-				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
-
-				// replacement
-				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
-
-				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
-				"${workspaceFolder}/src/Ramulator/*.cpp",
-				"${workspaceFolder}/src/*.cc",
-				// Below is the executable file's name
-				"-o",
-				"${workspaceFolder}/bin/champsim_plus_ramulator_O1_no_research"
 			],
 			"options": {
 				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
@@ -308,7 +69,7 @@
 				// "-MM",
 				// "-MT",
 				"-fopenmp",
-				"-std=c++17",	// c++11/c++17
+				"-std=c++17", // c++11/c++17
 				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
 				"${workspaceFolder}/inc/",
 				"-I",
@@ -317,25 +78,22 @@
 				"${workspaceFolder}/inc/Ramulator/",
 				// Below are input files (can be from multiples folders)
 				"${workspaceFolder}/src/ChampSim/*.cc",
-				// branch
+				// branch:
 				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
 				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
 				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
 				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
-
-				// prefetcher
+				// prefetcher:
 				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
 				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
-
-				// replacement
+				// replacement:
 				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
 				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
 				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
 				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
-
 				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
 				"${workspaceFolder}/src/Ramulator/*.cpp",
 				"${workspaceFolder}/src/*.cc",
