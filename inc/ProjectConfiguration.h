@@ -14,8 +14,8 @@
 #define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE                 (ENABLE) // whether print simulation statistics into files
 #define PRINT_MEMORY_TRACE                         (DISABLE) // whether print memory trace into files
-#define MEMORY_USE_SWAPPING_UNIT                   (DISABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
-#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (DISABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
+#define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
+#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
 #define CPU_USE_MULTIPLE_CORES                     (DISABLE) // whether CPU uses multiple cores to run simulation (go to ./inc/ChampSim/champsim_constants.h to check related parameters)
 
 #if (MEMORY_USE_HYBRID == ENABLE)
@@ -48,7 +48,11 @@
 #elif (IDEAL_VARIABLE_GRANULARITY == ENABLE)
 #define HOTNESS_THRESHOLD                     (1u)
 #define DATA_EVICTION                         (ENABLE)
-#define FLEXIBLE_DATA_PLACEMENT               (DISABLE)
+#define FLEXIBLE_DATA_PLACEMENT               (ENABLE)
+#define STATISTICS_INFORMATION                (ENABLE)
+#define FLEXIBLE_GRANULARITY                  (ENABLE)
+#define IMMEDIATE_EVICTION                    (DISABLE)
+#define COLD_DATA_DETECTION_IN_GROUP          (DISABLE)
 #else
 #define HOTNESS_THRESHOLD                     (1u)
 #endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY
@@ -131,6 +135,10 @@
 #define CPU_L1I_PREFETCHER             (PREFETCHER_USE_NO_INSTR)
 //#define CPU_L1I_PREFETCHER             (CACHE::pref_t::CPU_REDIRECT_pprefetcherDnext_line_instr_)
 #endif  // INSTRUCTION_PREFETCHER
+
+#if (USE_OPENMP == ENABLE)
+#define SET_THREADS_NUMBER             (6)
+#endif  // USE_OPENMP
 
 #define KB (1024ul) // unit is byte
 #define MB (KB*KB)
