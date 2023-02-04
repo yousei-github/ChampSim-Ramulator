@@ -5,6 +5,7 @@
 #include "Request.h"
 #include <vector>
 #include <functional>
+#include "ProjectConfiguration.h" // user file
 
 using namespace std;
 
@@ -24,19 +25,19 @@ public:
     static map<string, enum Speed> speed_map;
 
     /* Level */
-    enum class Level : int
+    enum class Level: int
     {
         Channel, Rank, BankGroup, Bank, Row, Column, MAX
     };
-    
-    static std::string level_str [int(Level::MAX)];
+
+    static std::string level_str[int(Level::MAX)];
 
     /* Command */
-    enum class Command : int
+    enum class Command: int
     {
-        ACT, PRE,   PREA,
-        RD,  WR,    RDA, WRA,
-        REF, REFSB, PDE, PDX,  SRE, SRX,
+        ACT, PRE, PREA,
+        RD, WR, RDA, WRA,
+        REF, REFSB, PDE, PDX, SRE, SRX,
         MAX
     };
 
@@ -58,8 +59,9 @@ public:
 
     bool is_opening(Command cmd)
     {
-        switch(int(cmd)) {
-            case int(Command::ACT):
+        switch (int(cmd))
+        {
+            case int(Command::ACT) :
                 return true;
             default:
                 return false;
@@ -68,43 +70,46 @@ public:
 
     bool is_accessing(Command cmd)
     {
-        switch(int(cmd)) {
-            case int(Command::RD):
-            case int(Command::WR):
-            case int(Command::RDA):
-            case int(Command::WRA):
+        switch (int(cmd))
+        {
+            case int(Command::RD) :
+                case int(Command::WR) :
+                case int(Command::RDA) :
+                case int(Command::WRA) :
                 return true;
-            default:
-                return false;
+                default:
+                    return false;
         }
     }
 
     bool is_closing(Command cmd)
     {
-        switch(int(cmd)) {
-            case int(Command::RDA):
-            case int(Command::WRA):
-            case int(Command::PRE):
-            case int(Command::PREA):
+        switch (int(cmd))
+        {
+            case int(Command::RDA) :
+                case int(Command::WRA) :
+                case int(Command::PRE) :
+                case int(Command::PREA) :
                 return true;
-            default:
-                return false;
+                default:
+                    return false;
         }
     }
 
     bool is_refreshing(Command cmd)
     {
-        switch(int(cmd)) {
-            case int(Command::REF):
-            case int(Command::REFSB):
+        switch (int(cmd))
+        {
+            case int(Command::REF) :
+                case int(Command::REFSB) :
                 return true;
-            default:
-                return false;
+                default:
+                    return false;
         }
     }
 
     /* State */
-    enum class State : int
+    enum class State: int
     {
         Opened, Closed, PowerUp, ActPowerDown, PrePowerDown, SelfRefresh, MAX
     } start[int(Level::MAX)] = {
@@ -139,29 +144,36 @@ public:
     function<void(DRAM<HBM>*, int)> lambda[int(Level::MAX)][int(Command::MAX)];
 
     /* Organization */
-    enum class Org : int
+    enum class Org: int
     { // per channel density here. Each stack comes with 8 channels
+#if (ADD_HBM_128MB == ENABLE)
+        HBM_128Mb,
+#endif  // ADD_HBM_128MB
         HBM_1Gb,
         HBM_2Gb,
         HBM_4Gb,
         MAX
     };
 
-    struct OrgEntry {
+    struct OrgEntry
+    {
         int size;
         int dq;
         int count[int(Level::MAX)];
     } org_table[int(Org::MAX)] = {
-        {1<<10, 128, {0, 0, 4, 2, 1<<13, 1<<(6+1)}},
-        {2<<10, 128, {0, 0, 4, 2, 1<<14, 1<<(6+1)}},
-        {4<<10, 128, {0, 0, 4, 4, 1<<14, 1<<(6+1)}},
+#if (ADD_HBM_128MB == ENABLE)
+        {1 << 7, 128, {0, 0, 2, 1, 1 << 12, 1 << (6 + 1)}},
+#endif  // ADD_HBM_128MB
+        {1 << 10, 128, {0, 0, 4, 2, 1 << 13, 1 << (6 + 1)}},
+        {2 << 10, 128, {0, 0, 4, 2, 1 << 14, 1 << (6 + 1)}},
+        {4 << 10, 128, {0, 0, 4, 4, 1 << 14, 1 << (6 + 1)}},
     }, org_entry;
 
     void set_channel_number(int channel);
     void set_rank_number(int rank);
 
     /* Speed */
-    enum class Speed : int
+    enum class Speed: int
     {
         HBM_1Gbps,
         MAX
@@ -170,7 +182,8 @@ public:
     int prefetch_size = 4; // burst length could be 2 and 4 (choose 4 here), 2n prefetch
     int channel_width = 128;
 
-    struct SpeedEntry {
+    struct SpeedEntry
+    {
         int rate;
         double freq, tCK;
         int nBL, nCCDS, nCCDL;

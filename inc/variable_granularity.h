@@ -37,12 +37,12 @@
 #define MIGRATION_GRANULARITY_WIDTH         uint8_t
 #define MIGRATION_GRANULARITY_WIDTH_BITS    (3)
 
-#define NUMBER_OF_BLOCK                     (5) // default: 5
+#define NUMBER_OF_BLOCK                     (35) // default: 5
 
 #define REMAPPING_REQUEST_QUEUE_LENGTH      (64)  // 1024/4096
 #define QUEUE_BUSY_DEGREE_THRESHOLD         (0.8f)
 
-#define INTERVAL_FOR_DECREMENT              (1000000)   // 1000000
+#define INTERVAL_FOR_DECREMENT              (1000000)   // default: 1000000
 
 class OS_TRANSPARENT_MANAGEMENT
 {
@@ -105,9 +105,11 @@ public:
 
 #if (STATISTICS_INFORMATION == ENABLE)
     bool access_flag = false; // mark whether this page has ever been accessed.
-    bool access_stats[START_ADDRESS_WIDTH(StartAddress::Max)];
-    MIGRATION_GRANULARITY_WIDTH granularity_stats = 0;          // store the best granularity for this page
-    MIGRATION_GRANULARITY_WIDTH granularity_predict_stats = 0;  // store the predicted granularity for this page
+    bool access_stats[START_ADDRESS_WIDTH(StartAddress::Max)];            // record the accessed data line
+    bool temporal_access_stats[START_ADDRESS_WIDTH(StartAddress::Max)];   // record the accessed data line for a fix intervsal (clear is possible)
+    MIGRATION_GRANULARITY_WIDTH estimated_spatial_locality_stats = 0;     // store the estimated spatial locality for this page
+    MIGRATION_GRANULARITY_WIDTH granularity_stats = 0;                    // store the best granularity for this page
+    MIGRATION_GRANULARITY_WIDTH granularity_predict_stats = 0;            // store the predicted granularity for this page
 #endif  // STATISTICS_INFORMATION
 
     AccessDistribution()
@@ -121,6 +123,7 @@ public:
       for (uint8_t i = 0; i < START_ADDRESS_WIDTH(StartAddress::Max); i++)
       {
         access_stats[i] = false;
+        temporal_access_stats[i] = false;
       }
 #endif  // STATISTICS_INFORMATION
     };
@@ -151,7 +154,7 @@ public:
   std::vector<PlacementEntry>& placement_table;
 
   uint64_t expected_number_in_congruence_group = 0;
-  
+
   /* Member functions */
   OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, uint64_t max_address, uint64_t fast_memory_max_address);
   ~OS_TRANSPARENT_MANAGEMENT();

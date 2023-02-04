@@ -123,7 +123,7 @@ public:
         : is_first_command(true), coreid(0)
     {
     }
-#endif
+#endif  // USER_CODES, RAMULATOR
 };
 
 } /*namespace ramulator*/

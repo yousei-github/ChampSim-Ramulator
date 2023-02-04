@@ -28,8 +28,10 @@
 #define HOTNESS_DEFAULT_VALUE                   (false)
 
 #define REMAPPING_LOCATION_WIDTH                uint8_t
-#define REMAPPING_LOCATION_WIDTH_BITS           (3)
+#define REMAPPING_LOCATION_WIDTH_BITS           (3)  // default: 3
 #define LOCATION_TABLE_ENTRY_WIDTH              uint16_t
+
+#define NUMBER_OF_BLOCK                         (5) // default: 5
 
 // 0x0538 for the congruence group with 5 members (lines) at most, (000_001_010_011_100_0 = 0x0538)
 // [15:13] bit for member 0, [12:10] bit for member 1, [9:7] bit for member 2, [6:4] bit for member 3, [3:1] bit for member 4.
@@ -41,6 +43,13 @@
 
 #define INCOMPLETE_READ_REQUEST_QUEUE_LENGTH    (128)
 #define INCOMPLETE_WRITE_REQUEST_QUEUE_LENGTH   (128)
+
+#if (BITS_MANIPULATION == DISABLE)
+#undef REMAPPING_LOCATION_WIDTH_BITS
+#undef NUMBER_OF_BLOCK
+#define REMAPPING_LOCATION_WIDTH_BITS           (lg2(64))
+#define NUMBER_OF_BLOCK                         (35)
+#endif  // BITS_MANIPULATION
 
 class OS_TRANSPARENT_MANAGEMENT
 {
@@ -70,13 +79,29 @@ public:
     enum class RemappingLocation: REMAPPING_LOCATION_WIDTH
     {
         Zero = 0, One, Two, Three, Four,
-        Max
+        Max = NUMBER_OF_BLOCK
     };
 
     uint8_t  congruence_group_msb;      // most significant bit of congruence group, and its address format is in the byte granularity
 
     /* Remapping table */
+#if (BITS_MANIPULATION == ENABLE)
     std::vector<LOCATION_TABLE_ENTRY_WIDTH>& line_location_table;    // paper CAMEO: SRAM-Based LLT / Embed LLT in Stacked DRAM
+#else
+    struct LocationTableEntry
+    {
+        REMAPPING_LOCATION_WIDTH location[NUMBER_OF_BLOCK]; // location field for each line, location[0] is for the line in NM
+
+        LocationTableEntry()
+        {
+            for (REMAPPING_LOCATION_WIDTH i = 0; i < REMAPPING_LOCATION_WIDTH(RemappingLocation::Max); i++)
+            {
+                location[i] = i;
+            }
+        };
+    };
+    std::vector<LocationTableEntry>& line_location_table;    // paper CAMEO: SRAM-Based LLT / Embed LLT in Stacked DRAM
+#endif  // BITS_MANIPULATION
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     /** @brief

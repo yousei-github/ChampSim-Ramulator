@@ -22,6 +22,7 @@
 #define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
 #define MEMORY_NUMBER_ONE    (0u)
 #define MEMORY_NUMBER_TWO    (1u)
+#define ADD_HBM_128MB        (ENABLE)
 #else
 #define NUMBER_OF_MEMORIES   (1u)
 
@@ -37,16 +38,17 @@
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-#define IDEAL_LINE_LOCATION_TABLE             (DISABLE)
+#define IDEAL_LINE_LOCATION_TABLE             (ENABLE)
 #define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
-#define IDEAL_VARIABLE_GRANULARITY            (ENABLE)
+#define IDEAL_VARIABLE_GRANULARITY            (DISABLE)
 
 #define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
 
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
 #define HOTNESS_THRESHOLD                     (1u)
+#define BITS_MANIPULATION                     (DISABLE)
 #elif (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-#define HOTNESS_THRESHOLD                     (1u)
+#define HOTNESS_THRESHOLD                     (1u)      // default: 1/4
 #define DATA_EVICTION                         (ENABLE)
 #define FLEXIBLE_DATA_PLACEMENT               (ENABLE)
 #define STATISTICS_INFORMATION                (ENABLE)
