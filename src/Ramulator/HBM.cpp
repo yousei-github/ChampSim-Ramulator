@@ -9,9 +9,12 @@ using namespace std;
 using namespace ramulator;
 
 string HBM::standard_name = "HBM";
-string HBM::level_str [int(Level::MAX)] = {"Ch", "Ra", "Bg", "Ba", "Ro", "Co"};
+string HBM::level_str[int(Level::MAX)] = {"Ch", "Ra", "Bg", "Ba", "Ro", "Co"};
 
 map<string, enum HBM::Org> HBM::org_map = {
+#if (ADD_HBM_128MB == ENABLE)
+    {"HBM_128Mb", HBM::Org::HBM_128Mb},
+#endif  // ADD_HBM_128MB
     {"HBM_1Gb", HBM::Org::HBM_1Gb},
     {"HBM_2Gb", HBM::Org::HBM_2Gb},
     {"HBM_4Gb", HBM::Org::HBM_4Gb},
@@ -34,22 +37,35 @@ HBM::HBM(Org org, Speed speed)
     init_timing();
 }
 
-HBM::HBM(const string& org_str, const string& speed_str) :
+HBM::HBM(const string& org_str, const string& speed_str):
     HBM(org_map[org_str], speed_map[speed_str])
 {
 }
 
-void HBM::set_channel_number(int channel) {
-  org_entry.count[int(Level::Channel)] = channel;
+void HBM::set_channel_number(int channel)
+{
+    org_entry.count[int(Level::Channel)] = channel;
 }
 
-void HBM::set_rank_number(int rank) {
-  org_entry.count[int(Level::Rank)] = rank;
+void HBM::set_rank_number(int rank)
+{
+    org_entry.count[int(Level::Rank)] = rank;
 }
 
 
 void HBM::init_speed()
 {
+#if (ADD_HBM_128MB == ENABLE)
+    const static int RFC_TABLE[int(Speed::MAX)][int(Org::MAX)] = {
+        {43, 55, 80, 130}
+    };
+    const static int REFI1B_TABLE[int(Speed::MAX)][int(Org::MAX)] = {
+        {32, 64, 128, 256}
+    };
+    const static int XS_TABLE[int(Speed::MAX)][int(Org::MAX)] = {
+        {48, 60, 85, 135}
+    };
+#else
     const static int RFC_TABLE[int(Speed::MAX)][int(Org::MAX)] = {
         {55, 80, 130}
     };
@@ -59,18 +75,33 @@ void HBM::init_speed()
     const static int XS_TABLE[int(Speed::MAX)][int(Org::MAX)] = {
         {60, 85, 135}
     };
+#endif  // ADD_HBM_128MB
 
     int speed = 0, density = 0;
-    switch (speed_entry.rate) {
-        case 1000: speed = 0; break;
-        default: assert(false);
+    switch (speed_entry.rate)
+    {
+    case 1000: speed = 0; break;
+    default: assert(false);
     };
-    switch (org_entry.size >> 10){
-        case 1: density = 0; break;
-        case 2: density = 1; break;
-        case 4: density = 2; break;
-        default: assert(false);
+#if (ADD_HBM_128MB == ENABLE)
+    switch (org_entry.size >> 10)
+    {
+    case 0: density = 0; break;
+    case 1: density = 1; break;
+    case 2: density = 2; break;
+    case 4: density = 3; break;
+    default: assert(false);
     }
+#else
+    switch (org_entry.size >> 10)
+    {
+    case 1: density = 0; break;
+    case 2: density = 1; break;
+    case 4: density = 2; break;
+    default: assert(false);
+    }
+#endif  // ADD_HBM_128MB
+
     speed_entry.nRFC = RFC_TABLE[speed][density];
     speed_entry.nREFI1B = REFI1B_TABLE[speed][density];
     speed_entry.nXS = XS_TABLE[speed][density];
@@ -80,22 +111,24 @@ void HBM::init_speed()
 void HBM::init_prereq()
 {
     // RD
-    prereq[int(Level::Rank)][int(Command::RD)] = [] (DRAM<HBM>* node, Command cmd, int id) {
-        switch (int(node->state)) {
-            case int(State::PowerUp): return Command::MAX;
-            case int(State::ActPowerDown): return Command::PDX;
-            case int(State::PrePowerDown): return Command::PDX;
-            case int(State::SelfRefresh): return Command::SRX;
-            default: assert(false);
+    prereq[int(Level::Rank)][int(Command::RD)] = [](DRAM<HBM>* node, Command cmd, int id) {
+        switch (int(node->state))
+        {
+            case int(State::PowerUp) : return Command::MAX;
+                case int(State::ActPowerDown) : return Command::PDX;
+                    case int(State::PrePowerDown) : return Command::PDX;
+                        case int(State::SelfRefresh) : return Command::SRX;
+                        default: assert(false);
         }};
-    prereq[int(Level::Bank)][int(Command::RD)] = [] (DRAM<HBM>* node, Command cmd, int id) {
-        switch (int(node->state)) {
-            case int(State::Closed): return Command::ACT;
-            case int(State::Opened):
-                if (node->row_state.find(id) != node->row_state.end())
-                    return cmd;
-                else return Command::PRE;
-            default: assert(false);
+    prereq[int(Level::Bank)][int(Command::RD)] = [](DRAM<HBM>* node, Command cmd, int id) {
+        switch (int(node->state))
+        {
+            case int(State::Closed) : return Command::ACT;
+                case int(State::Opened) :
+                    if (node->row_state.find(id) != node->row_state.end())
+                        return cmd;
+                    else return Command::PRE;
+                default: assert(false);
         }};
 
     // WR
@@ -103,9 +136,10 @@ void HBM::init_prereq()
     prereq[int(Level::Bank)][int(Command::WR)] = prereq[int(Level::Bank)][int(Command::RD)];
 
     // REF
-    prereq[int(Level::Rank)][int(Command::REF)] = [] (DRAM<HBM>* node, Command cmd, int id) {
+    prereq[int(Level::Rank)][int(Command::REF)] = [](DRAM<HBM>* node, Command cmd, int id) {
         for (auto bg : node->children)
-            for (auto bank: bg->children) {
+            for (auto bank : bg->children)
+            {
                 if (bank->state == State::Closed)
                     continue;
                 return Command::PREA;
@@ -113,28 +147,30 @@ void HBM::init_prereq()
         return Command::REF;};
 
     // REFSB
-    prereq[int(Level::Bank)][int(Command::REFSB)] = [] (DRAM<HBM>* node, Command cmd, int id) {
+    prereq[int(Level::Bank)][int(Command::REFSB)] = [](DRAM<HBM>* node, Command cmd, int id) {
         if (node->state == State::Closed) return Command::REFSB;
         return Command::PRE;};
 
     // PD
-    prereq[int(Level::Rank)][int(Command::PDE)] = [] (DRAM<HBM>* node, Command cmd, int id) {
-        switch (int(node->state)) {
-            case int(State::PowerUp): return Command::PDE;
-            case int(State::ActPowerDown): return Command::PDE;
-            case int(State::PrePowerDown): return Command::PDE;
-            case int(State::SelfRefresh): return Command::SRX;
-            default: assert(false);
+    prereq[int(Level::Rank)][int(Command::PDE)] = [](DRAM<HBM>* node, Command cmd, int id) {
+        switch (int(node->state))
+        {
+            case int(State::PowerUp) : return Command::PDE;
+                case int(State::ActPowerDown) : return Command::PDE;
+                    case int(State::PrePowerDown) : return Command::PDE;
+                        case int(State::SelfRefresh) : return Command::SRX;
+                        default: assert(false);
         }};
 
     // SR
-    prereq[int(Level::Rank)][int(Command::SRE)] = [] (DRAM<HBM>* node, Command cmd, int id) {
-        switch (int(node->state)) {
-            case int(State::PowerUp): return Command::SRE;
-            case int(State::ActPowerDown): return Command::PDX;
-            case int(State::PrePowerDown): return Command::PDX;
-            case int(State::SelfRefresh): return Command::SRE;
-            default: assert(false);
+    prereq[int(Level::Rank)][int(Command::SRE)] = [](DRAM<HBM>* node, Command cmd, int id) {
+        switch (int(node->state))
+        {
+            case int(State::PowerUp) : return Command::SRE;
+                case int(State::ActPowerDown) : return Command::PDX;
+                    case int(State::PrePowerDown) : return Command::PDX;
+                        case int(State::SelfRefresh) : return Command::SRE;
+                        default: assert(false);
         }};
 }
 
@@ -142,14 +178,15 @@ void HBM::init_prereq()
 void HBM::init_rowhit()
 {
     // RD
-    rowhit[int(Level::Bank)][int(Command::RD)] = [] (DRAM<HBM>* node, Command cmd, int id) {
-        switch (int(node->state)) {
-            case int(State::Closed): return false;
-            case int(State::Opened):
-                if (node->row_state.find(id) != node->row_state.end())
-                    return true;
-                return false;
-            default: assert(false);
+    rowhit[int(Level::Bank)][int(Command::RD)] = [](DRAM<HBM>* node, Command cmd, int id) {
+        switch (int(node->state))
+        {
+            case int(State::Closed) : return false;
+                case int(State::Opened) :
+                    if (node->row_state.find(id) != node->row_state.end())
+                        return true;
+                    return false;
+                default: assert(false);
         }};
 
     // WR
@@ -159,11 +196,12 @@ void HBM::init_rowhit()
 void HBM::init_rowopen()
 {
     // RD
-    rowopen[int(Level::Bank)][int(Command::RD)] = [] (DRAM<HBM>* node, Command cmd, int id) {
-        switch (int(node->state)) {
-            case int(State::Closed): return false;
-            case int(State::Opened): return true;
-            default: assert(false);
+    rowopen[int(Level::Bank)][int(Command::RD)] = [](DRAM<HBM>* node, Command cmd, int id) {
+        switch (int(node->state))
+        {
+            case int(State::Closed) : return false;
+                case int(State::Opened) : return true;
+                default: assert(false);
         }};
 
     // WR
@@ -172,41 +210,43 @@ void HBM::init_rowopen()
 
 void HBM::init_lambda()
 {
-    lambda[int(Level::Bank)][int(Command::ACT)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Bank)][int(Command::ACT)] = [](DRAM<HBM>* node, int id) {
         node->state = State::Opened;
         node->row_state[id] = State::Opened;};
-    lambda[int(Level::Bank)][int(Command::PRE)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Bank)][int(Command::PRE)] = [](DRAM<HBM>* node, int id) {
         node->state = State::Closed;
         node->row_state.clear();};
-    lambda[int(Level::Rank)][int(Command::PREA)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Rank)][int(Command::PREA)] = [](DRAM<HBM>* node, int id) {
         for (auto bg : node->children)
-            for (auto bank : bg->children) {
+            for (auto bank : bg->children)
+            {
                 bank->state = State::Closed;
                 bank->row_state.clear();
             }};
-    lambda[int(Level::Rank)][int(Command::REF)] = [] (DRAM<HBM>* node, int id) {};
-    lambda[int(Level::Bank)][int(Command::RD)] = [] (DRAM<HBM>* node, int id) {};
-    lambda[int(Level::Bank)][int(Command::WR)] = [] (DRAM<HBM>* node, int id) {};
-    lambda[int(Level::Bank)][int(Command::RDA)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Rank)][int(Command::REF)] = [](DRAM<HBM>* node, int id) {};
+    lambda[int(Level::Bank)][int(Command::RD)] = [](DRAM<HBM>* node, int id) {};
+    lambda[int(Level::Bank)][int(Command::WR)] = [](DRAM<HBM>* node, int id) {};
+    lambda[int(Level::Bank)][int(Command::RDA)] = [](DRAM<HBM>* node, int id) {
         node->state = State::Closed;
         node->row_state.clear();};
-    lambda[int(Level::Bank)][int(Command::WRA)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Bank)][int(Command::WRA)] = [](DRAM<HBM>* node, int id) {
         node->state = State::Closed;
         node->row_state.clear();};
-    lambda[int(Level::Rank)][int(Command::PDE)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Rank)][int(Command::PDE)] = [](DRAM<HBM>* node, int id) {
         for (auto bg : node->children)
-            for (auto bank : bg->children) {
+            for (auto bank : bg->children)
+            {
                 if (bank->state == State::Closed)
                     continue;
                 node->state = State::ActPowerDown;
                 return;
             }
         node->state = State::PrePowerDown;};
-    lambda[int(Level::Rank)][int(Command::PDX)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Rank)][int(Command::PDX)] = [](DRAM<HBM>* node, int id) {
         node->state = State::PowerUp;};
-    lambda[int(Level::Rank)][int(Command::SRE)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Rank)][int(Command::SRE)] = [](DRAM<HBM>* node, int id) {
         node->state = State::SelfRefresh;};
-    lambda[int(Level::Rank)][int(Command::SRX)] = [] (DRAM<HBM>* node, int id) {
+    lambda[int(Level::Rank)][int(Command::SRX)] = [](DRAM<HBM>* node, int id) {
         node->state = State::PowerUp;};
 }
 
@@ -214,7 +254,7 @@ void HBM::init_lambda()
 void HBM::init_timing()
 {
     SpeedEntry& s = speed_entry;
-    vector<TimingEntry> *t;
+    vector<TimingEntry>* t;
 
     /*** Channel ***/
     t = timing[int(Level::Channel)];

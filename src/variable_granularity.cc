@@ -32,77 +32,76 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
     outputchampsimstatistics.remapping_request_queue_congestion = remapping_request_queue_congestion;
 
 #if (STATISTICS_INFORMATION == ENABLE)
+    uint64_t estimated_spatial_locality_counts[MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max)] = {0};
+    uint64_t estimated_spatial_locality_total_counts = 0;
     uint64_t granularity_counts[MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max)] = {0};
+    uint64_t granularity_total_counts = 0;
     uint64_t granularity_predict_counts[MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max)] = {0};
+    uint64_t granularity_total_predict_counts = 0;
+    uint64_t access_table_size = total_capacity >> DATA_MANAGEMENT_OFFSET_BITS;
 
-#if (USE_OPENMP == ENABLE)
-#pragma omp parallel
+    for (uint64_t i = 0; i < access_table_size; i++)
     {
-#pragma omp for
-#endif  // USE_OPENMP
-        for (uint64_t i = 0; i < total_capacity >> DATA_MANAGEMENT_OFFSET_BITS; i++)
+        if (access_table.at(i).access_flag == true)
         {
-            if (access_table.at(i).access_flag == true)
+            // calculate the start address
+            START_ADDRESS_WIDTH start_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+            for (START_ADDRESS_WIDTH j = START_ADDRESS_WIDTH(StartAddress::Zero); j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
             {
-                // calculate the start address
-                START_ADDRESS_WIDTH start_address = START_ADDRESS_WIDTH(StartAddress::Zero);
-                for (START_ADDRESS_WIDTH j = START_ADDRESS_WIDTH(StartAddress::Zero); j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
+                if (access_table.at(i).access_stats[j] == true)
                 {
-                    if (access_table.at(i).access_stats[j] == true)
-                    {
-                        start_address = j;
-                        break;
-                    }
+                    start_address = j;
+                    break;
                 }
-
-                // calculate the end address
-                START_ADDRESS_WIDTH end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
-                for (START_ADDRESS_WIDTH j = START_ADDRESS_WIDTH(StartAddress::Max) - 1; j > START_ADDRESS_WIDTH(StartAddress::Zero); j--)
-                {
-                    if (access_table.at(i).access_stats[j] == true)
-                    {
-                        end_address = j;
-                        break;
-                    }
-                }
-
-                access_table.at(i).granularity_stats = end_address - start_address + 1;
-                granularity_counts[access_table.at(i).granularity_stats]++;
             }
+
+            // calculate the end address
+            START_ADDRESS_WIDTH end_address = START_ADDRESS_WIDTH(StartAddress::Zero);
+            for (START_ADDRESS_WIDTH j = START_ADDRESS_WIDTH(StartAddress::Max) - 1; j > START_ADDRESS_WIDTH(StartAddress::Zero); j--)
+            {
+                if (access_table.at(i).access_stats[j] == true)
+                {
+                    end_address = j;
+                    break;
+                }
+            }
+
+            estimated_spatial_locality_counts[access_table.at(i).estimated_spatial_locality_stats]++;
+
+            access_table.at(i).granularity_stats = end_address - start_address + 1;
+            granularity_counts[access_table.at(i).granularity_stats]++;
+
+            granularity_predict_counts[access_table.at(i).granularity_predict_stats]++;
         }
-#if (USE_OPENMP == ENABLE)
     }
-#endif  // USE_OPENMP
 
     fprintf(outputchampsimstatistics.trace_file, "\n\nInformation about variable granularity\n\n");
 
-    fprintf(outputchampsimstatistics.trace_file, "Best granularity distribution:\n");
+    // print out spatial locality
+    fprintf(outputchampsimstatistics.trace_file, "Estimated spatial locality distribution:\n");
+    for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
+    {
+        fprintf(outputchampsimstatistics.trace_file, "Spatial locality [%d] %ld\n", i, estimated_spatial_locality_counts[i]);
+        estimated_spatial_locality_total_counts += estimated_spatial_locality_counts[i];
+    }
+    fprintf(outputchampsimstatistics.trace_file, "estimated_spatial_locality_total_counts %ld\n", estimated_spatial_locality_total_counts);
+
+    // print out best granularity
+    fprintf(outputchampsimstatistics.trace_file, "\nBest granularity distribution:\n");
     for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
     {
         fprintf(outputchampsimstatistics.trace_file, "Granularity [%d] %ld\n", i, granularity_counts[i]);
+        granularity_total_counts += granularity_counts[i];
     }
+    fprintf(outputchampsimstatistics.trace_file, "granularity_total_counts %ld\n", granularity_total_counts);
 
-    // print out predict granularity
-#if (USE_OPENMP == ENABLE)
-#pragma omp parallel
-    {
-#pragma omp for
-#endif  // USE_OPENMP
-        for (uint64_t i = 0; i < total_capacity >> DATA_MANAGEMENT_OFFSET_BITS; i++)
-        {
-            if (access_table.at(i).granularity_predict_stats != MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
-            {
-                granularity_predict_counts[access_table.at(i).granularity_predict_stats]++;
-            }
-        }
-#if (USE_OPENMP == ENABLE)
-    }
-#endif  // USE_OPENMP
     fprintf(outputchampsimstatistics.trace_file, "\nPredicted granularity distribution:\n");
     for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
     {
         fprintf(outputchampsimstatistics.trace_file, "Granularity [%d] %ld\n", i, granularity_predict_counts[i]);
+        granularity_total_predict_counts += granularity_predict_counts[i];
     }
+    fprintf(outputchampsimstatistics.trace_file, "granularity_total_predict_counts %ld\n", granularity_total_predict_counts);
 
 #endif  // STATISTICS_INFORMATION
 
@@ -133,6 +132,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
 #if (STATISTICS_INFORMATION == ENABLE)
     access_table.at(data_block_address).access_flag = true;
     access_table.at(data_block_address).access_stats[data_line_positon] = true;
+    access_table.at(data_block_address).temporal_access_stats[data_line_positon] = true;
 #endif  // STATISTICS_INFORMATION
 
 #if (COLD_DATA_DETECTION_IN_GROUP == ENABLE)
@@ -899,6 +899,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
 #if (STATISTICS_INFORMATION == ENABLE)
                 if (remapping_request.size > access_table.at(data_block_address).granularity_predict_stats)
                 {
+                    // record the biggest predicted granularity
                     access_table.at(data_block_address).granularity_predict_stats = remapping_request.size;
                 }
 #endif  // STATISTICS_INFORMATION
@@ -1086,12 +1087,31 @@ void OS_TRANSPARENT_MANAGEMENT::cold_data_detection()
                 if (counter_table[i] == 0)
                 {
                     hotness_table.at(i) = false;    // mark cold data block
-                    for (START_ADDRESS_WIDTH j = 0; j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
+                    for (START_ADDRESS_WIDTH j = START_ADDRESS_WIDTH(StartAddress::Zero); j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
                     {
                         // clear accessed data line
                         access_table.at(i).access[j] = false;
                     }
                 }
+
+#if (STATISTICS_INFORMATION == ENABLE)
+                // count the estimated spatial locality
+                START_ADDRESS_WIDTH count_access = START_ADDRESS_WIDTH(StartAddress::Zero);
+                for (START_ADDRESS_WIDTH j = START_ADDRESS_WIDTH(StartAddress::Zero); j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
+                {
+                    if (access_table.at(i).temporal_access_stats[j] == true)
+                    {
+                        count_access++;
+                        access_table.at(i).temporal_access_stats[j] = false;    // clear this bit
+                    }
+                }
+
+                if (access_table.at(i).estimated_spatial_locality_stats < count_access)
+                {
+                    // store the biggest estimated spatial locality
+                    access_table.at(i).estimated_spatial_locality_stats = count_access;
+                }
+#endif  // STATISTICS_INFORMATION
             }
 #if (USE_OPENMP == ENABLE)
         }

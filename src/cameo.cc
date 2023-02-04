@@ -11,7 +11,11 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, ui
     counter_table(*(new std::vector<COUNTER_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, COUNTER_DEFAULT_VALUE))),
     hotness_table(*(new std::vector<HOTNESS_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, HOTNESS_DEFAULT_VALUE))),
     congruence_group_msb(REMAPPING_LOCATION_WIDTH_BITS + fast_memory_offset_bit - 1),
+#if (BITS_MANIPULATION == ENABLE)
     line_location_table(*(new std::vector<LOCATION_TABLE_ENTRY_WIDTH>(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS, LOCATION_TABLE_ENTRY_DEFAULT_VALUE)))
+#else
+    line_location_table(*(new std::vector<LocationTableEntry>(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS)))
+#endif  // BITS_MANIPULATION
 {
     remapping_request_queue_congestion = 0;
 
@@ -53,10 +57,14 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         abort();
     }
 
+#if (BITS_MANIPULATION == ENABLE)
     uint8_t msb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - REMAPPING_LOCATION_WIDTH_BITS * location;
     uint8_t lsb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - (REMAPPING_LOCATION_WIDTH_BITS + REMAPPING_LOCATION_WIDTH_BITS * location - 1);
 
     REMAPPING_LOCATION_WIDTH remapping_location = get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
+#else
+    REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
+#endif  // BITS_MANIPULATION
 
     if (type == 1)  // for read request
     {
@@ -95,17 +103,24 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         RemappingRequest remapping_request;
         REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Max);
 
+#if (BITS_MANIPULATION == ENABLE)
         uint8_t fm_msb_in_location_table_entry;
         uint8_t fm_lsb_in_location_table_entry;
+#endif  // BITS_MANIPULATION
+
         REMAPPING_LOCATION_WIDTH fm_remapping_location;
 
         // find the fm_location in the entry of line_location_table (where RemappingLocation::Zero is in the entry of line_location_table)
         for (REMAPPING_LOCATION_WIDTH i = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero); i < REMAPPING_LOCATION_WIDTH(RemappingLocation::Max); i++)
         {
+#if (BITS_MANIPULATION == ENABLE)
             fm_msb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - REMAPPING_LOCATION_WIDTH_BITS * i;
             fm_lsb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - (REMAPPING_LOCATION_WIDTH_BITS + REMAPPING_LOCATION_WIDTH_BITS * i - 1);
 
             fm_remapping_location = get_bits(line_location_table.at(line_location_table_index), fm_msb_in_location_table_entry, fm_lsb_in_location_table_entry);
+#else
+            fm_remapping_location = line_location_table.at(line_location_table_index).location[i];
+#endif  // BITS_MANIPULATION
 
             if (fm_remapping_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
             {
@@ -124,10 +139,15 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
         if (fm_remapping_location == remapping_location)    // check
         {
             std::cout << __func__ << ": add new remapping request error 1." << std::endl;
+#if (BITS_MANIPULATION == ENABLE)
             printf("line_location_table.at(%ld): %d.\n", line_location_table_index, line_location_table.at(line_location_table_index));
             printf("remapping_location: %d, fm_remapping_location: %d.\n", remapping_location, fm_remapping_location);
             printf("fm_msb_in_location_table_entry: %d, fm_lsb_in_location_table_entry: %d.\n", fm_msb_in_location_table_entry, fm_lsb_in_location_table_entry);
             printf("msb_in_location_table_entry: %d, lsb_in_location_table_entry: %d.\n", msb_in_location_table_entry, lsb_in_location_table_entry);
+#else
+            printf("line_location_table.at(%ld)\n", line_location_table_index);
+            printf("remapping_location: %d, fm_remapping_location: %d.\n", remapping_location, fm_remapping_location);
+#endif  // BITS_MANIPULATION
             abort();
         }
 
@@ -155,10 +175,14 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(PACKET& packet)
     uint64_t line_location_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;
     REMAPPING_LOCATION_WIDTH location = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity);
 
+#if (BITS_MANIPULATION == ENABLE)
     uint8_t msb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - REMAPPING_LOCATION_WIDTH_BITS * location;
     uint8_t lsb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - (REMAPPING_LOCATION_WIDTH_BITS + REMAPPING_LOCATION_WIDTH_BITS * location - 1);
 
     REMAPPING_LOCATION_WIDTH remapping_location = get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
+#else
+    REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
+#endif  // BITS_MANIPULATION
 
     packet.h_address = replace_bits(replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(remapping_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address, DATA_MANAGEMENT_OFFSET_BITS - 1);
 
@@ -173,10 +197,14 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
     uint64_t line_location_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;
     REMAPPING_LOCATION_WIDTH location = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity);
 
+#if (BITS_MANIPULATION == ENABLE)
     uint8_t msb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - REMAPPING_LOCATION_WIDTH_BITS * location;
     uint8_t lsb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - (REMAPPING_LOCATION_WIDTH_BITS + REMAPPING_LOCATION_WIDTH_BITS * location - 1);
 
     REMAPPING_LOCATION_WIDTH remapping_location = get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
+#else
+    REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
+#endif  // BITS_MANIPULATION
 
     address = replace_bits(replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(remapping_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), address, DATA_MANAGEMENT_OFFSET_BITS - 1);
 };
@@ -203,6 +231,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         //data_block_address = remapping_request.address_in_sm >> DATA_MANAGEMENT_OFFSET_BITS;
         uint64_t line_location_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;
 
+#if (BITS_MANIPULATION == ENABLE)
         uint8_t fm_msb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - REMAPPING_LOCATION_WIDTH_BITS * remapping_request.fm_location;
         uint8_t fm_lsb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - (REMAPPING_LOCATION_WIDTH_BITS + REMAPPING_LOCATION_WIDTH_BITS * remapping_request.fm_location - 1);
         uint8_t sm_msb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - REMAPPING_LOCATION_WIDTH_BITS * remapping_request.sm_location;
@@ -213,6 +242,13 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
 
         line_location_table.at(line_location_table_index) = replace_bits(line_location_table.at(line_location_table_index), uint64_t(fm_remapping_location) << sm_lsb_in_location_table_entry, sm_msb_in_location_table_entry, sm_lsb_in_location_table_entry);
         line_location_table.at(line_location_table_index) = replace_bits(line_location_table.at(line_location_table_index), uint64_t(sm_remapping_location) << fm_lsb_in_location_table_entry, fm_msb_in_location_table_entry, fm_lsb_in_location_table_entry);
+#else
+        REMAPPING_LOCATION_WIDTH fm_remapping_location = line_location_table.at(line_location_table_index).location[remapping_request.fm_location];
+        REMAPPING_LOCATION_WIDTH sm_remapping_location = line_location_table.at(line_location_table_index).location[remapping_request.sm_location];
+
+        line_location_table.at(line_location_table_index).location[remapping_request.sm_location] = fm_remapping_location;
+        line_location_table.at(line_location_table_index).location[remapping_request.fm_location] = sm_remapping_location;
+#endif  // BITS_MANIPULATION
 
         // sanity check
         if (fm_remapping_location == sm_remapping_location)
@@ -222,22 +258,31 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         }
 
         REMAPPING_LOCATION_WIDTH sum_of_remapping_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
-        for (REMAPPING_LOCATION_WIDTH i = 0; i < REMAPPING_LOCATION_WIDTH(RemappingLocation::Max); i++)
+        for (REMAPPING_LOCATION_WIDTH i = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero); i < REMAPPING_LOCATION_WIDTH(RemappingLocation::Max); i++)
         {
+#if (BITS_MANIPULATION == ENABLE)
             uint8_t msb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - REMAPPING_LOCATION_WIDTH_BITS * i;
             uint8_t lsb_in_location_table_entry = LOCATION_TABLE_ENTRY_MSB - (REMAPPING_LOCATION_WIDTH_BITS + REMAPPING_LOCATION_WIDTH_BITS * i - 1);
 
             sum_of_remapping_location += get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
+#else
+            sum_of_remapping_location += line_location_table.at(line_location_table_index).location[i];
+#endif  // BITS_MANIPULATION
         }
-        REMAPPING_LOCATION_WIDTH correct_result = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero) + REMAPPING_LOCATION_WIDTH(RemappingLocation::One) + REMAPPING_LOCATION_WIDTH(RemappingLocation::Two) + REMAPPING_LOCATION_WIDTH(RemappingLocation::Three) + REMAPPING_LOCATION_WIDTH(RemappingLocation::Four);
-        
+
+        REMAPPING_LOCATION_WIDTH correct_result = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
+        for (REMAPPING_LOCATION_WIDTH i = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero); i < REMAPPING_LOCATION_WIDTH(RemappingLocation::Max); i++)
+        {
+            correct_result += i;
+        }
+
         if (sum_of_remapping_location != correct_result)
         {
             std::cout << __func__ << ": sum_of_remapping_location verification error." << std::endl;
             printf("sum_of_remapping_location: %d, correct_result: %d.\n", sum_of_remapping_location, correct_result);
             abort();
         }
-        
+
     }
     else
     {
