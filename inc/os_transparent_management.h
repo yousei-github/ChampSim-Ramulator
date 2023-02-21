@@ -14,6 +14,7 @@
 /* Includes for research */
 #include "cameo.h"
 #include "variable_granularity.h"
+#include "ideal_single_mempod.h"
 
 
 /** @note Abbreviation:
