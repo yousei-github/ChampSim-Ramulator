@@ -88,13 +88,19 @@ void output_champsim_statistics_initialization(const char* string)
     outputchampsimstatistics.write_request_in_memory = 0;
     outputchampsimstatistics.write_request_in_memory2 = 0;
 
+    outputchampsimstatistics.swapping_count = 0;
+    outputchampsimstatistics.swapping_traffic_in_bytes = 0;
+
     outputchampsimstatistics.remapping_request_queue_congestion = 0;
+
+#if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
     outputchampsimstatistics.no_free_space_for_migration = 0;
     outputchampsimstatistics.no_invalid_group_for_migration = 0;
     outputchampsimstatistics.unexpandable_since_start_address = 0;
     outputchampsimstatistics.unexpandable_since_no_invalid_group = 0;
     outputchampsimstatistics.data_eviction_success = outputchampsimstatistics.data_eviction_failure = 0;
     outputchampsimstatistics.uncertain_counter = 0;
+#endif  // IDEAL_VARIABLE_GRANULARITY
 }
 
 void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileType& outputchampsimstatistics)
@@ -113,7 +119,11 @@ void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileTyp
     fprintf(outputchampsimstatistics.trace_file, "write_request_in_memory: %ld, write_request_in_memory2: %ld.\n", outputchampsimstatistics.write_request_in_memory, outputchampsimstatistics.write_request_in_memory2);
     fprintf(outputchampsimstatistics.trace_file, "hit rate: %f.\n", (outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.write_request_in_memory) / float(total_access_request_in_memory));
 
+    fprintf(outputchampsimstatistics.trace_file, "swapping_count: %ld, swapping_traffic_in_bytes: %ld.\n", outputchampsimstatistics.swapping_count, outputchampsimstatistics.swapping_traffic_in_bytes);
+
     fprintf(outputchampsimstatistics.trace_file, "remapping_request_queue_congestion: %ld.\n", outputchampsimstatistics.remapping_request_queue_congestion);
+
+#if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
     fprintf(outputchampsimstatistics.trace_file, "no_free_space_for_migration: %ld (%f).\n", outputchampsimstatistics.no_free_space_for_migration, outputchampsimstatistics.no_free_space_for_migration / float(total_access_request_in_memory));
     fprintf(outputchampsimstatistics.trace_file, "no_invalid_group_for_migration: %ld (%f).\n", outputchampsimstatistics.no_invalid_group_for_migration, outputchampsimstatistics.no_invalid_group_for_migration / float(total_access_request_in_memory));
     fprintf(outputchampsimstatistics.trace_file, "unexpandable_since_start_address: %ld (%f).\n", outputchampsimstatistics.unexpandable_since_start_address, outputchampsimstatistics.unexpandable_since_start_address / float(total_access_request_in_memory));
@@ -121,6 +131,7 @@ void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileTyp
     fprintf(outputchampsimstatistics.trace_file, "data_eviction_success: %ld (%f).\n", outputchampsimstatistics.data_eviction_success, outputchampsimstatistics.data_eviction_success / float(total_access_request_in_memory));
     fprintf(outputchampsimstatistics.trace_file, "data_eviction_failure: %ld (%f).\n", outputchampsimstatistics.data_eviction_failure, outputchampsimstatistics.data_eviction_failure / float(total_access_request_in_memory));
     fprintf(outputchampsimstatistics.trace_file, "uncertain_counter: %ld (%f).\n", outputchampsimstatistics.uncertain_counter, outputchampsimstatistics.uncertain_counter / float(total_access_request_in_memory));
+#endif  // IDEAL_VARIABLE_GRANULARITY
 
     fclose(outputchampsimstatistics.trace_file);
     printf("Output ChampSim statistics into %s.\n", outputchampsimstatistics.trace_string);

@@ -17,14 +17,8 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, ui
     remapping_request_queue_congestion = 0;
 
     expected_number_in_congruence_group = total_capacity / fast_memory_capacity;
-    if (expected_number_in_congruence_group > REMAPPING_LOCATION_WIDTH(RemappingLocation::Max))
-    {
-        std::cout << __func__ << ": congruence group error." << std::endl;
-    }
-    else
-    {
-        printf("Number in Congruence group: %ld.\n", expected_number_in_congruence_group);
-    }
+    printf("Number in Congruence group: %ld.\n", expected_number_in_congruence_group);
+
 };
 
 OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
