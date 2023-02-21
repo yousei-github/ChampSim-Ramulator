@@ -38,9 +38,9 @@
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-#define IDEAL_LINE_LOCATION_TABLE             (ENABLE)
+#define IDEAL_LINE_LOCATION_TABLE             (DISABLE)
 #define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
-#define IDEAL_VARIABLE_GRANULARITY            (DISABLE)
+#define IDEAL_VARIABLE_GRANULARITY            (ENABLE)
 
 #define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
 
@@ -63,6 +63,10 @@
 #error OS-transparent management designs need to be enabled.
 #endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+
+#if (PRINT_MEMORY_TRACE == ENABLE)
+#define CONTINUOUS_ADDRESS                    (ENABLE)
+#endif  // PRINT_MEMORY_TRACE
 
 // Data block management granularity
 #define DATA_GRANULARITY_64B                (64u)
@@ -195,13 +199,19 @@ typedef struct
     uint64_t read_request_in_memory, read_request_in_memory2;
     uint64_t write_request_in_memory, write_request_in_memory2;
 
+    uint64_t swapping_count;
+    uint64_t swapping_traffic_in_bytes;
+
     uint64_t remapping_request_queue_congestion;
+
+#if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
     uint64_t no_free_space_for_migration;
     uint64_t no_invalid_group_for_migration;
     uint64_t unexpandable_since_start_address;
     uint64_t unexpandable_since_no_invalid_group;
     uint64_t data_eviction_success, data_eviction_failure;
     uint64_t uncertain_counter;
+#endif  // IDEAL_VARIABLE_GRANULARITY
 
 } OutputChampSimStatisticsFileType;
 

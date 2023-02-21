@@ -171,6 +171,9 @@ public:
   uint64_t read_request_in_memory, read_request_in_memory2;
   uint64_t write_request_in_memory, write_request_in_memory2;
 
+  uint64_t swapping_count;
+  uint64_t swapping_traffic_in_bytes;
+
   /* Member functions */
   MEMORY_CONTROLLER(double freq_scale, double clock_scale, double clock_scale2, Memory<T, Controller>& memory, Memory<T2, Controller>& memory2);
   ~MEMORY_CONTROLLER();
@@ -237,6 +240,8 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
   read_request_in_memory = read_request_in_memory2 = 0;
   write_request_in_memory = write_request_in_memory2 = 0;
 
+  swapping_count = swapping_traffic_in_bytes = 0;
+
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
   initialize_swapping();
 
@@ -258,6 +263,9 @@ MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
   outputchampsimstatistics.write_request_in_memory = write_request_in_memory;
   outputchampsimstatistics.write_request_in_memory2 = write_request_in_memory2;
 
+  outputchampsimstatistics.swapping_count = swapping_count;
+  outputchampsimstatistics.swapping_traffic_in_bytes = swapping_traffic_in_bytes;
+  
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   delete& os_transparent_management;
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
@@ -845,6 +853,9 @@ void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
 template<class T, class T2>
 void MEMORY_CONTROLLER<T, T2>::initialize_swapping()
 {
+  swapping_count += active_entry_number * 2;
+  swapping_traffic_in_bytes += active_entry_number * 2 * BLOCK_SIZE;
+
   states = SwappingState::Idle;
   for (auto i = 0; i < SWAPPING_BUFFER_ENTRY_NUMBER; i++)
   {

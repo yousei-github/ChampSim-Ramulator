@@ -29,7 +29,7 @@
 
 #define REMAPPING_LOCATION_WIDTH            uint8_t // default: uint8_t
 #define REMAPPING_LOCATION_WIDTH_SIGN       int8_t // default: int8_t
-#define REMAPPING_LOCATION_WIDTH_BITS       (3)
+#define REMAPPING_LOCATION_WIDTH_BITS       (lg2(64))
 
 #define START_ADDRESS_WIDTH                 uint8_t
 #define START_ADDRESS_WIDTH_BITS            (6)
@@ -37,7 +37,7 @@
 #define MIGRATION_GRANULARITY_WIDTH         uint8_t
 #define MIGRATION_GRANULARITY_WIDTH_BITS    (3)
 
-#define NUMBER_OF_BLOCK                     (35) // default: 5
+#define NUMBER_OF_BLOCK                     (5) // default: 5
 
 #define REMAPPING_REQUEST_QUEUE_LENGTH      (64)  // 1024/4096
 #define QUEUE_BUSY_DEGREE_THRESHOLD         (0.8f)
