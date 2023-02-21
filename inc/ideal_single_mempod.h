@@ -29,7 +29,7 @@
 
 /* MemPod Parameter Setting */
 #define TIME_INTERVAL_MEMPOD_us         (50) // [us]
-#define DATA_MANAGEMENT_GRANULARITY     (2048) // [B]
+#define DATA_MANAGEMENT_GRANULARITY     (2048) // [B] default:2048
 #define DATA_MANAGEMENT_OFFSET_BITS     (lg2(DATA_MANAGEMENT_GRANULARITY)) // [bit]
 #define CACHE_LINE_SIZE                 (64) // [B]
 #define SWAP_DATA_CACHE_LINES           (DATA_MANAGEMENT_GRANULARITY / CACHE_LINE_SIZE) //[lines]
@@ -91,12 +91,6 @@ public:
 
     std::deque<RemappingRequest> remapping_request_queue;
     uint64_t remapping_request_queue_congestion;
-
-#if (PRINT_SWAP_DETAIL)
-    uint64_t swap_request;
-    uint64_t swap_enqueued;
-    uint64_t swap_cancelled;
-#endif // PRINT_SWAP_DETAIL
 
     double interval_cycle;
     double next_interval_cycle;

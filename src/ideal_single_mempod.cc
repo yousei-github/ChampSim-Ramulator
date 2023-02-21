@@ -19,12 +19,6 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint6
     interval_cycle = CPU_FREQUENCY * (double)TIME_INTERVAL_MEMPOD_us / MEMORY_CONTROLLER_CLOCK_SCALE;
     next_interval_cycle = interval_cycle;
 
-#if (PRINT_SWAP_DETAIL)
-    swap_request = 0;
-    swap_enqueued = 0;
-    swap_cancelled = 0;
-#endif // PRINT_SWAP_DETAIL
-
     /* initializing address_remapping_table and invert_address_remapping_table */
     // TODO: I think there is faster way to construct mapping.
 
@@ -45,12 +39,6 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint6
 OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 {
     outputchampsimstatistics.remapping_request_queue_congestion = remapping_request_queue_congestion;
-
-#if (PRINT_SWAP_DETAIL)
-    outputchampsimstatistics.swap_request = swap_request;
-    outputchampsimstatistics.swap_enqueued = swap_enqueued;
-    outputchampsimstatistics.swap_cancelled = swap_cancelled;
-#endif // PRINT_SWAP_DETAIL
 
     delete& mea_counter_table;
     delete& address_remapping_table;
@@ -313,13 +301,6 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
         }
     }
 
-    // new remapping request is issued.
-#if (PRINT_SWAP_DETAIL)
-    if (all_warmup_complete > NUM_CPUS)
-    {
-        swap_request++;
-    }
-#endif
     return true;
 }
 
@@ -398,12 +379,6 @@ void OS_TRANSPARENT_MANAGEMENT::determine_swap_pair(std::vector<REMAPPING_TABLE_
         swaps_per_epoch++;
 #endif // PRINT_SWAPS_PER_EPOCH_MEMPOD
 
-#if (PRINT_SWAP_DETAIL)
-        if (all_warmup_complete > NUM_CPUS)
-        {
-            swap_enqueued++;
-        }
-#endif
         swap_fm_address_itr++;
 
         // if this iterator's value is over fast memory range, then swap_fm_address_itr = 0. (loop)
@@ -426,23 +401,11 @@ void OS_TRANSPARENT_MANAGEMENT::cancel_not_started_remapping_request(uint8_t swa
     {
         case 0: // the swapping unit is idle
             {   
-#if (PRINT_SWAP_DETAIL)
-                if (all_warmup_complete > NUM_CPUS)
-                {
-                    swap_cancelled += remapping_request_queue.size();
-                }
-#endif
                 remapping_request_queue.clear();
                 break;
             }
         case 1: // the swapping unit is busy
             {  
-#if (PRINT_SWAP_DETAIL) 
-                if (all_warmup_complete > NUM_CPUS)
-                {
-                    swap_cancelled += (remapping_request_queue.size() - 1);
-                }
-#endif
                 RemappingRequest remapping_request_in_progress = remapping_request_queue.front();
                 remapping_request_queue.clear();
                 remapping_request_queue.push_back(remapping_request_in_progress);
@@ -450,12 +413,6 @@ void OS_TRANSPARENT_MANAGEMENT::cancel_not_started_remapping_request(uint8_t swa
             }
         case 2: // the swapping unit finishes a swapping request
             {   
-#if (PRINT_SWAP_DETAIL)
-                if (all_warmup_complete > NUM_CPUS)
-                {
-                    swap_cancelled += remapping_request_queue.size();
-                }
-#endif
                 remapping_request_queue.clear();
                 break;
             }
