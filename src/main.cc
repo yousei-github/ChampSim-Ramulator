@@ -369,12 +369,12 @@ int main(int argc, char** argv)
 #if (USER_CODES == ENABLE)
 #if (PRINT_MEMORY_TRACE == ENABLE)
   // prepare file for recording memory traces.
-  output_memory_trace_initialization(argv[start_position_of_traces]);
+  output_memorytrace.output_file_initialization(&(argv[start_position_of_traces]), argc - start_position_of_traces);
 #endif  // PRINT_MEMORY_TRACE
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  output_champsim_statistics_initialization(argv[start_position_of_traces]);
-  fprintf(outputchampsimstatistics.trace_file, "\n*** ChampSim Multicore Out-of-Order Simulator ***\n\n");
+  output_statistics.output_file_initialization(&(argv[start_position_of_traces]), argc - start_position_of_traces);
+  fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\n\n");
 #endif  // PRINT_STATISTICS_INTO_FILE
 
 #else
@@ -403,7 +403,7 @@ int main(int argc, char** argv)
   for (int64_t i = start_position_of_traces; i < argc; i++)
   {
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, "CPU %ld runs %s\n", traces.size(), argv[i]);
+    fprintf(output_statistics.file_handler, "CPU %ld runs %s\n", traces.size(), argv[i]);
 #else
     std::cout << "CPU " << traces.size() << " runs " << argv[i] << std::endl;
 #endif  // PRINT_STATISTICS_INTO_FILE
@@ -451,14 +451,6 @@ int main(int argc, char** argv)
   printf("Simulation done.\n");
 #endif  // RAMULATOR
 
-#if (PRINT_MEMORY_TRACE == ENABLE)
-  output_memory_trace_deinitialization(outputmemorytrace_one);
-#endif  // PRINT_MEMORY_TRACE
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  output_champsim_statistics_deinitialization(outputchampsimstatistics);
-#endif  // PRINT_STATISTICS_INTO_FILE
-
   return 0;
 }
 
@@ -501,21 +493,21 @@ void print_roi_stats(uint32_t cpu, CACHE* cache)
   if (TOTAL_ACCESS > 0)
   {
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, "%s TOTAL     ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), TOTAL_ACCESS, TOTAL_HIT, TOTAL_MISS);
+    fprintf(output_statistics.file_handler, "%s TOTAL     ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), TOTAL_ACCESS, TOTAL_HIT, TOTAL_MISS);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s LOAD      ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][0], cache->roi_hit[cpu][0], cache->roi_miss[cpu][0]);
+    fprintf(output_statistics.file_handler, "%s LOAD      ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][0], cache->roi_hit[cpu][0], cache->roi_miss[cpu][0]);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s RFO       ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][1], cache->roi_hit[cpu][1], cache->roi_miss[cpu][1]);
+    fprintf(output_statistics.file_handler, "%s RFO       ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][1], cache->roi_hit[cpu][1], cache->roi_miss[cpu][1]);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s PREFETCH  ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][2], cache->roi_hit[cpu][2], cache->roi_miss[cpu][2]);
+    fprintf(output_statistics.file_handler, "%s PREFETCH  ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][2], cache->roi_hit[cpu][2], cache->roi_miss[cpu][2]);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s WRITEBACK ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][3], cache->roi_hit[cpu][3], cache->roi_miss[cpu][3]);
+    fprintf(output_statistics.file_handler, "%s WRITEBACK ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][3], cache->roi_hit[cpu][3], cache->roi_miss[cpu][3]);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s TRANSLATION ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][4], cache->roi_hit[cpu][4], cache->roi_miss[cpu][4]);
+    fprintf(output_statistics.file_handler, "%s TRANSLATION ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->roi_access[cpu][4], cache->roi_hit[cpu][4], cache->roi_miss[cpu][4]);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s PREFETCH  REQUESTED: %10ld  ISSUED: %10ld  USEFUL: %10ld  USELESS: %10ld\n", cache->NAME.c_str(), cache->pf_requested, cache->pf_issued, cache->pf_useful, cache->pf_useless);
+    fprintf(output_statistics.file_handler, "%s PREFETCH  REQUESTED: %10ld  ISSUED: %10ld  USEFUL: %10ld  USELESS: %10ld\n", cache->NAME.c_str(), cache->pf_requested, cache->pf_issued, cache->pf_useful, cache->pf_useless);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s AVERAGE MISS LATENCY: %f cycles\n", cache->NAME.c_str(), (1.0 * (cache->total_miss_latency)) / TOTAL_MISS);
+    fprintf(output_statistics.file_handler, "%s AVERAGE MISS LATENCY: %f cycles\n", cache->NAME.c_str(), (1.0 * (cache->total_miss_latency)) / TOTAL_MISS);
 #else
     cout << cache->NAME;
     cout << " TOTAL     ACCESS: " << setw(10) << TOTAL_ACCESS << "  HIT: " << setw(10) << TOTAL_HIT << "  MISS: " << setw(10) << TOTAL_MISS << endl;
@@ -567,15 +559,15 @@ void print_sim_stats(uint32_t cpu, CACHE* cache)
   if (TOTAL_ACCESS > 0)
   {
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, "%s TOTAL     ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), TOTAL_ACCESS, TOTAL_HIT, TOTAL_MISS);
+    fprintf(output_statistics.file_handler, "%s TOTAL     ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), TOTAL_ACCESS, TOTAL_HIT, TOTAL_MISS);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s LOAD      ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->sim_access[cpu][0], cache->sim_hit[cpu][0], cache->sim_miss[cpu][0]);
+    fprintf(output_statistics.file_handler, "%s LOAD      ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->sim_access[cpu][0], cache->sim_hit[cpu][0], cache->sim_miss[cpu][0]);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s RFO       ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->sim_access[cpu][1], cache->sim_hit[cpu][1], cache->sim_miss[cpu][1]);
+    fprintf(output_statistics.file_handler, "%s RFO       ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->sim_access[cpu][1], cache->sim_hit[cpu][1], cache->sim_miss[cpu][1]);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s PREFETCH  ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->sim_access[cpu][2], cache->sim_hit[cpu][2], cache->sim_miss[cpu][2]);
+    fprintf(output_statistics.file_handler, "%s PREFETCH  ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->sim_access[cpu][2], cache->sim_hit[cpu][2], cache->sim_miss[cpu][2]);
 
-    fprintf(outputchampsimstatistics.trace_file, "%s WRITEBACK ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->sim_access[cpu][3], cache->sim_hit[cpu][3], cache->sim_miss[cpu][3]);
+    fprintf(output_statistics.file_handler, "%s WRITEBACK ACCESS: %10ld  HIT: %10ld  MISS: %10ld\n", cache->NAME.c_str(), cache->sim_access[cpu][3], cache->sim_hit[cpu][3], cache->sim_miss[cpu][3]);
 #else
     cout << cache->NAME;
     cout << " TOTAL     ACCESS: " << setw(10) << TOTAL_ACCESS << "  HIT: " << setw(10) << TOTAL_HIT << "  MISS: " << setw(10) << TOTAL_MISS << endl;
@@ -604,16 +596,16 @@ void print_branch_stats(std::array<O3_CPU*, NUM_CPUS>& ooo_cpu)
   for (uint32_t i = 0; i < NUM_CPUS; i++)
   {
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, "\nCPU %d Branch Prediction Accuracy: %f", i, (100.0 * (ooo_cpu[i]->num_branch - ooo_cpu[i]->branch_mispredictions)) / ooo_cpu[i]->num_branch);
-    fprintf(outputchampsimstatistics.trace_file, "%% MPKI: %f", (1000.0 * ooo_cpu[i]->branch_mispredictions) / (ooo_cpu[i]->num_retired - warmup_instructions));
-    fprintf(outputchampsimstatistics.trace_file, " Average ROB Occupancy at Mispredict: %f\n", (1.0 * ooo_cpu[i]->total_rob_occupancy_at_branch_mispredict) / ooo_cpu[i]->branch_mispredictions);
+    fprintf(output_statistics.file_handler, "\nCPU %d Branch Prediction Accuracy: %f", i, (100.0 * (ooo_cpu[i]->num_branch - ooo_cpu[i]->branch_mispredictions)) / ooo_cpu[i]->num_branch);
+    fprintf(output_statistics.file_handler, "%% MPKI: %f", (1000.0 * ooo_cpu[i]->branch_mispredictions) / (ooo_cpu[i]->num_retired - warmup_instructions));
+    fprintf(output_statistics.file_handler, " Average ROB Occupancy at Mispredict: %f\n", (1.0 * ooo_cpu[i]->total_rob_occupancy_at_branch_mispredict) / ooo_cpu[i]->branch_mispredictions);
 
-    fprintf(outputchampsimstatistics.trace_file, "Branch type MPKI\nBRANCH_DIRECT_JUMP: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[1] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
-    fprintf(outputchampsimstatistics.trace_file, "BRANCH_INDIRECT: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[2] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
-    fprintf(outputchampsimstatistics.trace_file, "BRANCH_CONDITIONAL: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[3] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
-    fprintf(outputchampsimstatistics.trace_file, "BRANCH_DIRECT_CALL: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[4] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
-    fprintf(outputchampsimstatistics.trace_file, "BRANCH_INDIRECT_CALL: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[5] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
-    fprintf(outputchampsimstatistics.trace_file, "BRANCH_RETURN: %f\n\n", (1000.0 * ooo_cpu[i]->branch_type_misses[6] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
+    fprintf(output_statistics.file_handler, "Branch type MPKI\nBRANCH_DIRECT_JUMP: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[1] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
+    fprintf(output_statistics.file_handler, "BRANCH_INDIRECT: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[2] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
+    fprintf(output_statistics.file_handler, "BRANCH_CONDITIONAL: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[3] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
+    fprintf(output_statistics.file_handler, "BRANCH_DIRECT_CALL: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[4] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
+    fprintf(output_statistics.file_handler, "BRANCH_INDIRECT_CALL: %f\n", (1000.0 * ooo_cpu[i]->branch_type_misses[5] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
+    fprintf(output_statistics.file_handler, "BRANCH_RETURN: %f\n\n", (1000.0 * ooo_cpu[i]->branch_type_misses[6] / (ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr)));
 #else
     cout << endl << "CPU " << i << " Branch Prediction Accuracy: ";
     cout << (100.0 * (ooo_cpu[i]->num_branch - ooo_cpu[i]->branch_mispredictions)) / ooo_cpu[i]->num_branch;
@@ -670,7 +662,7 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
 
   // For DDR Statistics
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\nDRAM Statistics\n");
+  fprintf(output_statistics.file_handler, "\nDRAM Statistics\n");
 #else
   std::cout << std::endl << "DRAM Statistics" << std::endl;
 #endif
@@ -679,16 +671,16 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
 
     auto& channel = memory_controller.ddr_channels[i];
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, " CHANNEL %d\n", i);
-    fprintf(outputchampsimstatistics.trace_file, " RQ ROW_BUFFER_HIT: %10d  ROW_BUFFER_MISS: %10d\n", channel.RQ_ROW_BUFFER_HIT, channel.RQ_ROW_BUFFER_MISS);
+    fprintf(output_statistics.file_handler, " CHANNEL %d\n", i);
+    fprintf(output_statistics.file_handler, " RQ ROW_BUFFER_HIT: %10d  ROW_BUFFER_MISS: %10d\n", channel.RQ_ROW_BUFFER_HIT, channel.RQ_ROW_BUFFER_MISS);
 
-    fprintf(outputchampsimstatistics.trace_file, " DBUS AVG_CONGESTED_CYCLE: ");
+    fprintf(output_statistics.file_handler, " DBUS AVG_CONGESTED_CYCLE: ");
     if (channel.dbus_count_congested)
-      fprintf(outputchampsimstatistics.trace_file, "%10f\n", ((double)channel.dbus_cycle_congested / channel.dbus_count_congested));
+      fprintf(output_statistics.file_handler, "%10f\n", ((double)channel.dbus_cycle_congested / channel.dbus_count_congested));
     else
-      fprintf(outputchampsimstatistics.trace_file, "-\n");
+      fprintf(output_statistics.file_handler, "-\n");
 
-    fprintf(outputchampsimstatistics.trace_file, " WQ ROW_BUFFER_HIT: %10d  ROW_BUFFER_MISS: %10d  FULL: %10d\n\n", channel.WQ_ROW_BUFFER_HIT, channel.WQ_ROW_BUFFER_MISS, channel.WQ_FULL);
+    fprintf(output_statistics.file_handler, " WQ ROW_BUFFER_HIT: %10d  ROW_BUFFER_MISS: %10d  FULL: %10d\n\n", channel.WQ_ROW_BUFFER_HIT, channel.WQ_ROW_BUFFER_MISS, channel.WQ_FULL);
 #else
     std::cout << " CHANNEL " << i << std::endl;
     std::cout << " RQ ROW_BUFFER_HIT: " << std::setw(10) << channel.RQ_ROW_BUFFER_HIT << " ";
@@ -717,11 +709,11 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
   if (DDR_CHANNELS > 1)
   {
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, " DBUS AVG_CONGESTED_CYCLE: ");
+    fprintf(output_statistics.file_handler, " DBUS AVG_CONGESTED_CYCLE: ");
     if (total_congested_count)
-      fprintf(outputchampsimstatistics.trace_file, "%10f\n", ((double)total_congested_cycle / total_congested_count));
+      fprintf(output_statistics.file_handler, "%10f\n", ((double)total_congested_cycle / total_congested_count));
     else
-      fprintf(outputchampsimstatistics.trace_file, "-\n");
+      fprintf(output_statistics.file_handler, "-\n");
 #else
     std::cout << " DBUS AVG_CONGESTED_CYCLE: ";
     if (total_congested_count)
@@ -738,7 +730,7 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
 
   // For HBM Statistics
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\nHBM Statistics\n");
+  fprintf(output_statistics.file_handler, "\nHBM Statistics\n");
 #else
   std::cout << std::endl << "HBM Statistics" << std::endl;
 #endif
@@ -746,16 +738,16 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
   {
     auto& channel = memory_controller.hbm_channels[i];
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, " CHANNEL %d\n", i);
-    fprintf(outputchampsimstatistics.trace_file, " RQ ROW_BUFFER_HIT: %10d  ROW_BUFFER_MISS: %10d\n", channel.RQ_ROW_BUFFER_HIT, channel.RQ_ROW_BUFFER_MISS);
+    fprintf(output_statistics.file_handler, " CHANNEL %d\n", i);
+    fprintf(output_statistics.file_handler, " RQ ROW_BUFFER_HIT: %10d  ROW_BUFFER_MISS: %10d\n", channel.RQ_ROW_BUFFER_HIT, channel.RQ_ROW_BUFFER_MISS);
 
-    fprintf(outputchampsimstatistics.trace_file, " DBUS AVG_CONGESTED_CYCLE: ");
+    fprintf(output_statistics.file_handler, " DBUS AVG_CONGESTED_CYCLE: ");
     if (channel.dbus_count_congested)
-      fprintf(outputchampsimstatistics.trace_file, "%10f\n", ((double)channel.dbus_cycle_congested / channel.dbus_count_congested));
+      fprintf(output_statistics.file_handler, "%10f\n", ((double)channel.dbus_cycle_congested / channel.dbus_count_congested));
     else
-      fprintf(outputchampsimstatistics.trace_file, "-\n");
+      fprintf(output_statistics.file_handler, "-\n");
 
-    fprintf(outputchampsimstatistics.trace_file, " WQ ROW_BUFFER_HIT: %10d  ROW_BUFFER_MISS: %10d  FULL: %10d\n\n", channel.WQ_ROW_BUFFER_HIT, channel.WQ_ROW_BUFFER_MISS, channel.WQ_FULL);
+    fprintf(output_statistics.file_handler, " WQ ROW_BUFFER_HIT: %10d  ROW_BUFFER_MISS: %10d  FULL: %10d\n\n", channel.WQ_ROW_BUFFER_HIT, channel.WQ_ROW_BUFFER_MISS, channel.WQ_FULL);
 #else
     std::cout << " CHANNEL " << i << std::endl;
     std::cout << " RQ ROW_BUFFER_HIT: " << std::setw(10) << channel.RQ_ROW_BUFFER_HIT << " ";
@@ -784,11 +776,11 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
   if (HBM_CHANNELS > 1)
   {
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, " DBUS AVG_CONGESTED_CYCLE: ");
+    fprintf(output_statistics.file_handler, " DBUS AVG_CONGESTED_CYCLE: ");
     if (total_congested_count)
-      fprintf(outputchampsimstatistics.trace_file, "%10f\n", ((double)total_congested_cycle / total_congested_count));
+      fprintf(output_statistics.file_handler, "%10f\n", ((double)total_congested_cycle / total_congested_count));
     else
-      fprintf(outputchampsimstatistics.trace_file, "-\n");
+      fprintf(output_statistics.file_handler, "-\n");
 #else
     std::cout << " DBUS AVG_CONGESTED_CYCLE: ";
     if (total_congested_count)
@@ -802,7 +794,7 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
 
   // Output memory statistics
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\nAverage memory access time: %10f cycle.\n", memory_controller.get_average_memory_access_time());
+  fprintf(output_statistics.file_handler, "\nAverage memory access time: %10f cycle.\n", memory_controller.get_average_memory_access_time());
 #else
   std::cout << "Average memory access time: " << std::setw(10) << memory_controller.get_average_memory_access_time() << " cycle. " << std::endl;
 #endif
@@ -812,50 +804,50 @@ void print_memory_stats(MEMORY_CONTROLLER& memory_controller)
 void print_configuration_details(VirtualMemory& vmem)
 {
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\nWarmup Instructions: %ld\n", warmup_instructions);
-  fprintf(outputchampsimstatistics.trace_file, "Simulation Instructions: %ld\n", simulation_instructions);
-  fprintf(outputchampsimstatistics.trace_file, "Number of CPUs: %d\n", NUM_CPUS);
+  fprintf(output_statistics.file_handler, "\nWarmup Instructions: %ld\n", warmup_instructions);
+  fprintf(output_statistics.file_handler, "Simulation Instructions: %ld\n", simulation_instructions);
+  fprintf(output_statistics.file_handler, "Number of CPUs: %d\n", NUM_CPUS);
 
 #if RAMULATOR == ENABLE
 #else
   uint64_t ddr_address_space = DDR_CHANNELS * DDR_RANKS * DDR_BANKS * DDR_ROWS * DDR_COLUMNS * BLOCK_SIZE / 1024 / 1024; // in MB
   uint64_t ddr_capacity = DDR_CAPACITY / 1024 / 1024; // in MB
 
-  fprintf(outputchampsimstatistics.trace_file, "Off-chip DDR Address Space: ");
+  fprintf(output_statistics.file_handler, "Off-chip DDR Address Space: ");
 
   if (ddr_address_space >= 1024)
-    fprintf(outputchampsimstatistics.trace_file, "%ld GB", ddr_address_space / 1024);
+    fprintf(output_statistics.file_handler, "%ld GB", ddr_address_space / 1024);
   else
-    fprintf(outputchampsimstatistics.trace_file, "%ld MB", ddr_address_space);
+    fprintf(output_statistics.file_handler, "%ld MB", ddr_address_space);
 
-  fprintf(outputchampsimstatistics.trace_file, ", Capacity: ");
+  fprintf(output_statistics.file_handler, ", Capacity: ");
   if (ddr_capacity >= 1024)
-    fprintf(outputchampsimstatistics.trace_file, "%ld GB", ddr_capacity / 1024);
+    fprintf(output_statistics.file_handler, "%ld GB", ddr_capacity / 1024);
   else
-    fprintf(outputchampsimstatistics.trace_file, "%ld MB", ddr_capacity);
+    fprintf(output_statistics.file_handler, "%ld MB", ddr_capacity);
 
-  fprintf(outputchampsimstatistics.trace_file, ", Channels: %ld, Width: %ld-bit, Data Rate: %ld MT/s\n", DDR_CHANNELS, 8 * DRAM_CHANNEL_WIDTH, DRAM_IO_FREQ);
+  fprintf(output_statistics.file_handler, ", Channels: %ld, Width: %ld-bit, Data Rate: %ld MT/s\n", DDR_CHANNELS, 8 * DRAM_CHANNEL_WIDTH, DRAM_IO_FREQ);
 
   uint64_t hbm_address_space = HBM_CHANNELS * HBM_BANKS * HBM_ROWS * HBM_COLUMNS * BLOCK_SIZE / 1024 / 1024; // in MB
   uint64_t hbm_capacity = HBM_CAPACITY / 1024 / 1024; // in MB
-  fprintf(outputchampsimstatistics.trace_file, "On-chip HBM Address Space: ");
+  fprintf(output_statistics.file_handler, "On-chip HBM Address Space: ");
   if (hbm_address_space >= 1024)
-    fprintf(outputchampsimstatistics.trace_file, "%ld GB", hbm_address_space / 1024);
+    fprintf(output_statistics.file_handler, "%ld GB", hbm_address_space / 1024);
   else
-    fprintf(outputchampsimstatistics.trace_file, "%ld MB", hbm_address_space);
+    fprintf(output_statistics.file_handler, "%ld MB", hbm_address_space);
 
-  fprintf(outputchampsimstatistics.trace_file, ", Capacity: ");
+  fprintf(output_statistics.file_handler, ", Capacity: ");
   if (hbm_capacity >= 1024)
-    fprintf(outputchampsimstatistics.trace_file, "%ld GB", hbm_capacity / 1024);
+    fprintf(output_statistics.file_handler, "%ld GB", hbm_capacity / 1024);
   else
-    fprintf(outputchampsimstatistics.trace_file, "%ld MB", hbm_capacity);
+    fprintf(output_statistics.file_handler, "%ld MB", hbm_capacity);
 
-  fprintf(outputchampsimstatistics.trace_file, ", Channels: %ld, Width: %ld-bit, Data Rate: %ld MT/s\n", HBM_CHANNELS, 8 * DRAM_CHANNEL_WIDTH, DRAM_IO_FREQ);
+  fprintf(output_statistics.file_handler, ", Channels: %ld, Width: %ld-bit, Data Rate: %ld MT/s\n", HBM_CHANNELS, 8 * DRAM_CHANNEL_WIDTH, DRAM_IO_FREQ);
 #endif
 
-  fprintf(outputchampsimstatistics.trace_file, "\nVirtualMemory physical capacity: %ld B", std::size(vmem.ppage_free_list) * vmem.page_size);
-  fprintf(outputchampsimstatistics.trace_file, ", num_ppages: %ld\n", std::size(vmem.ppage_free_list));
-  fprintf(outputchampsimstatistics.trace_file, "VirtualMemory page size: %ld, log2_page_size: %d\n\n", PAGE_SIZE, LOG2_PAGE_SIZE);
+  fprintf(output_statistics.file_handler, "\nVirtualMemory physical capacity: %ld B", std::size(vmem.ppage_free_list) * vmem.page_size);
+  fprintf(output_statistics.file_handler, ", num_ppages: %ld\n", std::size(vmem.ppage_free_list));
+  fprintf(output_statistics.file_handler, "VirtualMemory page size: %ld, log2_page_size: %d\n\n", PAGE_SIZE, LOG2_PAGE_SIZE);
 #else
   std::cout << "Warmup Instructions: " << warmup_instructions << std::endl;
   std::cout << "Simulation Instructions: " << simulation_instructions << std::endl;
@@ -1001,15 +993,15 @@ void finish_warmup(std::array<O3_CPU*, NUM_CPUS>& ooo_cpu, std::array<CACHE*, NU
   // SWAP_LATENCY = 100000;
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\n");
+  fprintf(output_statistics.file_handler, "\n");
 #else
   cout << endl;
 #endif
   for (uint32_t i = 0; i < NUM_CPUS; i++)
   {
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, "Warmup complete CPU %d instructions: %ld cycles: %ld", i, ooo_cpu[i]->num_retired, ooo_cpu[i]->current_cycle);
-    fprintf(outputchampsimstatistics.trace_file, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
+    fprintf(output_statistics.file_handler, "Warmup complete CPU %d instructions: %ld cycles: %ld", i, ooo_cpu[i]->num_retired, ooo_cpu[i]->current_cycle);
+    fprintf(output_statistics.file_handler, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
 #else
     cout << "Warmup complete CPU " << i << " instructions: " << ooo_cpu[i]->num_retired << " cycles: " << ooo_cpu[i]->current_cycle;
     cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << endl;
@@ -1033,7 +1025,7 @@ void finish_warmup(std::array<O3_CPU*, NUM_CPUS>& ooo_cpu, std::array<CACHE*, NU
       reset_cache_stats(i, *it);
   }
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\n");
+  fprintf(output_statistics.file_handler, "\n");
 #else
   cout << endl;
 #endif
@@ -1335,26 +1327,26 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory, const 
   ooo_cpu.at(NUM_CPUS - 1) = &cpu1;
 
   std::array<CACHE*, NUM_CACHES> caches{
-  &LLC,
-  &cpu0_L2C, &cpu0_L1D, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB,
-  &cpu1_L2C, &cpu1_L1D, &cpu1_STLB, &cpu1_L1I, &cpu1_ITLB, &cpu1_DTLB
+    &LLC,
+      & cpu0_L2C, & cpu0_L1D, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB,
+      & cpu1_L2C, & cpu1_L1D, & cpu1_STLB, & cpu1_L1I, & cpu1_ITLB, & cpu1_DTLB
   };
 
   std::array<champsim::operable*, NUM_OPERABLES> operables{
-  &cpu0, &cpu1,
-  &LLC,
-  &cpu0_L2C, &cpu0_L1D, &cpu0_PTW, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB,
-  &cpu1_L2C, &cpu1_L1D, &cpu1_PTW, &cpu1_STLB, &cpu1_L1I, &cpu1_ITLB, &cpu1_DTLB,
-  &memory_controller
+    &cpu0, & cpu1,
+      & LLC,
+      & cpu0_L2C, & cpu0_L1D, & cpu0_PTW, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB,
+      & cpu1_L2C, & cpu1_L1D, & cpu1_PTW, & cpu1_STLB, & cpu1_L1I, & cpu1_ITLB, & cpu1_DTLB,
+      & memory_controller
   };
 
 #else
   // put cpu into the cpu array.
   ooo_cpu.at(NUM_CPUS - 1) = &cpu0;
 
-  std::array<CACHE*, NUM_CACHES> caches{&LLC, &cpu0_L2C, &cpu0_L1D, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB};
+  std::array<CACHE*, NUM_CACHES> caches{&LLC, & cpu0_L2C, & cpu0_L1D, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB};
 
-  std::array<champsim::operable*, NUM_OPERABLES> operables{&cpu0, &LLC, &cpu0_L2C, &cpu0_L1D, &cpu0_PTW, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB, &memory_controller};
+  std::array<champsim::operable*, NUM_OPERABLES> operables{&cpu0, & LLC, & cpu0_L2C, & cpu0_L1D, & cpu0_PTW, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB, & memory_controller};
 #endif  // CPU_USE_MULTIPLE_CORES
 
   // Output configuration details
@@ -1493,9 +1485,9 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory, const 
         float heartbeat_ipc = (1.0 * ooo_cpu[i]->num_retired - ooo_cpu[i]->last_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->last_sim_cycle);
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        //fprintf(outputchampsimstatistics.trace_file, "Heartbeat CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->num_retired, ooo_cpu[i]->current_cycle);
-        //fprintf(outputchampsimstatistics.trace_file, " heartbeat IPC: %f cumulative IPC: %f", heartbeat_ipc, cumulative_ipc);
-        //fprintf(outputchampsimstatistics.trace_file, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
+        //fprintf(output_statistics.file_handler, "Heartbeat CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->num_retired, ooo_cpu[i]->current_cycle);
+        //fprintf(output_statistics.file_handler, " heartbeat IPC: %f cumulative IPC: %f", heartbeat_ipc, cumulative_ipc);
+        //fprintf(output_statistics.file_handler, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
         std::cout << "Heartbeat CPU " << i << " instructions: " << ooo_cpu[i]->num_retired << " cycles: " << ooo_cpu[i]->current_cycle;
         std::cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
         std::cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << std::endl;
@@ -1534,9 +1526,9 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory, const 
         ooo_cpu[i]->finish_sim_cycle = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        fprintf(outputchampsimstatistics.trace_file, "Finished CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
-        fprintf(outputchampsimstatistics.trace_file, " cumulative IPC: %f", ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
-        fprintf(outputchampsimstatistics.trace_file, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
+        fprintf(output_statistics.file_handler, "Finished CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
+        fprintf(output_statistics.file_handler, " cumulative IPC: %f", ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
+        fprintf(output_statistics.file_handler, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
 #else
         std::cout << "Finished CPU " << i << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle;
         std::cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
@@ -1559,24 +1551,24 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory, const 
   elapsed_second -= (elapsed_hour * 3600 + elapsed_minute * 60);
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\nChampSim completed all CPUs\n");
+  fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n");
   if (NUM_CPUS > 1)
   {
-    fprintf(outputchampsimstatistics.trace_file, "\nTotal Simulation Statistics (not including warmup)\n");
+    fprintf(output_statistics.file_handler, "\nTotal Simulation Statistics (not including warmup)\n");
     for (uint32_t i = 0; i < NUM_CPUS; i++)
     {
-      fprintf(outputchampsimstatistics.trace_file, "\nCPU %d cumulative IPC: %f", i, (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle));
-      fprintf(outputchampsimstatistics.trace_file, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr, ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
+      fprintf(output_statistics.file_handler, "\nCPU %d cumulative IPC: %f", i, (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle));
+      fprintf(output_statistics.file_handler, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr, ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
       for (auto it = caches.rbegin(); it != caches.rend(); ++it)
         print_sim_stats(i, *it);
     }
   }
 
-  fprintf(outputchampsimstatistics.trace_file, "\nRegion of Interest Statistics\n");
+  fprintf(output_statistics.file_handler, "\nRegion of Interest Statistics\n");
   for (uint32_t i = 0; i < NUM_CPUS; i++)
   {
-    fprintf(outputchampsimstatistics.trace_file, "\nCPU %d cumulative IPC: %f", i, ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
-    fprintf(outputchampsimstatistics.trace_file, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
+    fprintf(output_statistics.file_handler, "\nCPU %d cumulative IPC: %f", i, ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
+    fprintf(output_statistics.file_handler, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
     for (auto it = caches.rbegin(); it != caches.rend(); ++it)
       print_roi_stats(i, *it);
   }
@@ -1776,26 +1768,26 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory)
   ooo_cpu.at(NUM_CPUS - 1) = &cpu1;
 
   std::array<CACHE*, NUM_CACHES> caches{
-  &LLC,
-  &cpu0_L2C, &cpu0_L1D, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB,
-  &cpu1_L2C, &cpu1_L1D, &cpu1_STLB, &cpu1_L1I, &cpu1_ITLB, &cpu1_DTLB
+    &LLC,
+      & cpu0_L2C, & cpu0_L1D, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB,
+      & cpu1_L2C, & cpu1_L1D, & cpu1_STLB, & cpu1_L1I, & cpu1_ITLB, & cpu1_DTLB
   };
 
   std::array<champsim::operable*, NUM_OPERABLES> operables{
-  &cpu0, &cpu1,
-  &LLC,
-  &cpu0_L2C, &cpu0_L1D, &cpu0_PTW, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB,
-  &cpu1_L2C, &cpu1_L1D, &cpu1_PTW, &cpu1_STLB, &cpu1_L1I, &cpu1_ITLB, &cpu1_DTLB,
-  &memory_controller
+    &cpu0, & cpu1,
+      & LLC,
+      & cpu0_L2C, & cpu0_L1D, & cpu0_PTW, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB,
+      & cpu1_L2C, & cpu1_L1D, & cpu1_PTW, & cpu1_STLB, & cpu1_L1I, & cpu1_ITLB, & cpu1_DTLB,
+      & memory_controller
   };
 
 #else
   // put cpu into the cpu array.
   ooo_cpu.at(NUM_CPUS - 1) = &cpu0;
 
-  std::array<CACHE*, NUM_CACHES> caches{&LLC, &cpu0_L2C, &cpu0_L1D, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB};
+  std::array<CACHE*, NUM_CACHES> caches{&LLC, & cpu0_L2C, & cpu0_L1D, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB};
 
-  std::array<champsim::operable*, NUM_OPERABLES> operables{&cpu0, &LLC, &cpu0_L2C, &cpu0_L1D, &cpu0_PTW, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB, &memory_controller};
+  std::array<champsim::operable*, NUM_OPERABLES> operables{&cpu0, & LLC, & cpu0_L2C, & cpu0_L1D, & cpu0_PTW, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB, & memory_controller};
 #endif  // CPU_USE_MULTIPLE_CORES
 
   // Output configuration details
@@ -1862,9 +1854,9 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory)
         float heartbeat_ipc = (1.0 * ooo_cpu[i]->num_retired - ooo_cpu[i]->last_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->last_sim_cycle);
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        //fprintf(outputchampsimstatistics.trace_file, "Heartbeat CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->num_retired, ooo_cpu[i]->current_cycle);
-        //fprintf(outputchampsimstatistics.trace_file, " heartbeat IPC: %f cumulative IPC: %f", heartbeat_ipc, cumulative_ipc);
-        //fprintf(outputchampsimstatistics.trace_file, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
+        //fprintf(output_statistics.file_handler, "Heartbeat CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->num_retired, ooo_cpu[i]->current_cycle);
+        //fprintf(output_statistics.file_handler, " heartbeat IPC: %f cumulative IPC: %f", heartbeat_ipc, cumulative_ipc);
+        //fprintf(output_statistics.file_handler, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
         std::cout << "Heartbeat CPU " << i << " instructions: " << ooo_cpu[i]->num_retired << " cycles: " << ooo_cpu[i]->current_cycle;
         std::cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
         std::cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << std::endl;
@@ -1903,9 +1895,9 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory)
         ooo_cpu[i]->finish_sim_cycle = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        fprintf(outputchampsimstatistics.trace_file, "Finished CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
-        fprintf(outputchampsimstatistics.trace_file, " cumulative IPC: %f", ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
-        fprintf(outputchampsimstatistics.trace_file, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
+        fprintf(output_statistics.file_handler, "Finished CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
+        fprintf(output_statistics.file_handler, " cumulative IPC: %f", ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
+        fprintf(output_statistics.file_handler, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
 #else
         std::cout << "Finished CPU " << i << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle;
         std::cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
@@ -1927,24 +1919,24 @@ void simulation_run(const Config& configs, Memory<T, Controller>& memory)
   elapsed_second -= (elapsed_hour * 3600 + elapsed_minute * 60);
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\nChampSim completed all CPUs\n");
+  fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n");
   if (NUM_CPUS > 1)
   {
-    fprintf(outputchampsimstatistics.trace_file, "\nTotal Simulation Statistics (not including warmup)\n");
+    fprintf(output_statistics.file_handler, "\nTotal Simulation Statistics (not including warmup)\n");
     for (uint32_t i = 0; i < NUM_CPUS; i++)
     {
-      fprintf(outputchampsimstatistics.trace_file, "\nCPU %d cumulative IPC: %f", i, (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle));
-      fprintf(outputchampsimstatistics.trace_file, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr, ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
+      fprintf(output_statistics.file_handler, "\nCPU %d cumulative IPC: %f", i, (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle));
+      fprintf(output_statistics.file_handler, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr, ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
       for (auto it = caches.rbegin(); it != caches.rend(); ++it)
         print_sim_stats(i, *it);
     }
   }
 
-  fprintf(outputchampsimstatistics.trace_file, "\nRegion of Interest Statistics\n");
+  fprintf(output_statistics.file_handler, "\nRegion of Interest Statistics\n");
   for (uint32_t i = 0; i < NUM_CPUS; i++)
   {
-    fprintf(outputchampsimstatistics.trace_file, "\nCPU %d cumulative IPC: %f", i, ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
-    fprintf(outputchampsimstatistics.trace_file, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
+    fprintf(output_statistics.file_handler, "\nCPU %d cumulative IPC: %f", i, ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
+    fprintf(output_statistics.file_handler, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
     for (auto it = caches.rbegin(); it != caches.rend(); ++it)
       print_roi_stats(i, *it);
   }
@@ -2035,26 +2027,26 @@ void simulation_run()
   ooo_cpu.at(NUM_CPUS - 1) = &cpu1;
 
   std::array<CACHE*, NUM_CACHES> caches{
-  &LLC,
-  &cpu0_L2C, &cpu0_L1D, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB,
-  &cpu1_L2C, &cpu1_L1D, &cpu1_STLB, &cpu1_L1I, &cpu1_ITLB, &cpu1_DTLB
+    &LLC,
+      & cpu0_L2C, & cpu0_L1D, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB,
+      & cpu1_L2C, & cpu1_L1D, & cpu1_STLB, & cpu1_L1I, & cpu1_ITLB, & cpu1_DTLB
   };
 
   std::array<champsim::operable*, NUM_OPERABLES> operables{
-  &cpu0, &cpu1,
-  &LLC,
-  &cpu0_L2C, &cpu0_L1D, &cpu0_PTW, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB,
-  &cpu1_L2C, &cpu1_L1D, &cpu1_PTW, &cpu1_STLB, &cpu1_L1I, &cpu1_ITLB, &cpu1_DTLB,
-  &memory_controller
+    &cpu0, & cpu1,
+      & LLC,
+      & cpu0_L2C, & cpu0_L1D, & cpu0_PTW, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB,
+      & cpu1_L2C, & cpu1_L1D, & cpu1_PTW, & cpu1_STLB, & cpu1_L1I, & cpu1_ITLB, & cpu1_DTLB,
+      & memory_controller
   };
 
 #else
   // put cpu into the cpu array.
   ooo_cpu.at(NUM_CPUS - 1) = &cpu0;
 
-  std::array<CACHE*, NUM_CACHES> caches{&LLC, &cpu0_L2C, &cpu0_L1D, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB};
+  std::array<CACHE*, NUM_CACHES> caches{&LLC, & cpu0_L2C, & cpu0_L1D, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB};
 
-  std::array<champsim::operable*, NUM_OPERABLES> operables{&cpu0, &LLC, &cpu0_L2C, &cpu0_L1D, &cpu0_PTW, &cpu0_STLB, &cpu0_L1I, &cpu0_ITLB, &cpu0_DTLB, &memory_controller};
+  std::array<champsim::operable*, NUM_OPERABLES> operables{&cpu0, & LLC, & cpu0_L2C, & cpu0_L1D, & cpu0_PTW, & cpu0_STLB, & cpu0_L1I, & cpu0_ITLB, & cpu0_DTLB, & memory_controller};
 #endif  // CPU_USE_MULTIPLE_CORES
 
   // Output configuration details
@@ -2120,9 +2112,9 @@ void simulation_run()
         float heartbeat_ipc = (1.0 * ooo_cpu[i]->num_retired - ooo_cpu[i]->last_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->last_sim_cycle);
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        //fprintf(outputchampsimstatistics.trace_file, "Heartbeat CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->num_retired, ooo_cpu[i]->current_cycle);
-        //fprintf(outputchampsimstatistics.trace_file, " heartbeat IPC: %f cumulative IPC: %f", heartbeat_ipc, cumulative_ipc);
-        //fprintf(outputchampsimstatistics.trace_file, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
+        //fprintf(output_statistics.file_handler, "Heartbeat CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->num_retired, ooo_cpu[i]->current_cycle);
+        //fprintf(output_statistics.file_handler, " heartbeat IPC: %f cumulative IPC: %f", heartbeat_ipc, cumulative_ipc);
+        //fprintf(output_statistics.file_handler, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
         std::cout << "Heartbeat CPU " << i << " instructions: " << ooo_cpu[i]->num_retired << " cycles: " << ooo_cpu[i]->current_cycle;
         std::cout << " heartbeat IPC: " << heartbeat_ipc << " cumulative IPC: " << cumulative_ipc;
         std::cout << " (Simulation time: " << elapsed_hour << " hr " << elapsed_minute << " min " << elapsed_second << " sec) " << std::endl;
@@ -2161,9 +2153,9 @@ void simulation_run()
         ooo_cpu[i]->finish_sim_cycle = ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle;
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        fprintf(outputchampsimstatistics.trace_file, "Finished CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
-        fprintf(outputchampsimstatistics.trace_file, " cumulative IPC: %f", ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
-        fprintf(outputchampsimstatistics.trace_file, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
+        fprintf(output_statistics.file_handler, "Finished CPU %ld instructions: %ld cycles: %ld", i, ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
+        fprintf(output_statistics.file_handler, " cumulative IPC: %f", ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
+        fprintf(output_statistics.file_handler, " (Simulation time: %ld hr %ld min %ld sec) \n", elapsed_hour, elapsed_minute, elapsed_second);
 #else
         std::cout << "Finished CPU " << i << " instructions: " << ooo_cpu[i]->finish_sim_instr << " cycles: " << ooo_cpu[i]->finish_sim_cycle;
         std::cout << " cumulative IPC: " << ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle);
@@ -2181,24 +2173,24 @@ void simulation_run()
   elapsed_second -= (elapsed_hour * 3600 + elapsed_minute * 60);
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-  fprintf(outputchampsimstatistics.trace_file, "\nChampSim completed all CPUs\n");
+  fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n");
   if (NUM_CPUS > 1)
   {
-    fprintf(outputchampsimstatistics.trace_file, "\nTotal Simulation Statistics (not including warmup)\n");
+    fprintf(output_statistics.file_handler, "\nTotal Simulation Statistics (not including warmup)\n");
     for (uint32_t i = 0; i < NUM_CPUS; i++)
     {
-      fprintf(outputchampsimstatistics.trace_file, "\nCPU %d cumulative IPC: %f", i, (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle));
-      fprintf(outputchampsimstatistics.trace_file, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr, ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
+      fprintf(output_statistics.file_handler, "\nCPU %d cumulative IPC: %f", i, (float)(ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr) / (ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle));
+      fprintf(output_statistics.file_handler, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->num_retired - ooo_cpu[i]->begin_sim_instr, ooo_cpu[i]->current_cycle - ooo_cpu[i]->begin_sim_cycle);
       for (auto it = caches.rbegin(); it != caches.rend(); ++it)
         print_sim_stats(i, *it);
     }
   }
 
-  fprintf(outputchampsimstatistics.trace_file, "\nRegion of Interest Statistics\n");
+  fprintf(output_statistics.file_handler, "\nRegion of Interest Statistics\n");
   for (uint32_t i = 0; i < NUM_CPUS; i++)
   {
-    fprintf(outputchampsimstatistics.trace_file, "\nCPU %d cumulative IPC: %f", i, ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
-    fprintf(outputchampsimstatistics.trace_file, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
+    fprintf(output_statistics.file_handler, "\nCPU %d cumulative IPC: %f", i, ((float)ooo_cpu[i]->finish_sim_instr / ooo_cpu[i]->finish_sim_cycle));
+    fprintf(output_statistics.file_handler, " instructions: %ld cycles: %ld\n", ooo_cpu[i]->finish_sim_instr, ooo_cpu[i]->finish_sim_cycle);
     for (auto it = caches.rbegin(); it != caches.rend(); ++it)
       print_roi_stats(i, *it);
   }

@@ -23,7 +23,7 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, ui
 
 OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 {
-    outputchampsimstatistics.remapping_request_queue_congestion = remapping_request_queue_congestion;
+    output_statistics.remapping_request_queue_congestion = remapping_request_queue_congestion;
 
 #if (STATISTICS_INFORMATION == ENABLE)
     uint64_t estimated_spatial_locality_counts[MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max)] = {0};
@@ -69,33 +69,33 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
         }
     }
 
-    fprintf(outputchampsimstatistics.trace_file, "\n\nInformation about variable granularity\n\n");
+    fprintf(output_statistics.file_handler, "\n\nInformation about variable granularity\n\n");
 
     // print out spatial locality
-    fprintf(outputchampsimstatistics.trace_file, "Estimated spatial locality distribution:\n");
+    fprintf(output_statistics.file_handler, "Estimated spatial locality distribution:\n");
     for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
     {
-        fprintf(outputchampsimstatistics.trace_file, "Spatial locality [%d] %ld\n", i, estimated_spatial_locality_counts[i]);
+        fprintf(output_statistics.file_handler, "Spatial locality [%d] %ld\n", i, estimated_spatial_locality_counts[i]);
         estimated_spatial_locality_total_counts += estimated_spatial_locality_counts[i];
     }
-    fprintf(outputchampsimstatistics.trace_file, "estimated_spatial_locality_total_counts %ld\n", estimated_spatial_locality_total_counts);
+    fprintf(output_statistics.file_handler, "estimated_spatial_locality_total_counts %ld\n", estimated_spatial_locality_total_counts);
 
     // print out best granularity
-    fprintf(outputchampsimstatistics.trace_file, "\nBest granularity distribution:\n");
+    fprintf(output_statistics.file_handler, "\nBest granularity distribution:\n");
     for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
     {
-        fprintf(outputchampsimstatistics.trace_file, "Granularity [%d] %ld\n", i, granularity_counts[i]);
+        fprintf(output_statistics.file_handler, "Granularity [%d] %ld\n", i, granularity_counts[i]);
         granularity_total_counts += granularity_counts[i];
     }
-    fprintf(outputchampsimstatistics.trace_file, "granularity_total_counts %ld\n", granularity_total_counts);
+    fprintf(output_statistics.file_handler, "granularity_total_counts %ld\n", granularity_total_counts);
 
-    fprintf(outputchampsimstatistics.trace_file, "\nPredicted granularity distribution:\n");
+    fprintf(output_statistics.file_handler, "\nPredicted granularity distribution:\n");
     for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
     {
-        fprintf(outputchampsimstatistics.trace_file, "Granularity [%d] %ld\n", i, granularity_predict_counts[i]);
+        fprintf(output_statistics.file_handler, "Granularity [%d] %ld\n", i, granularity_predict_counts[i]);
         granularity_total_predict_counts += granularity_predict_counts[i];
     }
-    fprintf(outputchampsimstatistics.trace_file, "granularity_total_predict_counts %ld\n", granularity_total_predict_counts);
+    fprintf(output_statistics.file_handler, "granularity_total_predict_counts %ld\n", granularity_total_predict_counts);
 
 #endif  // STATISTICS_INFORMATION
 
@@ -277,11 +277,11 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                     }
 
                     // this existing group can not be expanded because no invalid groups behind it (i.e., no continuous free space).
-                    outputchampsimstatistics.unexpandable_since_no_invalid_group++;
+                    output_statistics.unexpandable_since_no_invalid_group++;
 #else
                     // this existing group can not be expanded because no invalid groups behind it (i.e., no continuous free space).
                     cold_data_eviction(address, queue_busy_degree);
-                    outputchampsimstatistics.unexpandable_since_no_invalid_group++;
+                    output_statistics.unexpandable_since_no_invalid_group++;
                     return true;
 #endif  // FLEXIBLE_DATA_PLACEMENT
 
@@ -301,7 +301,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                         break;
 #else
                         // this existing group can not be expanded because the new start_address is smaller than the existing group's start_address
-                        outputchampsimstatistics.unexpandable_since_start_address++;
+                        output_statistics.unexpandable_since_start_address++;
                         return true;
 #endif  // FLEXIBLE_DATA_PLACEMENT
                     }
@@ -359,14 +359,14 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                                     {
                                         // no enough free space for data migration. Data eviction is necessary.
                                         cold_data_eviction(address, queue_busy_degree);
-                                        outputchampsimstatistics.no_free_space_for_migration++;
+                                        output_statistics.no_free_space_for_migration++;
                                         return true;
                                     }
 
 #else
                                     // no enough free space for data migration. Data eviction is necessary.
                                     cold_data_eviction(address, queue_busy_degree);
-                                    outputchampsimstatistics.no_free_space_for_migration++;
+                                    output_statistics.no_free_space_for_migration++;
                                     return true;
 #endif  // FLEXIBLE_GRANULARITY
                                 }
@@ -410,7 +410,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                 {
                     // no enough invalid groups for data migration. Data eviction is necessary.
                     cold_data_eviction(address, queue_busy_degree);
-                    outputchampsimstatistics.no_invalid_group_for_migration++;
+                    output_statistics.no_invalid_group_for_migration++;
                     return true;
                 }
             }
@@ -425,7 +425,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                     {
                         // no enough invalid groups for data migration. Data eviction is necessary.
                         cold_data_eviction(address, queue_busy_degree);
-                        outputchampsimstatistics.no_invalid_group_for_migration++;
+                        output_statistics.no_invalid_group_for_migration++;
                         return true;
                     }
                     migration_granularity = free_space;
@@ -434,13 +434,13 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
                 {
                     // no enough free space for data migration. Data eviction is necessary.
                     cold_data_eviction(address, queue_busy_degree);
-                    outputchampsimstatistics.no_free_space_for_migration++;
+                    output_statistics.no_free_space_for_migration++;
                     return true;
                 }
 #else
                 // no enough free space for data migration. Data eviction is necessary.
                 cold_data_eviction(address, queue_busy_degree);
-                outputchampsimstatistics.no_free_space_for_migration++;
+                output_statistics.no_free_space_for_migration++;
                 return true;
 #endif  // FLEXIBLE_GRANULARITY
             }
@@ -1244,12 +1244,12 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
                 if (enqueue)
                 {
                     // new eviction request is issued.
-                    outputchampsimstatistics.data_eviction_success++;
+                    output_statistics.data_eviction_success++;
                 }
                 else
                 {
                     // no eviction request is issued.
-                    outputchampsimstatistics.data_eviction_failure++;
+                    output_statistics.data_eviction_failure++;
                 }
             }
 

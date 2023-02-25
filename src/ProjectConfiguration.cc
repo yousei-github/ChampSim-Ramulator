@@ -1,140 +1,162 @@
-#include "champsim.h"
+#include "ProjectConfiguration.h"
 
-OutputMemoryTraceFileType outputmemorytrace_one;
+MEMORY_TRACE output_memorytrace("memory trace", ".trace");
+SIMULATOR_STATISTICS output_statistics("ChampSim statistics", ".statistics");
 
-OutputChampSimStatisticsFileType outputchampsimstatistics;
-
-void output_memory_trace_initialization(const char* string)
+DATA_OUTPUT::DATA_OUTPUT(std::string v1, std::string v2)
+    : data_name(v1), file_extension(v2)
 {
-    char* string2 = (char*)malloc(strlen(string) + 1);
-    strcpy(string2, string);
+}
 
-    const char* delimiter = "/";
-    char* token = NULL;
-    char* last_token = NULL;
+DATA_OUTPUT::~DATA_OUTPUT()
+{
+    fclose(file_handler);
+    printf("Output %s into %s\n", data_name.c_str(), file_name);
+    free(file_name);
+}
 
-    /* get the first token */
-    token = strtok(string2, delimiter);
-
-    /* walk through other tokens */
-    while (token != NULL)
+void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t number)
+{
+    std::string benchmark_names;
+    for (uint32_t i = 0; i < number; i++)
     {
-        last_token = token;
-        token = strtok(NULL, delimiter);
+        char* string_temp = (char*)malloc(strlen(string_array[i]) + 1);
+        strcpy(string_temp, string_array[i]);
+
+        const char* delimiter = "/";
+        char empty[] = "";
+        char* token = empty;
+        char* last_token = empty;
+
+        /* get the first token */
+        token = strtok(string_temp, delimiter);
+
+        /* walk through other tokens */
+        while (token != NULL)
+        {
+            last_token = token;
+            token = strtok(NULL, delimiter);
+        }
+
+        benchmark_names += std::string(last_token) + "_";
+
+        free(string_temp);
     }
+    benchmark_names.erase(benchmark_names.size() - 1);
 
-    // append file_extension to string3.
-    const char* file_extension = ".trace";
-    char* string3 = (char*)malloc(strlen(last_token) + 1 + strlen(file_extension));
-    strcpy(string3, last_token);
-    strcat(string3, file_extension);
+    // append file_extension to benchmark_names.
+    benchmark_names += file_extension.c_str();
 
-    outputmemorytrace_one.trace_file = fopen(string3, "w");
-    outputmemorytrace_one.trace_string = (char*)malloc(strlen(string3) + 1);
-    strcpy(outputmemorytrace_one.trace_string, string3);
+    file_handler = fopen(benchmark_names.c_str(), "w");
+    file_name = (char*)malloc(benchmark_names.size() + 1);
+    strcpy(file_name, benchmark_names.c_str());
 }
 
-void output_memory_trace_deinitialization(OutputMemoryTraceFileType& outputmemorytrace)
+MEMORY_TRACE::MEMORY_TRACE(std::string v1, std::string v2)
+    : DATA_OUTPUT(v1, v2)
 {
-    fclose(outputmemorytrace.trace_file);
-    printf("Output memory trace into %s.\n", outputmemorytrace.trace_string);
-
-    free(outputmemorytrace.trace_string);
 }
 
-void output_memory_trace_hexadecimal(OutputMemoryTraceFileType& outputmemorytrace, uint64_t address, char type)
+MEMORY_TRACE::MEMORY_TRACE(std::string v1, std::string v2, char** string_array, uint32_t number)
+    : DATA_OUTPUT(v1, v2)
 {
-    fprintf(outputmemorytrace.trace_file, "0x%lx %c\n", address, type);
+    output_file_initialization(string_array, number);
 }
 
-void output_champsim_statistics_initialization(const char* string)
+void MEMORY_TRACE::output_memory_trace_hexadecimal(uint64_t address, char type)
 {
-    char* string2 = (char*)malloc(strlen(string) + 1);
-    strcpy(string2, string);
+    fprintf(file_handler, "0x%lx %c\n", address, type);
+}
 
-    const char* delimiter = "/";
-    char* token;
-    char* last_token;
-
-    /* get the first token */
-    token = strtok(string2, delimiter);
-
-    /* walk through other tokens */
-    while (token != NULL)
+SIMULATOR_STATISTICS::SIMULATOR_STATISTICS(std::string v1, std::string v2)
+    : DATA_OUTPUT(v1, v2)
+{
+    /* Initialize variabes */
+    for (uint64_t i = 0; i < valid_pte_count.size(); i++)
     {
-        last_token = token;
-        token = strtok(NULL, delimiter);
+        valid_pte_count[i] = 0;
     }
+    virtual_page_count = 0;
 
-    // append file_extension to string3.
-    const char* file_extension = ".statistics";
-    char* string3 = (char*)malloc(strlen(last_token) + 1 + strlen(file_extension));
-    strcpy(string3, last_token);
-    strcat(string3, file_extension);
+    read_request_in_memory = 0;
+    read_request_in_memory2 = 0;
+    write_request_in_memory = 0;
+    write_request_in_memory2 = 0;
 
-    outputchampsimstatistics.trace_file = fopen(string3, "w");
-    outputchampsimstatistics.trace_string = (char*)malloc(strlen(string3) + 1);
-    strcpy(outputchampsimstatistics.trace_string, string3);
+    swapping_count = 0;
+    swapping_traffic_in_bytes = 0;
+
+    remapping_request_queue_congestion = 0;
+
+#if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
+    no_free_space_for_migration = 0;
+    no_invalid_group_for_migration = 0;
+    unexpandable_since_start_address = 0;
+    unexpandable_since_no_invalid_group = 0;
+    data_eviction_success = data_eviction_failure = 0;
+    uncertain_counter = 0;
+#endif  // IDEAL_VARIABLE_GRANULARITY
+}
+
+SIMULATOR_STATISTICS::SIMULATOR_STATISTICS(std::string v1, std::string v2, char** string_array, uint32_t number)
+    : DATA_OUTPUT(v1, v2)
+{
+    output_file_initialization(string_array, number);
 
     /* Initialize variabes */
-    for (uint64_t i = 0; i < outputchampsimstatistics.valid_pte_count.size(); i++)
+    for (uint64_t i = 0; i < valid_pte_count.size(); i++)
     {
-        outputchampsimstatistics.valid_pte_count[i] = 0;
+        valid_pte_count[i] = 0;
     }
-    outputchampsimstatistics.virtual_page_count = 0;
+    virtual_page_count = 0;
 
-    outputchampsimstatistics.read_request_in_memory = 0;
-    outputchampsimstatistics.read_request_in_memory2 = 0;
-    outputchampsimstatistics.write_request_in_memory = 0;
-    outputchampsimstatistics.write_request_in_memory2 = 0;
+    read_request_in_memory = 0;
+    read_request_in_memory2 = 0;
+    write_request_in_memory = 0;
+    write_request_in_memory2 = 0;
 
-    outputchampsimstatistics.swapping_count = 0;
-    outputchampsimstatistics.swapping_traffic_in_bytes = 0;
+    swapping_count = 0;
+    swapping_traffic_in_bytes = 0;
 
-    outputchampsimstatistics.remapping_request_queue_congestion = 0;
+    remapping_request_queue_congestion = 0;
 
 #if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-    outputchampsimstatistics.no_free_space_for_migration = 0;
-    outputchampsimstatistics.no_invalid_group_for_migration = 0;
-    outputchampsimstatistics.unexpandable_since_start_address = 0;
-    outputchampsimstatistics.unexpandable_since_no_invalid_group = 0;
-    outputchampsimstatistics.data_eviction_success = outputchampsimstatistics.data_eviction_failure = 0;
-    outputchampsimstatistics.uncertain_counter = 0;
+    no_free_space_for_migration = 0;
+    no_invalid_group_for_migration = 0;
+    unexpandable_since_start_address = 0;
+    unexpandable_since_no_invalid_group = 0;
+    data_eviction_success = data_eviction_failure = 0;
+    uncertain_counter = 0;
 #endif  // IDEAL_VARIABLE_GRANULARITY
 }
 
-void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileType& outputchampsimstatistics)
+SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
 {
-    fprintf(outputchampsimstatistics.trace_file, "\n\nInformation about virtual memory\n\n");
-    for (uint64_t i = 0; i < outputchampsimstatistics.valid_pte_count.size(); i++)
+    fprintf(file_handler, "\n\nInformation about virtual memory\n\n");
+    for (uint64_t i = 0; i < valid_pte_count.size(); i++)
     {
-        fprintf(outputchampsimstatistics.trace_file, "Level: %ld, valid_pte_count: %ld.\n", i, outputchampsimstatistics.valid_pte_count[i]);
+        fprintf(file_handler, "Level: %ld, valid_pte_count: %ld.\n", i, valid_pte_count[i]);
     }
-    fprintf(outputchampsimstatistics.trace_file, "virtual_page_count: %ld, main memory footprint: %f MB.\n", outputchampsimstatistics.virtual_page_count, outputchampsimstatistics.virtual_page_count * 4.0 / KB);
+    fprintf(file_handler, "virtual_page_count: %ld, main memory footprint: %f MB.\n", virtual_page_count, virtual_page_count * 4.0 / KB);
 
-    uint64_t total_access_request_in_memory = outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.read_request_in_memory2 + outputchampsimstatistics.write_request_in_memory + outputchampsimstatistics.write_request_in_memory2;
+    uint64_t total_access_request_in_memory = read_request_in_memory + read_request_in_memory2 + write_request_in_memory + write_request_in_memory2;
 
-    fprintf(outputchampsimstatistics.trace_file, "\n\nInformation about memory controller\n\n");
-    fprintf(outputchampsimstatistics.trace_file, "read_request_in_memory: %ld, read_request_in_memory2: %ld.\n", outputchampsimstatistics.read_request_in_memory, outputchampsimstatistics.read_request_in_memory2);
-    fprintf(outputchampsimstatistics.trace_file, "write_request_in_memory: %ld, write_request_in_memory2: %ld.\n", outputchampsimstatistics.write_request_in_memory, outputchampsimstatistics.write_request_in_memory2);
-    fprintf(outputchampsimstatistics.trace_file, "hit rate: %f.\n", (outputchampsimstatistics.read_request_in_memory + outputchampsimstatistics.write_request_in_memory) / float(total_access_request_in_memory));
+    fprintf(file_handler, "\n\nInformation about memory controller\n\n");
+    fprintf(file_handler, "read_request_in_memory: %ld, read_request_in_memory2: %ld.\n", read_request_in_memory, read_request_in_memory2);
+    fprintf(file_handler, "write_request_in_memory: %ld, write_request_in_memory2: %ld.\n", write_request_in_memory, write_request_in_memory2);
+    fprintf(file_handler, "hit rate: %f.\n", (read_request_in_memory + write_request_in_memory) / float(total_access_request_in_memory));
 
-    fprintf(outputchampsimstatistics.trace_file, "swapping_count: %ld, swapping_traffic_in_bytes: %ld.\n", outputchampsimstatistics.swapping_count, outputchampsimstatistics.swapping_traffic_in_bytes);
+    fprintf(file_handler, "swapping_count: %ld, swapping_traffic_in_bytes: %ld.\n", swapping_count, swapping_traffic_in_bytes);
 
-    fprintf(outputchampsimstatistics.trace_file, "remapping_request_queue_congestion: %ld.\n", outputchampsimstatistics.remapping_request_queue_congestion);
+    fprintf(file_handler, "remapping_request_queue_congestion: %ld.\n", remapping_request_queue_congestion);
 
 #if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-    fprintf(outputchampsimstatistics.trace_file, "no_free_space_for_migration: %ld (%f).\n", outputchampsimstatistics.no_free_space_for_migration, outputchampsimstatistics.no_free_space_for_migration / float(total_access_request_in_memory));
-    fprintf(outputchampsimstatistics.trace_file, "no_invalid_group_for_migration: %ld (%f).\n", outputchampsimstatistics.no_invalid_group_for_migration, outputchampsimstatistics.no_invalid_group_for_migration / float(total_access_request_in_memory));
-    fprintf(outputchampsimstatistics.trace_file, "unexpandable_since_start_address: %ld (%f).\n", outputchampsimstatistics.unexpandable_since_start_address, outputchampsimstatistics.unexpandable_since_start_address / float(total_access_request_in_memory));
-    fprintf(outputchampsimstatistics.trace_file, "unexpandable_since_no_invalid_group: %ld (%f).\n", outputchampsimstatistics.unexpandable_since_no_invalid_group, outputchampsimstatistics.unexpandable_since_no_invalid_group / float(total_access_request_in_memory));
-    fprintf(outputchampsimstatistics.trace_file, "data_eviction_success: %ld (%f).\n", outputchampsimstatistics.data_eviction_success, outputchampsimstatistics.data_eviction_success / float(total_access_request_in_memory));
-    fprintf(outputchampsimstatistics.trace_file, "data_eviction_failure: %ld (%f).\n", outputchampsimstatistics.data_eviction_failure, outputchampsimstatistics.data_eviction_failure / float(total_access_request_in_memory));
-    fprintf(outputchampsimstatistics.trace_file, "uncertain_counter: %ld (%f).\n", outputchampsimstatistics.uncertain_counter, outputchampsimstatistics.uncertain_counter / float(total_access_request_in_memory));
+    fprintf(file_handler, "no_free_space_for_migration: %ld (%f).\n", no_free_space_for_migration, no_free_space_for_migration / float(total_access_request_in_memory));
+    fprintf(file_handler, "no_invalid_group_for_migration: %ld (%f).\n", no_invalid_group_for_migration, no_invalid_group_for_migration / float(total_access_request_in_memory));
+    fprintf(file_handler, "unexpandable_since_start_address: %ld (%f).\n", unexpandable_since_start_address, unexpandable_since_start_address / float(total_access_request_in_memory));
+    fprintf(file_handler, "unexpandable_since_no_invalid_group: %ld (%f).\n", unexpandable_since_no_invalid_group, unexpandable_since_no_invalid_group / float(total_access_request_in_memory));
+    fprintf(file_handler, "data_eviction_success: %ld (%f).\n", data_eviction_success, data_eviction_success / float(total_access_request_in_memory));
+    fprintf(file_handler, "data_eviction_failure: %ld (%f).\n", data_eviction_failure, data_eviction_failure / float(total_access_request_in_memory));
+    fprintf(file_handler, "uncertain_counter: %ld (%f).\n", uncertain_counter, uncertain_counter / float(total_access_request_in_memory));
 #endif  // IDEAL_VARIABLE_GRANULARITY
-
-    fclose(outputchampsimstatistics.trace_file);
-    printf("Output ChampSim statistics into %s.\n", outputchampsimstatistics.trace_string);
-
-    free(outputchampsimstatistics.trace_string);
 }

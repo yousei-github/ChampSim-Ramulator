@@ -122,7 +122,7 @@ int MEMORY_CONTROLLER::add_rq(PACKET* packet)
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
     // output memory trace.
-    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
+    output_memorytrace.output_memory_trace_hexadecimal(packet->address, 'R');
 #endif
   }
   break;
@@ -169,7 +169,7 @@ int MEMORY_CONTROLLER::add_rq(PACKET* packet)
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
     // output memory trace.
-    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
+    output_memorytrace.output_memory_trace_hexadecimal(packet->address, 'R');
 #endif
   }
   break;
@@ -210,7 +210,7 @@ int MEMORY_CONTROLLER::add_wq(PACKET* packet)
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
     // output memory trace.
-    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
+    output_memorytrace.output_memory_trace_hexadecimal(packet->address, 'W');
 #endif  // PRINT_MEMORY_TRACE
   }
   break;
@@ -237,7 +237,7 @@ int MEMORY_CONTROLLER::add_wq(PACKET* packet)
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
     // output memory trace.
-    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
+    output_memorytrace.output_memory_trace_hexadecimal(packet->address, 'W');
 #endif  // PRINT_MEMORY_TRACE
   }
   break;

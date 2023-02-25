@@ -66,7 +66,7 @@ std::pair<uint64_t, bool> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t vad
   {
     ppage_free_list.pop_front();
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    outputchampsimstatistics.virtual_page_count++;
+    output_statistics.virtual_page_count++;
 #endif  // PRINT_STATISTICS_INTO_FILE
   }
 
@@ -85,7 +85,7 @@ std::pair<uint64_t, bool> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64_t v
     ppage_free_list.pop_front();
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    outputchampsimstatistics.valid_pte_count[level - 1]++;
+    output_statistics.valid_pte_count[level - 1]++;
 #endif  // PRINT_STATISTICS_INTO_FILE
   }
 
