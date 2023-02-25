@@ -16,7 +16,6 @@
 #include "variable_granularity.h"
 #include "ideal_single_mempod.h"
 
-
 /** @note Abbreviation:
  *  FM -> Fast memory (e.g., HBM, DDR4)
  *  SM -> Slow memory (e.g., DDR4, PCM)
@@ -86,7 +85,7 @@ private:
 
 };
 
-#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY
+#endif  // NO_METHOD_FOR_RUN_HYBRID_MEMORY
 
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 #endif  // OS_TRANSPARENT_MANAGEMENT_H

@@ -261,15 +261,15 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
 template<class T, class T2>
 MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
 {
-  // print some information to outputchampsimstatistics
-  outputchampsimstatistics.read_request_in_memory = read_request_in_memory;
-  outputchampsimstatistics.read_request_in_memory2 = read_request_in_memory2;
-  outputchampsimstatistics.write_request_in_memory = write_request_in_memory;
-  outputchampsimstatistics.write_request_in_memory2 = write_request_in_memory2;
+  // print some information to output_statistics
+  output_statistics.read_request_in_memory = read_request_in_memory;
+  output_statistics.read_request_in_memory2 = read_request_in_memory2;
+  output_statistics.write_request_in_memory = write_request_in_memory;
+  output_statistics.write_request_in_memory2 = write_request_in_memory2;
 
-  outputchampsimstatistics.swapping_count = swapping_count;
-  outputchampsimstatistics.swapping_traffic_in_bytes = swapping_traffic_in_bytes;
-  
+  output_statistics.swapping_count = swapping_count;
+  output_statistics.swapping_traffic_in_bytes = swapping_traffic_in_bytes;
+
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   delete& os_transparent_management;
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
@@ -549,7 +549,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
     {
       return int(ReturnValue::Full);
     }
-  }
+}
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
 #else
@@ -577,9 +577,9 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
         read_request.fm_access_finish = false;
 
         os_transparent_management.incomplete_read_request_queue.push_back(read_request);
-      }
-#endif  // COLOCATED_LINE_LOCATION_TABLE
     }
+#endif  // COLOCATED_LINE_LOCATION_TABLE
+  }
   }
   else if (address < memory.max_address + memory2.max_address)
   {
@@ -599,7 +599,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
   // output memory trace.
-  output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
+  output_memorytrace.output_memory_trace_hexadecimal(packet->address, 'R');
 #endif  // PRINT_MEMORY_TRACE
 
   if (stall == true)
@@ -677,7 +677,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   else
   {
     return int(ReturnValue::Full);
-  }
+}
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
 #else
@@ -713,7 +713,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
   // output memory trace.
-  output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
+  output_memorytrace.output_memory_trace_hexadecimal(packet->address, 'W');
 #endif  // PRINT_MEMORY_TRACE
 
   if (stall == true)
@@ -855,7 +855,7 @@ void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
     // this is a complete read request
     for (auto ret : request.packet.to_return)
       ret->return_data(&(request.packet));
-  }
+}
 
 #else
   for (auto ret : request.packet.to_return)
@@ -991,7 +991,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
             // output memory trace.
-            output_memory_trace_hexadecimal(outputmemorytrace_one, address, 'R');
+            output_memorytrace.output_memory_trace_hexadecimal(address, 'R');
 #endif  // PRINT_MEMORY_TRACE
 
             if (stall == true)
@@ -1044,7 +1044,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
               // output memory trace.
-              output_memory_trace_hexadecimal(outputmemorytrace_one, address, 'W');
+              output_memorytrace.output_memory_trace_hexadecimal(address, 'W');
 #endif  // PRINT_MEMORY_TRACE
 
               if (stall == true)
@@ -1332,9 +1332,9 @@ MEMORY_CONTROLLER<T>::MEMORY_CONTROLLER(double freq_scale, double clock_scale, M
 template<class T>
 MEMORY_CONTROLLER<T>::~MEMORY_CONTROLLER()
 {
-  // print some information to outputchampsimstatistics
-  outputchampsimstatistics.read_request_in_memory = read_request_in_memory;
-  outputchampsimstatistics.write_request_in_memory = write_request_in_memory;
+  // print some information to output_statistics
+  output_statistics.read_request_in_memory = read_request_in_memory;
+  output_statistics.write_request_in_memory = write_request_in_memory;
 };
 
 template<class T>
@@ -1398,7 +1398,7 @@ int MEMORY_CONTROLLER<T>::add_rq(PACKET* packet)
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
   // output memory trace.
-  output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
+  output_memorytrace.output_memory_trace_hexadecimal(packet->address, 'R');
 #endif  // PRINT_MEMORY_TRACE
 
   if (stall == true)
@@ -1441,7 +1441,7 @@ int MEMORY_CONTROLLER<T>::add_wq(PACKET* packet)
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
   // output memory trace.
-  output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
+  output_memorytrace.output_memory_trace_hexadecimal(packet->address, 'W');
 #endif  // PRINT_MEMORY_TRACE
 
   if (stall == true)

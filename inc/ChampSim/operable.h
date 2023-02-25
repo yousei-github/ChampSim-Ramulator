@@ -34,7 +34,7 @@ public:
   double leap_operation = 0;
   uint64_t current_cycle = 0;
 
-  explicit operable(double scale) : CLOCK_SCALE(scale - 1) {}
+  explicit operable(double scale): CLOCK_SCALE(scale - 1) {}
 
   void _operate()
   {
@@ -46,14 +46,14 @@ public:
       leap_operation -= 1;
       return;
     }
-#endif
+#endif  // RAMULATOR
 
     operate();
 
 #if (RAMULATOR == ENABLE)
 #else
     leap_operation += CLOCK_SCALE;
-#endif
+#endif  // RAMULATOR
 
     ++current_cycle;
   }

@@ -9,16 +9,18 @@
 
 /* Functionality options */
 #if (USER_CODES == ENABLE)
+// Main functionalities selection
 #define USE_OPENMP                                 (ENABLE) // whether use OpenMP to speedup the simulation
 #define RAMULATOR                                  (ENABLE) // whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
 #define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE                 (ENABLE) // whether print simulation statistics into files
-#define PRINT_MEMORY_TRACE                         (DISABLE) // whether print memory trace into files
+#define PRINT_MEMORY_TRACE                         (ENABLE) // whether print memory trace into files
 #define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
 #define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
-#define CPU_USE_MULTIPLE_CORES                     (DISABLE) // whether CPU uses multiple cores to run simulation (go to ./inc/ChampSim/champsim_constants.h to check related parameters)
-#define TRACKING_LOAD_STORE_STATISTICS             (DISABLE)
+#define CPU_USE_MULTIPLE_CORES                     (ENABLE) // whether CPU uses multiple cores to run simulation (go to ./inc/ChampSim/champsim_constants.h to check related parameters)
+#define TRACKING_LOAD_STORE_STATISTICS             (DISABLE)    // Note: it might be better become a research proposal like IDEAL_SINGLE_MEMPOD in line 47
 
+// Configuration for hybrid memory systems
 #if (MEMORY_USE_HYBRID == ENABLE)
 #define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
 #define MEMORY_NUMBER_ONE    (0u)
@@ -26,22 +28,18 @@
 #define ADD_HBM_128MB        (ENABLE)
 #else
 #define NUMBER_OF_MEMORIES   (1u)
-
 #endif  // MEMORY_USE_HYBRID
 
+// Configuration for swapping unit in the memory controller
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
 #define SWAPPING_BUFFER_ENTRY_NUMBER    (64)
 #define SWAPPING_SEGMENT_ONE            (0)
 #define SWAPPING_SEGMENT_TWO            (1)
 #define SWAPPING_SEGMENT_NUMBER         (2)
-
-#define TEST_SWAPPING_UNIT        (DISABLE)
+#define TEST_SWAPPING_UNIT              (DISABLE)
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
-#if (IDEAL_SINGLE_MEMPOD == ENABLE)
-#define PRINT_SWAPS_PER_EPOCH_MEMPOD          (DISABLE)
-#endif // IDEAL_SINGLE_MEMPOD
-
+/* Research proposal selection */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 #define IDEAL_LINE_LOCATION_TABLE             (DISABLE)
 #define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
@@ -50,16 +48,15 @@
 
 #if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE) && (IDEAL_SINGLE_MEMPOD == DISABLE)
 #define NO_METHOD_FOR_RUN_HYBRID_MEMORY       (ENABLE)
-#endif
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD
 
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)  // Note: it might be better become part of configurations of TRACKING_LOAD_STORE_STATISTICS like IDEAL_SINGLE_MEMPOD in line 71
 /* Option for research */
 #define TRACKING_LOAD_ONLY                    (DISABLE)
 #define TRACKING_READ_ONLY                    (DISABLE)
 #endif // TRACKING_LOAD_STORE_STATISTICS
 
-#define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
-
+// Configuration for each research proposal
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
 #define HOTNESS_THRESHOLD                     (1u)
 #define BITS_MANIPULATION                     (DISABLE)
@@ -71,13 +68,17 @@
 #define FLEXIBLE_GRANULARITY                  (ENABLE)
 #define IMMEDIATE_EVICTION                    (DISABLE)
 #define COLD_DATA_DETECTION_IN_GROUP          (DISABLE)
+#elif (IDEAL_SINGLE_MEMPOD == ENABLE)
+#define PRINT_SWAPS_PER_EPOCH_MEMPOD          (DISABLE)
 #else
 #define HOTNESS_THRESHOLD                     (1u)
-#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD
 
+// Check
 #if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
 #error OS-transparent management designs need to be enabled.
 #endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
@@ -178,37 +179,43 @@
 #include <cstdio>
 #include <cassert>
 #include <array>
+#include <string>
 
 #if (USE_OPENMP == ENABLE)
 #include <omp.h>
 #endif  // USE_OPENMP
 
-/* Defines (C style) */
-typedef enum
-{
-    read_default = 0,
-    read_end = 1,
-} ReadPINTraceType;
+/* Defines (C++ style) */
 
-typedef struct
+// data output class
+class DATA_OUTPUT
 {
-    uint64_t PIN_trace_number;
-    uint64_t total_PIN_trace_number;
-    ReadPINTraceType read_PIN_trace_end;
-} PINTraceReadType;
+public:
+    const std::string data_name;
+    FILE* file_handler;
+    char* file_name;
+    const std::string file_extension;
 
-typedef struct
-{
-    FILE* trace_file;
-    char* trace_string;
-    // uint64_t address;    // The address's granularity is byte.
-    // uint8_t access_type; // read access = 0, write access = 1
-} OutputMemoryTraceFileType;
+    DATA_OUTPUT(std::string v1, std::string v2);
+    ~DATA_OUTPUT();
 
-typedef struct
+    void output_file_initialization(char** string_array, uint32_t number);
+};
+
+// memory trace output class
+class MEMORY_TRACE: public DATA_OUTPUT
 {
-    FILE* trace_file;
-    char* trace_string;
+public:
+    MEMORY_TRACE(std::string v1, std::string v2);
+    MEMORY_TRACE(std::string v1, std::string v2, char** string_array, uint32_t number);
+
+    void output_memory_trace_hexadecimal(uint64_t address, char type);
+};
+
+// simulator statistics output class
+class SIMULATOR_STATISTICS: public DATA_OUTPUT
+{
+public:
 #define PAGE_TABLE_LEVEL_NUMBER     (5u)
 
     std::array<uint64_t, PAGE_TABLE_LEVEL_NUMBER> valid_pte_count = {0};
@@ -231,41 +238,13 @@ typedef struct
     uint64_t uncertain_counter;
 #endif  // IDEAL_VARIABLE_GRANULARITY
 
-} OutputChampSimStatisticsFileType;
+    SIMULATOR_STATISTICS(std::string v1, std::string v2);
+    SIMULATOR_STATISTICS(std::string v1, std::string v2, char** string_array, uint32_t number);
+    ~SIMULATOR_STATISTICS();
+};
 
-/* Declaration (C style) */
-
-void output_memory_trace_initialization(const char* string);
-void output_memory_trace_deinitialization(OutputMemoryTraceFileType& outputmemorytrace);
-void output_memory_trace_hexadecimal(OutputMemoryTraceFileType& outputmemorytrace, uint64_t address, char type);
-
-void output_champsim_statistics_initialization(const char* string);
-void output_champsim_statistics_deinitialization(OutputChampSimStatisticsFileType& outputchampsimstatistics);
-
-extern OutputMemoryTraceFileType outputmemorytrace_one;
-extern OutputChampSimStatisticsFileType outputchampsimstatistics;
-
-/* Defines (C++ style) */
-// class CHAMPSIM_STATISTICS
-// {
-// private:
-//     /* data */
-//     FILE* trace_file;
-//     char* trace_string;
-// public:
-//     CHAMPSIM_STATISTICS(/* args */);
-//     ~CHAMPSIM_STATISTICS();
-// };
-
-// CHAMPSIM_STATISTICS::CHAMPSIM_STATISTICS(/* args */)
-// {
-// }
-
-// CHAMPSIM_STATISTICS::~CHAMPSIM_STATISTICS()
-// {
-// }
-
-
+extern MEMORY_TRACE output_memorytrace;
+extern SIMULATOR_STATISTICS output_statistics;
 
 #endif  // USER_CODES
 
