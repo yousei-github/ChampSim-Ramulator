@@ -2,7 +2,7 @@
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 
-#if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE)
+#if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
 
 OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, uint64_t max_address, uint64_t fast_memory_max_address)
     : hotness_threshold(threshold), total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
@@ -85,5 +85,5 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
     return false;
 }
 
-#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY
+#endif  // NO_METHOD_FOR_RUN_HYBRID_MEMORY
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT

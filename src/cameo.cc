@@ -34,6 +34,7 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, ui
 OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 {
     outputchampsimstatistics.remapping_request_queue_congestion = remapping_request_queue_congestion;
+
     delete& counter_table;
     delete& hotness_table;
     delete& line_location_table;

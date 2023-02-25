@@ -4,7 +4,7 @@
 #define ENABLE  (1)
 #define DISABLE (0)
 
-#define DEBUG_PRINTF (ENABLE)
+#define DEBUG_PRINTF (DISABLE)
 #define USER_CODES   (ENABLE)
 
 /* Functionality options */
@@ -17,6 +17,7 @@
 #define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
 #define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
 #define CPU_USE_MULTIPLE_CORES                     (DISABLE) // whether CPU uses multiple cores to run simulation (go to ./inc/ChampSim/champsim_constants.h to check related parameters)
+#define TRACKING_LOAD_STORE_STATISTICS             (DISABLE)
 
 #if (MEMORY_USE_HYBRID == ENABLE)
 #define NUMBER_OF_MEMORIES   (2u)    // we use two memories for hybrid memory system.
@@ -37,10 +38,25 @@
 #define TEST_SWAPPING_UNIT        (DISABLE)
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
+#if (IDEAL_SINGLE_MEMPOD == ENABLE)
+#define PRINT_SWAPS_PER_EPOCH_MEMPOD          (DISABLE)
+#endif // IDEAL_SINGLE_MEMPOD
+
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 #define IDEAL_LINE_LOCATION_TABLE             (DISABLE)
 #define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
-#define IDEAL_VARIABLE_GRANULARITY            (ENABLE)
+#define IDEAL_VARIABLE_GRANULARITY            (DISABLE)
+#define IDEAL_SINGLE_MEMPOD                   (ENABLE)
+
+#if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE) && (IDEAL_SINGLE_MEMPOD == DISABLE)
+#define NO_METHOD_FOR_RUN_HYBRID_MEMORY       (ENABLE)
+#endif
+
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+/* Option for research */
+#define TRACKING_LOAD_ONLY                    (DISABLE)
+#define TRACKING_READ_ONLY                    (DISABLE)
+#endif // TRACKING_LOAD_STORE_STATISTICS
 
 #define TEST_OS_TRANSPARENT_MANAGEMENT        (DISABLE)
 
@@ -59,7 +75,7 @@
 #define HOTNESS_THRESHOLD                     (1u)
 #endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY
 
-#if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE)
+#if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
 #error OS-transparent management designs need to be enabled.
 #endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
@@ -77,6 +93,7 @@
 #define DATA_GRANULARITY_2048B              (2048u)
 #define DATA_GRANULARITY_4096B              (4096u)
 
+#if (IDEAL_SINGLE_MEMPOD == DISABLE)
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
 #define DATA_MANAGEMENT_GRANULARITY         (DATA_GRANULARITY_64B)  // default: DATA_GRANULARITY_64B
 #elif (IDEAL_VARIABLE_GRANULARITY == ENABLE)
@@ -88,6 +105,7 @@
 
 #define DATA_MANAGEMENT_OFFSET_BITS         (lg2(DATA_MANAGEMENT_GRANULARITY))  // data management granularity means how the hardware cluster the data
 #define DATA_GRANULARITY_IN_CACHE_LINE      (DATA_MANAGEMENT_GRANULARITY / DATA_GRANULARITY_64B)
+#endif // IDEAL_SINGLE_MEMPOD
 
 // CPU setting for branch_predictor (bimodal, gshare, hashed_perceptron, perceptron)
 #define BRANCH_USE_BIMODAL             (O3_CPU::bpred_t::bbranchDbimodal)

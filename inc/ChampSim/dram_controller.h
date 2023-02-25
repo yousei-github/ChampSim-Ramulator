@@ -229,7 +229,11 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
   clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2),
+#if (IDEAL_SINGLE_MEMPOD == ENABLE)
+  os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(memory.max_address + memory2.max_address, memory.max_address)))
+#else
   os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(HOTNESS_THRESHOLD, memory.max_address + memory2.max_address, memory.max_address)))
+#endif // IDEAL_SINGLE_MEMPOD
 #else
   : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
   clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2)
@@ -363,7 +367,9 @@ void MEMORY_CONTROLLER<T, T2>::operate()
     {
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_VARIABLE_GRANULARITY == ENABLE)
       start_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
-#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+#elif (IDEAL_SINGLE_MEMPOD == ENABLE)
+      start_swapping_segments(remapping_request.h_address_in_fm, remapping_request.h_address_in_sm, remapping_request.size);
+#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD
     }
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
   }
@@ -378,7 +384,9 @@ void MEMORY_CONTROLLER<T, T2>::operate()
       // in case the swapping segments are updated
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_VARIABLE_GRANULARITY == ENABLE)
       update_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
-#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+#elif (IDEAL_SINGLE_MEMPOD == ENABLE)
+      update_swapping_segments(remapping_request.h_address_in_fm, remapping_request.h_address_in_sm, remapping_request.size);
+#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD
     }
     else
     {
@@ -399,7 +407,9 @@ void MEMORY_CONTROLLER<T, T2>::operate()
       // in case the swapping segments are updated
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_VARIABLE_GRANULARITY == ENABLE)
       is_updated = update_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
-#endif  // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+#elif (IDEAL_SINGLE_MEMPOD == ENABLE)
+      is_updated = update_swapping_segments(remapping_request.h_address_in_fm, remapping_request.h_address_in_sm, remapping_request.size);
+#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD
     }
     else
     {
@@ -433,6 +443,12 @@ void MEMORY_CONTROLLER<T, T2>::operate()
   }
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 #endif  // MEMORY_USE_SWAPPING_UNIT
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+#if (IDEAL_SINGLE_MEMPOD == ENABLE)
+  os_transparent_management.check_interval_swap(swapping_states);
+#endif // IDEAL_SINGLE_MEMPOD
+#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
   /* Operate memories below */
   static double leap_operation = 0, leap_operation2 = 0;
