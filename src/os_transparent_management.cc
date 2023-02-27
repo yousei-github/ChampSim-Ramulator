@@ -4,14 +4,14 @@
 
 #if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
 
-OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, uint64_t max_address, uint64_t fast_memory_max_address)
-    : hotness_threshold(threshold), total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
+OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address)
+    : total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
     fast_memory_capacity_at_data_block_granularity(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS),
     fast_memory_offset_bit(lg2(fast_memory_max_address)),   // note here only support integers of 2's power.
     counter_table(*(new std::vector<COUNTER_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, COUNTER_DEFAULT_VALUE))),
     hotness_table(*(new std::vector<HOTNESS_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, HOTNESS_DEFAULT_VALUE)))
 {
-
+    hotness_threshold = HOTNESS_THRESHOLD;
 };
 
 OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()

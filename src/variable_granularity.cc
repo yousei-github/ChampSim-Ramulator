@@ -3,8 +3,8 @@
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 
 #if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, uint64_t max_address, uint64_t fast_memory_max_address)
-    : hotness_threshold(threshold), total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
+OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address)
+    : total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
     total_capacity_at_data_block_granularity(max_address >> DATA_MANAGEMENT_OFFSET_BITS),
     fast_memory_capacity_at_data_block_granularity(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS),
     fast_memory_offset_bit(lg2(fast_memory_max_address)),   // note here only support integers of 2's power.
@@ -14,6 +14,7 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, ui
     access_table(*(new std::vector<AccessDistribution>(max_address >> DATA_MANAGEMENT_OFFSET_BITS))),
     placement_table(*(new std::vector<PlacementEntry>(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS)))
 {
+    hotness_threshold = HOTNESS_THRESHOLD;
     remapping_request_queue_congestion = 0;
 
     expected_number_in_congruence_group = total_capacity / fast_memory_capacity;
