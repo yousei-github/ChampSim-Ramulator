@@ -60,7 +60,7 @@ public:
     uint64_t remapping_request_queue_congestion;
 
     /* Member functions */
-    OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, uint64_t max_address, uint64_t fast_memory_max_address);
+    OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address);
     ~OS_TRANSPARENT_MANAGEMENT();
 
     // address is physical address and at byte granularity

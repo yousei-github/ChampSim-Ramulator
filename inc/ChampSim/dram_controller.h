@@ -229,11 +229,7 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
   clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2),
-#if (IDEAL_SINGLE_MEMPOD == ENABLE)
   os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(memory.max_address + memory2.max_address, memory.max_address)))
-#else
-  os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(HOTNESS_THRESHOLD, memory.max_address + memory2.max_address, memory.max_address)))
-#endif // IDEAL_SINGLE_MEMPOD
 #else
   : champsim::operable(freq_scale), MemoryRequestConsumer(std::numeric_limits<unsigned>::max()),
   clock_scale(clock_scale), clock_scale2(clock_scale2), memory(memory), memory2(memory2)
@@ -549,7 +545,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
     {
       return int(ReturnValue::Full);
     }
-}
+  }
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
 #else
@@ -577,9 +573,9 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
         read_request.fm_access_finish = false;
 
         os_transparent_management.incomplete_read_request_queue.push_back(read_request);
-    }
+      }
 #endif  // COLOCATED_LINE_LOCATION_TABLE
-  }
+    }
   }
   else if (address < memory.max_address + memory2.max_address)
   {
@@ -677,7 +673,7 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   else
   {
     return int(ReturnValue::Full);
-}
+  }
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
 #else
@@ -855,7 +851,7 @@ void MEMORY_CONTROLLER<T, T2>::return_data(Request& request)
     // this is a complete read request
     for (auto ret : request.packet.to_return)
       ret->return_data(&(request.packet));
-}
+  }
 
 #else
   for (auto ret : request.packet.to_return)

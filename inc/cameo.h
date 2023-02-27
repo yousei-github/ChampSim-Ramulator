@@ -129,7 +129,7 @@ public:
 #endif  // COLOCATED_LINE_LOCATION_TABLE
 
     /* Member functions */
-    OS_TRANSPARENT_MANAGEMENT(COUNTER_WIDTH threshold, uint64_t max_address, uint64_t fast_memory_max_address);
+    OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address);
     ~OS_TRANSPARENT_MANAGEMENT();
 
     // address is physical address and at byte granularity
