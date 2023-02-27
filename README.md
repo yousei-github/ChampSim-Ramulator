@@ -102,7 +102,7 @@ By referring the contents of `launch.json` file in the `.vscode` directory, inpu
 
 # Run simulation
 According to the setting in the `ProjectConfiguration.h` file, the input parameters vary. There are three types of the input pattern.
-## 1. Ramulator with hybrid memory systems
+## 1. ChampSim + Ramulator with hybrid memory systems
 If the preprocessor `RAMULATOR` is `ENABLE` and `MEMORY_USE_HYBRID` is `ENABLE`, execute the binary as the following,
 ```
 $ [EXECUTION] --warmup_instructions [N_WARM] --simulation_instructions [N_SIM] [CFG1] [CFG2] [TRACE]
@@ -118,7 +118,7 @@ Simulation done. Statistics written to my_output.txt
 # NOTE: optional --stats flag changes the statistics output filename
 ```
 
-## 2. Ramulator with single memory systems
+## 2. ChampSim + Ramulator with single memory systems
 If the preprocessor `RAMULATOR` is `ENABLE` and `MEMORY_USE_HYBRID` is `DISABLE`, execute the binary as the following,
 ```
 $ [EXECUTION] --warmup_instructions [N_WARM] --simulation_instructions [N_SIM] [CFG1] [TRACE]
