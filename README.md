@@ -73,11 +73,21 @@ Before starting to build or debug this project, you might need to be familiar wi
 
 ## Build
 Build methods are explained below.
-
+### 0. cmake method
+- You need to ensure that `cmake` is installed.
+```
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make -j4
+```
+- Be careful that the binary file will be in `build/bin/` instead of `bin/`. This is different from the following two methods.
 ### 1. Visual Studio Code-based method.
 - You may need to modify the compiler's path in the `tasks.json` file in the `.vscode` directory.
 - Click `Run Build Task` in the `Terminal` tab.
+```
 
+```
 ### 2. Command line-based method.
 By referring the contents of `tasks.json` file in the `.vscode` directory, input the below command,
 ```
