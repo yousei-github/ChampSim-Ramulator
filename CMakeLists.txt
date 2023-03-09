@@ -1,0 +1,37 @@
+cmake_minimum_required(VERSION 2.8)
+project(champsim_plus_ramulator_O3)
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fdiagnostics-color=always -O3 -g -Wall -fopenmp")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+
+set (RUNTIME_INSTALL_DIR bin)
+set (INCLUDE_INSTALL_DIR inc)
+
+include_directories(${PROJECT_SOURCE_DIR}/inc)
+include_directories(${PROJECT_SOURCE_DIR}/inc/ChampSim)
+include_directories(${PROJECT_SOURCE_DIR}/inc/Ramulator)
+
+#add_subdirectory(src)
+aux_source_directory(src _SOURCES)
+aux_source_directory(src/Ramulator _SUB_SOURCES)
+aux_source_directory(src/ChampSim _SUB_SOURCES)
+aux_source_directory(src/ChampSim/branch/bimodal _SUB_SOURCES)
+aux_source_directory(src/ChampSim/branch/gshare _SUB_SOURCES)
+aux_source_directory(src/ChampSim/branch/hashed_perceptron _SUB_SOURCES)
+aux_source_directory(src/ChampSim/branch/perceptron _SUB_SOURCES)
+aux_source_directory(src/ChampSim/btb/basic_btb _SUB_SOURCES)
+aux_source_directory(src/ChampSim/prefetcher/ip_stride _SUB_SOURCES)
+aux_source_directory(src/ChampSim/prefetcher/next_line _SUB_SOURCES)
+aux_source_directory(src/ChampSim/prefetcher/next_line_instr _SUB_SOURCES)
+aux_source_directory(src/ChampSim/prefetcher/no _SUB_SOURCES)
+aux_source_directory(src/ChampSim/prefetcher/no_instr _SUB_SOURCES)
+aux_source_directory(src/ChampSim/replacement/drrip _SUB_SOURCES)
+aux_source_directory(src/ChampSim/replacement/lru _SUB_SOURCES)
+aux_source_directory(src/ChampSim/replacement/ship _SUB_SOURCES)
+aux_source_directory(src/ChampSim/replacement/srrip _SUB_SOURCES)
+
+add_executable(${PROJECT_NAME} ${_SOURCES} ${_SUB_SOURCES})
