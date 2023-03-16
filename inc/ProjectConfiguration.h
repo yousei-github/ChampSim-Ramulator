@@ -18,7 +18,6 @@
 #define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
 #define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
 #define CPU_USE_MULTIPLE_CORES                     (ENABLE) // whether CPU uses multiple cores to run simulation (go to ./inc/ChampSim/champsim_constants.h to check related parameters)
-#define TRACKING_LOAD_STORE_STATISTICS             (DISABLE)    // Note: it might be better become a research proposal like IDEAL_SINGLE_MEMPOD in line 47
 
 // Configuration for hybrid memory systems
 #if (MEMORY_USE_HYBRID == ENABLE)
@@ -45,6 +44,7 @@
 #define COLOCATED_LINE_LOCATION_TABLE         (DISABLE)
 #define IDEAL_VARIABLE_GRANULARITY            (DISABLE)
 #define IDEAL_SINGLE_MEMPOD                   (ENABLE)
+#define TRACKING_LOAD_STORE_STATISTICS        (DISABLE)
 
 #if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE) && (IDEAL_SINGLE_MEMPOD == DISABLE)
 #define NO_METHOD_FOR_RUN_HYBRID_MEMORY       (ENABLE)

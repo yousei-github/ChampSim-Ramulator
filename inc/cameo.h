@@ -133,7 +133,13 @@ public:
     ~OS_TRANSPARENT_MANAGEMENT();
 
     // address is physical address and at byte granularity
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+    // address is physical address and at byte granularity
+    bool memory_activity_tracking(uint64_t address, uint8_t type, uint8_t type_origin, float queue_busy_degree);
+#else
+    // address is physical address and at byte granularity
     bool memory_activity_tracking(uint64_t address, uint8_t type, float queue_busy_degree);
+#endif // TRACKING_LOAD_STORE_STATISTICS
 
     // translate the physical address to hardware address
     void physical_to_hardware_address(PACKET& packet);
