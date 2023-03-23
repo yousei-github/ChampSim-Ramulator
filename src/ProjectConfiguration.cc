@@ -78,6 +78,13 @@ SIMULATOR_STATISTICS::SIMULATOR_STATISTICS(std::string v1, std::string v2)
     }
     virtual_page_count = 0;
 
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+    load_request_in_memory = 0;
+    load_request_in_memory2 = 0;
+    store_request_in_memory = 0;
+    store_request_in_memory2 = 0;
+#endif // TRACKING_LOAD_STORE_STATISTICS
+
     read_request_in_memory = 0;
     read_request_in_memory2 = 0;
     write_request_in_memory = 0;
@@ -109,6 +116,13 @@ SIMULATOR_STATISTICS::SIMULATOR_STATISTICS(std::string v1, std::string v2, char*
         valid_pte_count[i] = 0;
     }
     virtual_page_count = 0;
+
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+    load_request_in_memory = 0;
+    load_request_in_memory2 = 0;
+    store_request_in_memory = 0;
+    store_request_in_memory2 = 0;
+#endif // TRACKING_LOAD_STORE_STATISTICS
 
     read_request_in_memory = 0;
     read_request_in_memory2 = 0;
@@ -145,6 +159,10 @@ SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
     fprintf(file_handler, "read_request_in_memory: %ld, read_request_in_memory2: %ld.\n", read_request_in_memory, read_request_in_memory2);
     fprintf(file_handler, "write_request_in_memory: %ld, write_request_in_memory2: %ld.\n", write_request_in_memory, write_request_in_memory2);
     fprintf(file_handler, "hit rate: %f.\n", (read_request_in_memory + write_request_in_memory) / float(total_access_request_in_memory));
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+    fprintf(file_handler, "load_request_in_memory: %ld, load_request_in_memory2: %ld.\n", load_request_in_memory, load_request_in_memory2);
+    fprintf(file_handler, "store_request_in_memory: %ld, store_request_in_memory2: %ld.\n", store_request_in_memory, store_request_in_memory2);
+#endif // TRACKING_LOAD_STORE_STATISTICS
 
     fprintf(file_handler, "swapping_count: %ld, swapping_traffic_in_bytes: %ld.\n", swapping_count, swapping_traffic_in_bytes);
 
