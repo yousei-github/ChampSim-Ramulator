@@ -171,7 +171,7 @@ public:
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
   uint64_t load_request_in_memory, load_request_in_memory2;
   uint64_t store_request_in_memory, store_request_in_memory2;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 
   uint64_t read_request_in_memory, read_request_in_memory2;
   uint64_t write_request_in_memory, write_request_in_memory2;
@@ -245,7 +245,7 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
   load_request_in_memory = load_request_in_memory2 = 0;
   store_request_in_memory = store_request_in_memory2 = 0;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 
   read_request_in_memory = read_request_in_memory2 = 0;
   write_request_in_memory = write_request_in_memory2 = 0;
@@ -273,7 +273,7 @@ MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
   output_statistics.store_request_in_memory = store_request_in_memory;
   output_statistics.load_request_in_memory2 = load_request_in_memory2;
   output_statistics.store_request_in_memory2 = store_request_in_memory2;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
   output_statistics.read_request_in_memory = read_request_in_memory;
   output_statistics.read_request_in_memory2 = read_request_in_memory2;
   output_statistics.write_request_in_memory = write_request_in_memory;
@@ -502,7 +502,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
   uint64_t type_origin = packet->type_origin;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 
   if (all_warmup_complete < NUM_CPUS)
   {
@@ -598,7 +598,7 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
           store_request_in_memory++;
         }
       }
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
       if (is_sm_request)
@@ -627,19 +627,19 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
     }
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-        if (type_origin == LOAD || type_origin == TRANSLATION)
-        {
-          load_request_in_memory2++;
-        }
-        else if (type_origin == RFO)
-        {
-          store_request_in_memory2++;
-        }
-        else
-        {
-          printf("%s: Error!\n", __FUNCTION__);
-        }
-#endif // TRACKING_LOAD_STORE_STATISTICS
+    if (type_origin == LOAD || type_origin == TRANSLATION)
+    {
+      load_request_in_memory2++;
+    }
+    else if (type_origin == RFO)
+    {
+      store_request_in_memory2++;
+    }
+    else
+    {
+      printf("%s: Error!\n", __FUNCTION__);
+    }
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 
   }
   else

@@ -43,20 +43,21 @@ public:
 #if (USER_CODES == ENABLE)
   // address is physical address at byte granularity.
   uint64_t address = 0, v_address = 0, data = 0, instr_id = 0, ip = 0, event_cycle = std::numeric_limits<uint64_t>::max(), cycle_enqueued = 0;
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-  uint64_t type_origin = 0;
-#endif // TRACKING_LOAD_STORE_STATISTICS
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   uint64_t h_address = 0; // h_address (hardware address), which is the address used by memory chips
+
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
   uint64_t h_address_fm = 0;  // h_address_fm, corresponding hardware address in fast memory
 #endif  // COLOCATED_LINE_LOCATION_TABLE
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+  uint64_t type_origin = 0;
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+
 #else
   // address is physical address at byte granularity.
   uint64_t address = 0, v_address = 0, data = 0, instr_id = 0, ip = 0, event_cycle = std::numeric_limits<uint64_t>::max(), cycle_enqueued = 0;
 #endif  // USER_CODES
-
 
   std::vector<std::vector<LSQ_ENTRY>::iterator> lq_index_depend_on_me = {}, sq_index_depend_on_me = {};
   std::vector<champsim::circular_buffer<ooo_model_instr>::iterator> instr_depend_on_me;

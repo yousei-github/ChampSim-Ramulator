@@ -55,7 +55,7 @@
 /* Option for research */
 #define TRACKING_LOAD_ONLY                    (DISABLE)
 #define TRACKING_READ_ONLY                    (DISABLE)
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 
 // Configuration for each research proposal
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
@@ -228,7 +228,7 @@ public:
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     uint64_t load_request_in_memory, load_request_in_memory2;
     uint64_t store_request_in_memory, store_request_in_memory2;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 
     uint64_t swapping_count;
     uint64_t swapping_traffic_in_bytes;
