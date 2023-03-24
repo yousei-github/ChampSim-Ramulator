@@ -168,6 +168,11 @@ public:
 #endif  // TEST_SWAPPING_UNIT
 #endif  // MEMORY_USE_SWAPPING_UNIT
 
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+  uint64_t load_request_in_memory, load_request_in_memory2;
+  uint64_t store_request_in_memory, store_request_in_memory2;
+#endif // TRACKING_LOAD_STORE_STATISTICS
+
   uint64_t read_request_in_memory, read_request_in_memory2;
   uint64_t write_request_in_memory, write_request_in_memory2;
 
@@ -237,6 +242,11 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
 {
   printf("clock_scale: %f, clock_scale2: %f.\n", clock_scale, clock_scale2);
 
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+  load_request_in_memory = load_request_in_memory2 = 0;
+  store_request_in_memory = store_request_in_memory2 = 0;
+#endif // TRACKING_LOAD_STORE_STATISTICS
+
   read_request_in_memory = read_request_in_memory2 = 0;
   write_request_in_memory = write_request_in_memory2 = 0;
 
@@ -258,6 +268,12 @@ template<class T, class T2>
 MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
 {
   // print some information to output_statistics
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+  output_statistics.load_request_in_memory = load_request_in_memory;
+  output_statistics.store_request_in_memory = store_request_in_memory;
+  output_statistics.load_request_in_memory2 = load_request_in_memory2;
+  output_statistics.store_request_in_memory2 = store_request_in_memory2;
+#endif // TRACKING_LOAD_STORE_STATISTICS
   output_statistics.read_request_in_memory = read_request_in_memory;
   output_statistics.read_request_in_memory2 = read_request_in_memory2;
   output_statistics.write_request_in_memory = write_request_in_memory;
@@ -484,6 +500,10 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
 {
   const static uint8_t type = 1;  // it means the input request is read request.
 
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+  uint64_t type_origin = packet->type_origin;
+#endif // TRACKING_LOAD_STORE_STATISTICS
+
   if (all_warmup_complete < NUM_CPUS)
   {
     for (auto ret : packet->to_return)
@@ -495,7 +515,11 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
   /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   os_transparent_management.physical_to_hardware_address(*packet);
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+  os_transparent_management.memory_activity_tracking(packet->address, type, packet->type_origin, float(get_occupancy(type, packet->address)) / get_size(type, packet->address));
+#else
   os_transparent_management.memory_activity_tracking(packet->address, type, float(get_occupancy(type, packet->address)) / get_size(type, packet->address));
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -562,6 +586,20 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
     {
       read_request_in_memory++;
 
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+      if (all_warmup_complete > NUM_CPUS)
+      {
+        if (type_origin == LOAD || type_origin == TRANSLATION)
+        {
+          load_request_in_memory++;
+        }
+        else if (type_origin == RFO)
+        {
+          store_request_in_memory++;
+        }
+      }
+#endif // TRACKING_LOAD_STORE_STATISTICS
+
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
       if (is_sm_request)
       {
@@ -587,6 +625,22 @@ int MEMORY_CONTROLLER<T, T2>::add_rq(PACKET* packet)
     {
       read_request_in_memory2++;
     }
+
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+        if (type_origin == LOAD || type_origin == TRANSLATION)
+        {
+          load_request_in_memory2++;
+        }
+        else if (type_origin == RFO)
+        {
+          store_request_in_memory2++;
+        }
+        else
+        {
+          printf("%s: Error!\n", __FUNCTION__);
+        }
+#endif // TRACKING_LOAD_STORE_STATISTICS
+
   }
   else
   {
@@ -619,7 +673,11 @@ int MEMORY_CONTROLLER<T, T2>::add_wq(PACKET* packet)
   /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
   os_transparent_management.physical_to_hardware_address(*packet);
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+  os_transparent_management.memory_activity_tracking(packet->address, type, packet->type_origin, float(get_occupancy(type, packet->address)) / get_size(type, packet->address));
+#else
   os_transparent_management.memory_activity_tracking(packet->address, type, float(get_occupancy(type, packet->address)) / get_size(type, packet->address));
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 #endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)

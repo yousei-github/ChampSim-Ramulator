@@ -83,6 +83,9 @@ void PageTableWalker::handle_read()
     packet.v_address = handle_pkt.address;
     packet.cpu = cpu;
     packet.type = TRANSLATION;
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+    packet.type_origin = TRANSLATION;
+#endif // TRACKING_LOAD_STORE_STATISTICS
     packet.init_translation_level = ptw_level;
     packet.translation_level = packet.init_translation_level;
     packet.to_return = {this};
@@ -178,6 +181,9 @@ void PageTableWalker::handle_fill()
         PACKET packet = *fill_mshr;
         packet.cpu = cpu;
         packet.type = TRANSLATION;
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+        packet.type_origin = TRANSLATION;
+#endif // TRACKING_LOAD_STORE_STATISTICS
         packet.address = addr;
         packet.to_return = {this};
         packet.translation_level = fill_mshr->translation_level - 1;
