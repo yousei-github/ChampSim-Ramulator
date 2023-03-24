@@ -20,7 +20,7 @@
 #include "util.h"
 #include "vmem.h"
 
-//extern VirtualMemory vmem;
+ //extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
 #if (USER_CODES == ENABLE)
@@ -85,7 +85,7 @@ void PageTableWalker::handle_read()
     packet.type = TRANSLATION;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     packet.type_origin = TRANSLATION;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
     packet.init_translation_level = ptw_level;
     packet.translation_level = packet.init_translation_level;
     packet.to_return = {this};
@@ -183,7 +183,7 @@ void PageTableWalker::handle_fill()
         packet.type = TRANSLATION;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
         packet.type_origin = TRANSLATION;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
         packet.address = addr;
         packet.to_return = {this};
         packet.translation_level = fill_mshr->translation_level - 1;

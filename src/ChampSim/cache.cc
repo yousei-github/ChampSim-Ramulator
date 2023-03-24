@@ -28,7 +28,7 @@
 #define NDEBUG
 #endif
 
-//extern VirtualMemory vmem;
+ //extern VirtualMemory vmem;
 extern uint8_t warmup_complete[NUM_CPUS];
 
 void CACHE::handle_fill()
@@ -314,7 +314,7 @@ bool CACHE::readlike_miss(PACKET& handle_pkt)
       MSHR.pop_back();
       return false;
     }
-    
+
 #else
     // check to make sure the lower level queue has room for this read miss
     int queue_type = (is_read) ? 1 : 3;
@@ -391,7 +391,7 @@ bool CACHE::filllike_miss(std::size_t set, std::size_t way, PACKET& handle_pkt)
       writeback_packet.type = WRITEBACK;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
       writeback_packet.type_origin = WRITEBACK;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
 
       auto result = lower_level->add_wq(&writeback_packet);
       if (result == -2)

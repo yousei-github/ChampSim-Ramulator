@@ -372,7 +372,7 @@ void O3_CPU::do_translate_fetch(champsim::circular_buffer<ooo_model_instr>::iter
   trace_packet.type = LOAD;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
   trace_packet.type_origin = LOAD;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
   trace_packet.asid[0] = 0;
   trace_packet.asid[1] = 0;
   trace_packet.to_return = {&ITLB_bus};
@@ -433,7 +433,7 @@ void O3_CPU::do_fetch_instruction(champsim::circular_buffer<ooo_model_instr>::it
   fetch_packet.type = LOAD;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
   fetch_packet.type_origin = LOAD;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
   fetch_packet.asid[0] = 0;
   fetch_packet.asid[1] = 0;
   fetch_packet.to_return = {&L1I_bus};
@@ -587,7 +587,7 @@ void O3_CPU::schedule_instruction()
 struct instr_reg_will_produce
 {
   const uint8_t match_reg;
-  explicit instr_reg_will_produce(uint8_t reg) : match_reg(reg) {}
+  explicit instr_reg_will_produce(uint8_t reg): match_reg(reg) {}
   bool operator()(const ooo_model_instr& test) const
   {
     auto dreg_begin = std::begin(test.destination_registers);
@@ -767,7 +767,7 @@ void O3_CPU::do_sq_forward_to_lq(LSQ_ENTRY& sq_entry, LSQ_ENTRY& lq_entry)
 struct instr_mem_will_produce
 {
   const uint64_t match_mem;
-  explicit instr_mem_will_produce(uint64_t mem) : match_mem(mem) {}
+  explicit instr_mem_will_produce(uint64_t mem): match_mem(mem) {}
   bool operator()(const ooo_model_instr& test) const
   {
     auto dmem_begin = std::begin(test.destination_memory);
@@ -779,7 +779,7 @@ struct instr_mem_will_produce
 struct sq_will_forward
 {
   const uint64_t match_id, match_addr;
-  sq_will_forward(uint64_t id, uint64_t addr) : match_id(id), match_addr(addr) {}
+  sq_will_forward(uint64_t id, uint64_t addr): match_id(id), match_addr(addr) {}
   bool operator()(const LSQ_ENTRY& sq_test) const
   {
     return sq_test.fetched == COMPLETED && sq_test.instr_id == match_id && sq_test.virtual_address == match_addr;
@@ -920,7 +920,7 @@ int O3_CPU::do_translate_store(std::vector<LSQ_ENTRY>::iterator sq_it)
   data_packet.type = RFO;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
   data_packet.type_origin = RFO;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
   data_packet.asid[0] = sq_it->asid[0];
   data_packet.asid[1] = sq_it->asid[1];
   data_packet.to_return = {&DTLB_bus};
@@ -992,7 +992,7 @@ int O3_CPU::do_translate_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.type = LOAD;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
   data_packet.type_origin = LOAD;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
   data_packet.asid[0] = lq_it->asid[0];
   data_packet.asid[1] = lq_it->asid[1];
   data_packet.to_return = {&DTLB_bus};
@@ -1024,7 +1024,7 @@ int O3_CPU::execute_load(std::vector<LSQ_ENTRY>::iterator lq_it)
   data_packet.type = LOAD;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
   data_packet.type_origin = LOAD;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
   data_packet.asid[0] = lq_it->asid[0];
   data_packet.asid[1] = lq_it->asid[1];
   data_packet.to_return = {&L1D_bus};
@@ -1253,7 +1253,7 @@ void O3_CPU::retire_rob()
         data_packet.type = RFO;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
         data_packet.type_origin = RFO;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif  // TRACKING_LOAD_STORE_STATISTICS
         data_packet.asid[0] = sq_it->asid[0];
         data_packet.asid[1] = sq_it->asid[1];
 
