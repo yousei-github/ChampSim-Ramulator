@@ -14,10 +14,10 @@
 #define RAMULATOR                                  (ENABLE) // whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
 #define MEMORY_USE_HYBRID                          (ENABLE) // whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE                 (ENABLE) // whether print simulation statistics into files
-#define PRINT_MEMORY_TRACE                         (ENABLE) // whether print memory trace into files
+#define PRINT_MEMORY_TRACE                         (DISABLE) // whether print memory trace into files
 #define MEMORY_USE_SWAPPING_UNIT                   (ENABLE) // whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
 #define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT       (ENABLE) // whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
-#define CPU_USE_MULTIPLE_CORES                     (ENABLE) // whether CPU uses multiple cores to run simulation (go to ./inc/ChampSim/champsim_constants.h to check related parameters)
+#define CPU_USE_MULTIPLE_CORES                     (DISABLE) // whether CPU uses multiple cores to run simulation (go to ./inc/ChampSim/champsim_constants.h to check related parameters)
 
 // Configuration for hybrid memory systems
 #if (MEMORY_USE_HYBRID == ENABLE)
@@ -193,8 +193,8 @@ class DATA_OUTPUT
 {
 public:
     const std::string data_name;
-    FILE* file_handler;
-    char* file_name;
+    FILE* file_handler = NULL;
+    char* file_name = NULL;
     const std::string file_extension;
 
     DATA_OUTPUT(std::string v1, std::string v2);
@@ -209,6 +209,7 @@ class MEMORY_TRACE: public DATA_OUTPUT
 public:
     MEMORY_TRACE(std::string v1, std::string v2);
     MEMORY_TRACE(std::string v1, std::string v2, char** string_array, uint32_t number);
+    ~MEMORY_TRACE();
 
     void output_memory_trace_hexadecimal(uint64_t address, char type);
 };
@@ -247,6 +248,9 @@ public:
     SIMULATOR_STATISTICS(std::string v1, std::string v2);
     SIMULATOR_STATISTICS(std::string v1, std::string v2, char** string_array, uint32_t number);
     ~SIMULATOR_STATISTICS();
+
+private:
+    void statistics_initialization();
 };
 
 extern MEMORY_TRACE output_memorytrace;

@@ -112,6 +112,11 @@ int main(int argc, char** argv)
            "Example: %s --warmup_instructions 1000000 --simulation_instructions 2000000 cpu_trace.xz\n",
            argv[0], argv[0]);
 #endif  // RAMULATOR
+
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    printf("\nNote: assign cpu traces to each cpu by appending multiple trace files to the command line.\n");
+#endif  // CPU_USE_MULTIPLE_CORES
+
     return 0;
   }
 

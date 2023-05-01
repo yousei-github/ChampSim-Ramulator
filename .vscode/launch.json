@@ -14,9 +14,12 @@
                 "--warmup_instructions",
                 "1000000", // 1000000
                 "--simulation_instructions",
-                "1990000000",
-                "../dpc3_traces/648.exchange2_s-1699B.champsimtrace.xz",
-                "../dpc3_traces/648.exchange2_s-1699B.champsimtrace.xz"
+                "1000000",
+                "--stats",
+                "649.fotonik3d_s-1176B.champsimtrace.xz.HBM_DDR4.stats",
+                "configs/HBM-config.cfg",
+                "configs/DDR4-config.cfg",
+                "../dpc3_traces/649.fotonik3d_s-1176B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
@@ -36,7 +39,7 @@
                 }
             ],
             //"preLaunchTask": "C/C++: g++ build all files",
-            "miDebuggerPath": "/usr/local/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
+            "miDebuggerPath": "/usr/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
         },
         {
             "name": "(gdb) Launch for champsim_plus_ramulator with single cores",
@@ -73,7 +76,7 @@
                 }
             ],
             //"preLaunchTask": "C/C++: g++ build all files",
-            "miDebuggerPath": "/usr/local/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
+            "miDebuggerPath": "/usr/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
         },
         {
             "name": "(gdb) Launch for champsim with multiple cores",
@@ -86,8 +89,12 @@
                 "1000000", // 1000000
                 "--simulation_instructions",
                 "1990000000",
-                "../dpc3_traces/648.exchange2_s-1699B.champsimtrace.xz",
-                "../dpc3_traces/648.exchange2_s-1699B.champsimtrace.xz"
+                "--stats",
+                "649.fotonik3d_s-1176B.champsimtrace.xz.HBM_DDR4.stats",
+                "configs/HBM-config.cfg",
+                "configs/DDR4-config.cfg",
+                "../dpc3_traces/649.fotonik3d_s-1176B.champsimtrace.xz",
+                "../dpc3_traces/649.fotonik3d_s-1176B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
@@ -107,7 +114,7 @@
                 }
             ],
             //"preLaunchTask": "C/C++: g++ build all files",
-            "miDebuggerPath": "/usr/local/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
-        }
+            "miDebuggerPath": "/usr/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
+        },
     ]
 }

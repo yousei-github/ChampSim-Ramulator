@@ -1,0 +1,32 @@
+# ignore all files in below directories
+/bin/
+
+# ignore all .stats/.statistics/.trace/Dockerfile/.sh
+/*.stats
+/*.statistics
+/*.trace
+/Dockerfile
+/*.sh
+
+# git command
+# git init
+# git add ...
+# git status
+# git commit
+# git commit -a -m 'abc def'
+# git log
+
+# unstaging a staged file:
+# git restore --staged [name]
+
+# showing your remotes:
+# git remote [-v]
+
+# adding remote repositories:
+# git remote add [name] [path]
+
+# fetching from the remotes:
+# git fetch [name]
+
+# tracking the remotes:
+# git pull
