@@ -12,8 +12,11 @@
 # git init
 # git add ...
 # git status
+
+# 
 # git commit
 # git commit -a -m 'abc def'
+
 # git log
 
 # unstaging a staged file:
