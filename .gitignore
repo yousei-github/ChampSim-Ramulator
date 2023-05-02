@@ -1,35 +1,64 @@
+# This file is used to list the file patterns for ignoring the tracking in git
 # ignore all files in below directories
 /bin/
 
-# ignore all .stats/.statistics/.trace/Dockerfile/.sh
+# ignore the specified type of files (.stats/.statistics/.trace/Dockerfile/.sh)
 /*.stats
 /*.statistics
 /*.trace
 /Dockerfile
 /*.sh
 
-# git command
+# Common git commands are listed below,
+
+# (1) Initializing a repository in an existing directory (a subdirectory .git will be created):
 # git init
-# git add ...
+
+# (2) Beginning to track new files, stage files, mark merge-conflict files as resolved (i.e., add precisely this content to the next commit):
+# git add [name]
+
+# (3) Checking the status of your files:
 # git status
 
-# 
+# (4) Committing your changes:
 # git commit
+
+# Staging every tracked files and committing with the commit message 'abc def':
 # git commit -a -m 'abc def'
 
+# (5) Removing files from tracking (and your working directory):
+# git rm [name]
+
+# (6) Moving files (or renaming files):
+# git mv [name_old] [name_new]
+
+# (7) Viewing the commit history:
 # git log
 
-# unstaging a staged file:
+# (8) Unstaging a staged file (undo):
 # git restore --staged [name]
 
-# showing your remotes:
+# unmodifying a modified file (undo):
+# git restore [name]
+
+# (9) Showing your remotes (parameter -v shows the URLs):
 # git remote [-v]
 
-# adding remote repositories:
+# Inspecting a remote (i.e., showing a remote with more information):
+# git remote show [name]
+
+# (10) Adding remote repositories:
 # git remote add [name] [path]
 
-# fetching from the remotes:
+# (11) Fetching from a remote (i.e., just downloading the data, no merging or modifying):
 # git fetch [name]
 
-# tracking the remotes:
+# (12) Tracking the remote (i.e., fetching and then merging data into your current branch):
 # git pull
+
+# (13) Pushing to your remote (i.e., uploading your data):
+# git push [remote] [your_branch]
+
+# (14) Renaming and removing remotes:
+# git remote rename [name_old] [name_new]
+# git remote remove [name]
