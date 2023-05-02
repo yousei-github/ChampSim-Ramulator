@@ -68,19 +68,22 @@
 # (12) Fetching from a remote (i.e., just downloading and updating the data, no merging or modifying):
 # git fetch [name]
 
+# Fetching from all remotes:
+# git fetch --all
+
 # (13) Tracking the remote's branch (i.e., fetching and then merging data into your current branch):
 # git pull
 
 # (14) Pushing a local branch to your remote's main branch (i.e., uploading your data):
 # git push [remote] [your_branch]
 
-# Adding a local branch to your remote
+# Adding a local branch to your remote:
 # git push --set-upstream [remote] [your_branch]
 
-# Pushing a local branch to your remote's branches
+# Pushing a local branch to your remote's branches:
 # git push [remote] [your_branch]:[remote_branch]
 
-# Deleting a branch in your remote
+# Deleting a branch in your remote:
 # git push [remote] --delete [your_branch]
 
 # (15) Renaming and removing remotes:
@@ -120,16 +123,19 @@
 # (21) Listing your current branches (parameter -v shows the last commit):
 # git branch [-v]
 
-# Filtering the branch list with merged branches
+# parameter -vv shows the last commit and the tracking branches:
+# git branch -vv
+
+# Filtering the branch list with merged branches:
 # git branch --merged
 
-# Filtering the branch list with unmerged branches
+# Filtering the branch list with unmerged branches:
 # git branch --no-merged
 
-# Listing the branch list including the locals and remotes
+# Listing the branch list including the locals and remotes:
 # git branch --all
 
-# Note using the git fetch command to update the newest data from the remotes
+# Note using the git fetch command to update the newest data from the remotes.
 
 
 
