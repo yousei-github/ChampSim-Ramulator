@@ -9,10 +9,16 @@
 /Dockerfile
 /*.sh
 
-# Common git commands are listed below,
+# Common git commands are listed below, the main branch is the branch pointed by the HEAD pointer.
 
 # (1) Initializing a repository in an existing directory (a subdirectory .git will be created):
 # git init
+
+# Cloning a repository from the remote:
+# git clone [path]
+
+# Cloning a repository from the remote using a specified name:
+# git clone -o [name] [path]
 
 # (2) Beginning to track new files, stage files, mark merge-conflict files as resolved (i.e., add precisely this content to the next commit):
 # git add [name]
@@ -53,14 +59,23 @@
 # (10) Adding remote repositories:
 # git remote add [name] [path]
 
-# (11) Fetching from a remote (i.e., just downloading the data, no merging or modifying):
+# (11) Fetching from a remote (i.e., just downloading and updating the data, no merging or modifying):
 # git fetch [name]
 
 # (12) Tracking the remote (i.e., fetching and then merging data into your current branch):
 # git pull
 
-# (13) Pushing to your remote (i.e., uploading your data):
+# (13) Pushing a local branch to your remote's main branch (i.e., uploading your data):
 # git push [remote] [your_branch]
+
+# Adding a local branch to your remote
+# git push --set-upstream [remote] [your_branch]
+
+# Pushing a local branch to your remote's branches
+# git push [remote] [your_branch]:[remote_branch]
+
+# Deleting a branch in your remote
+# git push [remote] --delete [your_branch]
 
 # (14) Renaming and removing remotes:
 # git remote rename [name_old] [name_new]
@@ -89,3 +104,20 @@
 # (19) Merging a branch into the merge into branch (e.g., main):
 # git switch [merge_into_name]
 # git merge [merge_in_name]
+
+# Note you need to commit again after fixing merge conflicts if happened.
+
+# (20) Listing your current branches (parameter -v shows the last commit):
+# git branch [-v]
+
+# Filtering the branch list with merged branches
+# git branch --merged
+
+# Filtering the branch list with unmerged branches
+# git branch --no-merged
+
+# Listing the branch list including the locals and remotes
+# git branch --all
+
+# Note using the git fetch command to update the newest data from the remotes
+
