@@ -44,28 +44,34 @@
 # Viewing the commit history from all of the branches:
 # git log --all
 
-# (8) Unstaging a staged file (undo):
+# (8) Viewing the setting:
+# git config --list
+
+# Viewing the setting and where they are coming from:
+# git config --list --show-origin
+
+# (9) Unstaging a staged file (undo):
 # git restore --staged [name]
 
 # Unmodifying a modified file (undo):
 # git restore [name]
 
-# (9) Showing your remotes (parameter -v shows the URLs):
+# (10) Showing your remotes (parameter -v shows the URLs):
 # git remote [-v]
 
 # Inspecting a remote (i.e., showing a remote with more information):
 # git remote show [name]
 
-# (10) Adding remote repositories:
+# (11) Adding remote repositories:
 # git remote add [name] [path]
 
-# (11) Fetching from a remote (i.e., just downloading and updating the data, no merging or modifying):
+# (12) Fetching from a remote (i.e., just downloading and updating the data, no merging or modifying):
 # git fetch [name]
 
-# (12) Tracking the remote's branch (i.e., fetching and then merging data into your current branch):
+# (13) Tracking the remote's branch (i.e., fetching and then merging data into your current branch):
 # git pull
 
-# (13) Pushing a local branch to your remote's main branch (i.e., uploading your data):
+# (14) Pushing a local branch to your remote's main branch (i.e., uploading your data):
 # git push [remote] [your_branch]
 
 # Adding a local branch to your remote
@@ -77,20 +83,20 @@
 # Deleting a branch in your remote
 # git push [remote] --delete [your_branch]
 
-# (14) Renaming and removing remotes:
+# (15) Renaming and removing remotes:
 # git remote rename [name_old] [name_new]
 # git remote remove [name]
 
-# (15) Listing your tages:
+# (16) Listing your tages:
 # git tag
 
 # Creating a lightweight tag:
 # git tag v1.0.0
 
-# (16) Creating a new branch:
+# (17) Creating a new branch:
 # git branch [name]
 
-# (17) Switching branches:
+# (18) Switching branches:
 # git checkout [name]
 # git switch [name]
 
@@ -102,16 +108,16 @@
 # git checkout -b [name] [remote]/[remote_branch]
 # git switch -c [name] [remote]/[remote_branch]
 
-# (18) Deleting a branch:
+# (19) Deleting a branch:
 # git branch -d [name]
 
-# (19) Merging a branch into the merge into branch (e.g., main):
+# (20) Merging a branch into the merge into branch (e.g., main):
 # git switch [merge_into_name]
 # git merge [merge_in_name]
 
 # Note you need to commit again after fixing merge conflicts if happened.
 
-# (20) Listing your current branches (parameter -v shows the last commit):
+# (21) Listing your current branches (parameter -v shows the last commit):
 # git branch [-v]
 
 # Filtering the branch list with merged branches
@@ -125,8 +131,5 @@
 
 # Note using the git fetch command to update the newest data from the remotes
 
-# (21) Viewing the setting:
-# git config --list
 
-# Viewing the setting and where they are coming from:
-# git config --list --show-origin
+
