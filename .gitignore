@@ -86,6 +86,6 @@
 # (18) Deleting a branch:
 # git branch -d [name]
 
-# (19) merging a branch into the merge into branch (e.g., main):
+# (19) Merging a branch into the merge into branch (e.g., main):
 # git switch [merge_into_name]
 # git merge [merge_in_name]
