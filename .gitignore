@@ -35,6 +35,9 @@
 # (7) Viewing the commit history:
 # git log
 
+# Viewing the commit history from all of the branches:
+# git log --all
+
 # (8) Unstaging a staged file (undo):
 # git restore --staged [name]
 
@@ -62,3 +65,21 @@
 # (14) Renaming and removing remotes:
 # git remote rename [name_old] [name_new]
 # git remote remove [name]
+
+# (15) Listing your tages:
+# git tag
+
+# Creating a lightweight tag:
+# git tag v1.0.0
+
+# (16) Creating a new branch:
+# git branch [name]
+
+# (17) Switching branches:
+# git checkout [name]
+# git switch [name]
+
+# Creating and switching to a new branch:
+# git checkout -b [name]
+# git switch -c [name]
+
