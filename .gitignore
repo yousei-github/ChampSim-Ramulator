@@ -62,7 +62,7 @@
 # (11) Fetching from a remote (i.e., just downloading and updating the data, no merging or modifying):
 # git fetch [name]
 
-# (12) Tracking the remote (i.e., fetching and then merging data into your current branch):
+# (12) Tracking the remote's branch (i.e., fetching and then merging data into your current branch):
 # git pull
 
 # (13) Pushing a local branch to your remote's main branch (i.e., uploading your data):
@@ -125,3 +125,8 @@
 
 # Note using the git fetch command to update the newest data from the remotes
 
+# (21) Viewing the setting:
+# git config --list
+
+# Viewing the setting and where they are coming from:
+# git config --list --show-origin
