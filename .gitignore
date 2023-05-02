@@ -83,3 +83,5 @@
 # git checkout -b [name]
 # git switch -c [name]
 
+# (18) Deleting a branch:
+# git branch -d [name]
