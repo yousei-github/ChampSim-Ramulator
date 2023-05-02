@@ -94,9 +94,13 @@
 # git checkout [name]
 # git switch [name]
 
-# Creating and switching to a new branch:
+# Creating and switching to a new branch, based on the main branch:
 # git checkout -b [name]
 # git switch -c [name]
+
+# Creating and switching to a new branch, based on the remote's branches:
+# git checkout -b [name] [remote]/[remote_branch]
+# git switch -c [name] [remote]/[remote_branch]
 
 # (18) Deleting a branch:
 # git branch -d [name]
