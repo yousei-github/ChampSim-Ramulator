@@ -41,7 +41,7 @@
 # (8) Unstaging a staged file (undo):
 # git restore --staged [name]
 
-# unmodifying a modified file (undo):
+# Unmodifying a modified file (undo):
 # git restore [name]
 
 # (9) Showing your remotes (parameter -v shows the URLs):
