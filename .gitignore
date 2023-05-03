@@ -32,6 +32,9 @@
 # Staging every tracked files and committing with the commit message 'abc def':
 # git commit -a -m 'abc def'
 
+# Undoing the commit:
+# git commit --amend
+
 # (5) Removing files from tracking (and your working directory):
 # git rm [name]
 
