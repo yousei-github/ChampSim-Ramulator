@@ -32,7 +32,7 @@
 # Staging every tracked files and committing with the commit message 'abc def':
 # git commit -a -m 'abc def'
 
-# Undoing the commit:
+# Undoing the commit (or make the latest commit includes new changes):
 # git commit --amend
 
 # (5) Removing files from tracking (and your working directory):
@@ -140,5 +140,7 @@
 
 # Note using the git fetch command to update the newest data from the remotes.
 
+
+# git reset
 
 
