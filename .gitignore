@@ -152,6 +152,7 @@
 # Seeing a full difference between your current branch with another branch:
 # git diff [name]
 
-# git reset
+# (23) Undoing your last commit, the git add and git commit commands, and all the work in your working directory:
+# git reset --hard [commit_number]
 
 
