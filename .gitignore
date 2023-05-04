@@ -47,6 +47,9 @@
 # Viewing the commit history from all of the branches:
 # git log --all
 
+# Viewing the changes each commit introduces:
+# git log -p
+
 # (8) Viewing the setting:
 # git config --list
 
@@ -140,6 +143,14 @@
 
 # Note using the git fetch command to update the newest data from the remotes.
 
+# (22) Seeing the changes but not yet staged:
+# git diff
+
+# Seeing the staged changes to your last commit:
+# git diff --staged
+
+# Seeing a full difference between your current branch with another branch:
+# git diff [name]
 
 # git reset
 
