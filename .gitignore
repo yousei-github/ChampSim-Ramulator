@@ -11,7 +11,12 @@
 
 # Common git commands are listed below, the main branch is the branch pointed by the HEAD pointer.
 
-# (1) Initializing a repository in an existing directory (a subdirectory .git will be created):
+# (1) Setting git setup (e.g., user.name, user.email, core.editor):
+# git config --global user.name "your name"
+# git config --global user.email "your email address"
+# git config --global core.editor "code --wait"
+
+# (2) Initializing a repository in an existing directory (a subdirectory .git will be created):
 # git init
 
 # Cloning a repository from the remote:
@@ -20,13 +25,16 @@
 # Cloning a repository from the remote using a specified name:
 # git clone -o [name] [path]
 
-# (2) Beginning to track new files, stage files, mark merge-conflict files as resolved (i.e., add precisely this content to the next commit):
+# (3) Beginning to track new files, stage files, mark merge-conflict files as resolved (i.e., add precisely this content to the next commit):
 # git add [name]
 
-# (3) Checking the status of your files:
+# Adding all contents to the next commit:
+# git add --all
+
+# (4) Checking the status of your files:
 # git status
 
-# (4) Committing your changes:
+# (5) Committing your changes:
 # git commit
 
 # Staging every tracked files and committing with the commit message 'abc def':
@@ -35,13 +43,13 @@
 # Undoing the commit (or make the latest commit includes new changes):
 # git commit --amend
 
-# (5) Removing files from tracking (and your working directory):
+# (6) Removing files from tracking (and your working directory):
 # git rm [name]
 
-# (6) Moving files (or renaming files):
+# (7) Moving files (or renaming files):
 # git mv [name_old] [name_new]
 
-# (7) Viewing the commit history:
+# (8) Viewing the commit history:
 # git log
 
 # Viewing the commit history from all of the branches:
@@ -50,37 +58,37 @@
 # Viewing the changes each commit introduces:
 # git log -p
 
-# (8) Viewing the setting:
+# (9) Viewing the setting:
 # git config --list
 
 # Viewing the setting and where they are coming from:
 # git config --list --show-origin
 
-# (9) Unstaging a staged file (undo):
+# (10) Unstaging a staged file (undo):
 # git restore --staged [name]
 
 # Unmodifying a modified file (undo):
 # git restore [name]
 
-# (10) Showing your remotes (parameter -v shows the URLs):
+# (11) Showing your remotes (parameter -v shows the URLs):
 # git remote [-v]
 
 # Inspecting a remote (i.e., showing a remote with more information):
 # git remote show [name]
 
-# (11) Adding remote repositories:
+# (12) Adding remote repositories:
 # git remote add [name] [path]
 
-# (12) Fetching from a remote (i.e., just downloading and updating the data, no merging or modifying):
+# (13) Fetching from a remote (i.e., just downloading and updating the data, no merging or modifying):
 # git fetch [name]
 
 # Fetching from all remotes:
 # git fetch --all
 
-# (13) Tracking the remote's branch (i.e., fetching and then merging data into your current branch):
+# (14) Tracking the remote's branch (i.e., fetching and then merging data into your current branch):
 # git pull
 
-# (14) Pushing a local branch to your remote's main branch (i.e., uploading your data):
+# (15) Pushing a local branch to your remote's main branch (i.e., uploading your data):
 # git push [remote] [your_branch]
 
 # Adding a local branch to your remote:
@@ -92,20 +100,20 @@
 # Deleting a branch in your remote:
 # git push [remote] --delete [your_branch]
 
-# (15) Renaming and removing remotes:
+# (16) Renaming and removing remotes:
 # git remote rename [name_old] [name_new]
 # git remote remove [name]
 
-# (16) Listing your tages:
+# (17) Listing your tages:
 # git tag
 
 # Creating a lightweight tag:
 # git tag v1.0.0
 
-# (17) Creating a new branch:
+# (18) Creating a new branch:
 # git branch [name]
 
-# (18) Switching branches:
+# (19) Switching branches:
 # git checkout [name]
 # git switch [name]
 
@@ -117,16 +125,16 @@
 # git checkout -b [name] [remote]/[remote_branch]
 # git switch -c [name] [remote]/[remote_branch]
 
-# (19) Deleting a branch:
+# (20) Deleting a branch:
 # git branch -d [name]
 
-# (20) Merging a branch into the merge into branch (e.g., main):
+# (21) Merging a branch into the merge into branch (e.g., main):
 # git switch [merge_into_name]
 # git merge [merge_in_name]
 
 # Note you need to commit again after fixing merge conflicts if happened.
 
-# (21) Listing your current branches (parameter -v shows the last commit):
+# (22) Listing your current branches (parameter -v shows the last commit):
 # git branch [-v]
 
 # parameter -vv shows the last commit and the tracking branches:
@@ -143,7 +151,7 @@
 
 # Note using the git fetch command to update the newest data from the remotes.
 
-# (22) Seeing the changes but not yet staged:
+# (23) Seeing the changes but not yet staged:
 # git diff
 
 # Seeing the staged changes to your last commit:
@@ -152,7 +160,7 @@
 # Seeing a full difference between your current branch with another branch:
 # git diff [name]
 
-# (23) Undoing your last commit, the git add and git commit commands, and all the work in your working directory:
+# (24) Undoing your last commit, the git add and git commit commands, and all the work in your working directory:
 # git reset --hard [commit_number]
 
 
