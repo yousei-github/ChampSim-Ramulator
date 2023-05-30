@@ -16,11 +16,7 @@
 # git config --global user.email "your email address"
 # git config --global core.editor "code --wait"
 
-<<<<<<< HEAD
 # (2) Initializing a repository in an existing directory (a subdirectory .git will be created):
-=======
-# (1) Initializing a repository in an existing directory (a subdirectory .git will be created):
->>>>>>> c95c57029c4c83433edf12af5e9fc6f7d9a28833
 # git init
 
 # Cloning a repository from the remote:
@@ -35,11 +31,7 @@
 # Adding all contents to the next commit:
 # git add --all
 
-<<<<<<< HEAD
 # (4) Checking the status of your files:
-=======
-# (3) Checking the status of your files:
->>>>>>> c95c57029c4c83433edf12af5e9fc6f7d9a28833
 # git status
 
 # (5) Committing your changes:
