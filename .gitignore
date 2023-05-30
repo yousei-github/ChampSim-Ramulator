@@ -11,6 +11,11 @@
 
 # Common git commands are listed below, the main branch is the branch pointed by the HEAD pointer.
 
+# (1) Setting git setup (e.g., user.name, user.email, core.editor):
+# git config --global user.name "your name"
+# git config --global user.email "your email address"
+# git config --global core.editor "code --wait"
+
 # (1) Initializing a repository in an existing directory (a subdirectory .git will be created):
 # git init
 
@@ -22,6 +27,9 @@
 
 # (2) Beginning to track new files, stage files, mark merge-conflict files as resolved (i.e., add precisely this content to the next commit):
 # git add [name]
+
+# Adding all contents to the next commit:
+# git add --all
 
 # (3) Checking the status of your files:
 # git status
