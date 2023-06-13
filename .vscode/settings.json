@@ -59,5 +59,7 @@
         "queue": "cpp"
     },
     "editor.tabSize": 2,
-    "editor.indentSize": "tabSize"
+    "editor.indentSize": "tabSize",
+    "editor.defaultFormatter": "ms-vscode.cpptools",
+    "editor.formatOnSave": true
 }
