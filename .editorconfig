@@ -1,3 +1,7 @@
+# Top-most EditorConfig file
+root=true
+
+# Matches any string of characters, except path separators (/)
 [*]
 cpp_indent_braces=false # true/false
 cpp_indent_multi_line_relative_to=innermost_parenthesis # innermost_parenthesis/outermost_parenthesis/statement_begin
