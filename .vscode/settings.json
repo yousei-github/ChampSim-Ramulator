@@ -58,8 +58,8 @@
         "cassert": "cpp",
         "queue": "cpp"
     },
-    "editor.tabSize": 2,
+    "editor.tabSize": 4,
     "editor.indentSize": "tabSize",
-    "editor.defaultFormatter": "ms-vscode.cpptools",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true, // To format when you save your file
+    "C_Cpp.clang_format_path": "/usr/bin/clang-format", // The full path of the clang-format executable. For Linux: "/usr/bin/clang-format".
 }
