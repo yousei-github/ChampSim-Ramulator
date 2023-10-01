@@ -58,10 +58,19 @@ Copy and Initialization.* MICRO
 [\[6\] Chang et al. *Improving DRAM Performance by Parallelizing Refreshes with
 Accesses.* HPCA 2014.](https://users.ece.cmu.edu/~omutlu/pub/dram-access-refresh-parallelization_hpca14.pdf)
 
+# Download dependencies
+
+ChampSim uses [vcpkg](https://vcpkg.io) to manage its dependencies. In this repository, vcpkg is included as a submodule. You can download the dependencies with
+```sh
+$ git submodule update --init
+$ ./vcpkg/bootstrap-vcpkg.sh
+$ ./vcpkg/vcpkg install
+```
+
 # Download DPC-3 trace
 
 Professor Daniel Jimenez at Texas A&M University kindly provided traces for DPC-3. Use the following script to download these traces (~20GB size and max simpoint only).
-```
+```sh
 $ cd scripts
 
 $ ./download_dpc3_traces.sh
@@ -105,15 +114,15 @@ According to the setting in the `ProjectConfiguration.h` file, the input paramet
 ## 1. ChampSim + Ramulator with hybrid memory systems
 If the preprocessor `RAMULATOR` is `ENABLE` and `MEMORY_USE_HYBRID` is `ENABLE`, execute the binary as the following,
 ```
-$ [EXECUTION] --warmup_instructions [N_WARM] --simulation_instructions [N_SIM] [CFG1] [CFG2] [TRACE]
-$ [EXECUTION] --warmup_instructions [N_WARM] --simulation_instructions [N_SIM] --stats [FILENAME] [CFG1] [CFG2] [TRACE]
+$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] [CFG1] [CFG2] [TRACE]
+$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] --stats [FILENAME] [CFG1] [CFG2] [TRACE]
 ```
 where [EXECUTION] is the executable file's name, such as ./bin/champsim_plus_ramulator, [N_WARM] is the number of instructions for warmup (1 million), [N_SIM] is the number of instructinos for detailed simulation (10 million),
 [CFG1] and [CFG2] are the memory configuration files' name (configs/HBM-config.cfg), [TRACE] is the trace name (619.lbm_s-4268B.champsimtrace.xz), [FILENAME] is the statistics file name. For example,
 ```
-$ ./bin/champsim_plus_ramulator --warmup_instructions 1000000 --simulation_instructions 2000000 path_to_configs/HBM-config.cfg path_to_configs/DDR4-config.cfg path_to_traces/619.lbm_s-4268B.champsimtrace.xz
+$ ./bin/champsim_plus_ramulator --warmup-instructions 1000000 --simulation-instructions 2000000 path_to_configs/HBM-config.cfg path_to_configs/DDR4-config.cfg path_to_traces/619.lbm_s-4268B.champsimtrace.xz
 Simulation done. Statistics written to HBM_DDR4.stats
-$ ./bin/champsim_plus_ramulator --warmup_instructions 1000000 --simulation_instructions 2000000 --stats my_output.txt path_to_configs/HBM-config.cfg path_to_configs/DDR4-config.cfg path_to_traces/619.lbm_s-4268B.champsimtrace.xz
+$ ./bin/champsim_plus_ramulator --warmup-instructions 1000000 --simulation-instructions 2000000 --stats my_output.txt path_to_configs/HBM-config.cfg path_to_configs/DDR4-config.cfg path_to_traces/619.lbm_s-4268B.champsimtrace.xz
 Simulation done. Statistics written to my_output.txt
 # NOTE: optional --stats flag changes the statistics output filename
 ```
@@ -121,15 +130,15 @@ Simulation done. Statistics written to my_output.txt
 ## 2. ChampSim + Ramulator with single memory systems
 If the preprocessor `RAMULATOR` is `ENABLE` and `MEMORY_USE_HYBRID` is `DISABLE`, execute the binary as the following,
 ```
-$ [EXECUTION] --warmup_instructions [N_WARM] --simulation_instructions [N_SIM] [CFG1] [TRACE]
-$ [EXECUTION] --warmup_instructions [N_WARM] --simulation_instructions [N_SIM] --stats [FILENAME] [CFG1] [TRACE]
+$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] [CFG1] [TRACE]
+$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] --stats [FILENAME] [CFG1] [TRACE]
 ```
 where [EXECUTION] is the executable file's name, such as ./bin/champsim_plus_ramulator, [N_WARM] is the number of instructions for warmup (1 million), [N_SIM] is the number of instructinos for detailed simulation (10 million),
 [CFG1] is the memory configuration file's name (configs/HBM-config.cfg), [TRACE] is the trace name (619.lbm_s-4268B.champsimtrace.xz), [FILENAME] is the statistics file name. For example,
 ```
-$ ./bin/champsim_plus_ramulator --warmup_instructions 1000000 --simulation_instructions 2000000 path_to_configs/HBM-config.cfg path_to_traces/619.lbm_s-4268B.champsimtrace.xz
+$ ./bin/champsim_plus_ramulator --warmup-instructions 1000000 --simulation-instructions 2000000 path_to_configs/HBM-config.cfg path_to_traces/619.lbm_s-4268B.champsimtrace.xz
 Simulation done. Statistics written to HBM.stats
-$ ./bin/champsim_plus_ramulator --warmup_instructions 1000000 --simulation_instructions 2000000 --stats my_output.txt path_to_configs/HBM-config.cfg path_to_traces/619.lbm_s-4268B.champsimtrace.xz
+$ ./bin/champsim_plus_ramulator --warmup-instructions 1000000 --simulation-instructions 2000000 --stats my_output.txt path_to_configs/HBM-config.cfg path_to_traces/619.lbm_s-4268B.champsimtrace.xz
 Simulation done. Statistics written to my_output.txt
 # NOTE: optional --stats flag changes the statistics output filename
 ```
@@ -137,11 +146,11 @@ Simulation done. Statistics written to my_output.txt
 ## 3. ChampSim with single memory systems
 If the preprocessor `RAMULATOR` is `DISABLE` and `MEMORY_USE_HYBRID` is `DISABLE`, execute the binary as the following,
 ```
-$ [EXECUTION] --warmup_instructions [N_WARM] --simulation_instructions [N_SIM] [TRACE]
+$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] [TRACE]
 ```
 where [EXECUTION] is the executable file's name, such as ./bin/champsim_plus_ramulator, [N_WARM] is the number of instructions for warmup (1 million), [N_SIM] is the number of instructinos for detailed simulation (10 million), [TRACE] is the trace name (619.lbm_s-4268B.champsimtrace.xz). For example,
 ```
-$ ./bin/champsim_plus_ramulator --warmup_instructions 1000000 --simulation_instructions 2000000 path_to_traces/619.lbm_s-4268B.champsimtrace.xz
+$ ./bin/champsim_plus_ramulator --warmup-instructions 1000000 --simulation-instructions 2000000 path_to_traces/619.lbm_s-4268B.champsimtrace.xz
 Simulation done.
 ```
 

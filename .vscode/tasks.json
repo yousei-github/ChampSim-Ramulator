@@ -8,41 +8,68 @@
 			"args": [
 				"-fdiagnostics-color=always",
 				"-O3", // O1/O2/O3
-				"-g",
-				"-Wall",
-				// "-MM",
-				// "-MT",
-				"-fopenmp",
+				"-g", // Produce debugging information in the operationg system's native format
+				"-Wall", // Turns on all optional warnings which are desirable for normal code
+				// "-Werror", // Make all warnings into hard errors. Source code which triggers warnings will be rejected
+				"-fopenmp", // Enables #pragma omp in source code
 				"-std=c++17", // c++11/c++17
-				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
-				"${workspaceFolder}/inc/",
+				/**
+				 * Below are header files: (can be from multiples folders)
+				*/
+				"-I", // e.g., -I dir. This means adding the directory [dir] to the list of directories to be searched for header files during preprocessing
+				"${workspaceFolder}/vcpkg_installed/x64-linux/include/",
 				"-I",
-				"${workspaceFolder}/inc/ChampSim/",
-				"-I",
-				"${workspaceFolder}/inc/Ramulator/",
-				// Below are input files (can be from multiples folders)
-				"${workspaceFolder}/src/ChampSim/*.cc",
+				"${workspaceFolder}/include/",
+				"-L", // e.g., -L dir. Add directory [dir] to the list of directories to be searched for [-l].
+				"${workspaceFolder}/vcpkg_installed/x64-linux/lib",
+				"-L",
+				"${workspaceFolder}/vcpkg_installed/x64-linux/lib/manual-link",
+				/**
+				 * Below are source files: (can be from multiples folders)
+				*/
+				"${workspaceFolder}/source/ChampSim/*.cc",
 				// branch:
-				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
+				"${workspaceFolder}/source/ChampSim/branch/bimodal/*.cc",
+				"${workspaceFolder}/source/ChampSim/branch/gshare/*.cc",
+				"${workspaceFolder}/source/ChampSim/branch/hashed_perceptron/*.cc",
+				"${workspaceFolder}/source/ChampSim/branch/perceptron/*.cc",
 				// prefetcher:
-				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/no/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/next_line/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/ip_stride/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/no_instr/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/next_line_instr/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/spp_dev/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/va_ampm_lite/*.cc",
 				// replacement:
-				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
-				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
-				"${workspaceFolder}/src/Ramulator/*.cpp",
-				"${workspaceFolder}/src/*.cc",
-				// Below is the executable file's name
-				"-o",
+				"${workspaceFolder}/source/ChampSim/replacement/lru/*.cc",
+				"${workspaceFolder}/source/ChampSim/replacement/ship/*.cc",
+				"${workspaceFolder}/source/ChampSim/replacement/srrip/*.cc",
+				"${workspaceFolder}/source/ChampSim/replacement/drrip/*.cc",
+				"${workspaceFolder}/source/ChampSim/btb/basic_btb/*.cc",
+				"${workspaceFolder}/source/Ramulator/*.cpp",
+				"${workspaceFolder}/source/*.cc",
+				/**
+                 * Below are library names:
+				 * e.g., -l library. Search the library named [library] when linking.
+				 * 
+				 * The linker searches and processes libraries and object files in the order they are specified.
+				 * Thus, [foo.o -lz bar.o] searches library [z] after file [foo.o] but before [bar.o]. If bar.o refers to functions in [z], those functions may not be loaded.
+				 *
+				 * The linker searches a standard list of directories plus any that you specify with [-L] for the library, which is actually a file named [liblibrary.a]=[a file name library surrounded with lib and .a].
+				 */
+				"-l",
+				"lzma",
+				"-l",
+				"z",
+				"-l",
+				"bz2",
+				"-l",
+				"fmt",
+				/**
+				 * Below is the executable file's name
+				*/
+				"-o", // e.g., -o file1. This means placing the primary output in file [file1].
 				"${workspaceFolder}/bin/champsim_plus_ramulator_O3"
 			],
 			"options": {
@@ -63,42 +90,69 @@
 			"command": "/usr/bin/g++", // The path of compiler
 			"args": [
 				"-fdiagnostics-color=always",
-				//"-O3",	// O1/O2/O3
-				"-g",
-				"-Wall",
-				// "-MM",
-				// "-MT",
-				"-fopenmp",
+				// "-O3", // O1/O2/O3
+				"-g", // Produce debugging information in the operationg system's native format
+				"-Wall", // Turns on all optional warnings which are desirable for normal code
+				// "-Werror", // Make all warnings into hard errors. Source code which triggers warnings will be rejected
+				"-fopenmp", // Enables #pragma omp in source code
 				"-std=c++17", // c++11/c++17
-				"-I", // e.g., -I dir. This means adding the directory dir to the list of directories to be searched for header files during preprocessing
-				"${workspaceFolder}/inc/",
+				/**
+				 * Below are header files: (can be from multiples folders)
+				*/
+				"-I", // e.g., -I dir. This means adding the directory [dir] to the list of directories to be searched for header files during preprocessing
+				"${workspaceFolder}/vcpkg_installed/x64-linux/include/",
 				"-I",
-				"${workspaceFolder}/inc/ChampSim/",
-				"-I",
-				"${workspaceFolder}/inc/Ramulator/",
-				// Below are input files (can be from multiples folders)
-				"${workspaceFolder}/src/ChampSim/*.cc",
+				"${workspaceFolder}/include/",
+				"-L", // e.g., -L dir. Add directory [dir] to the list of directories to be searched for [-l].
+				"${workspaceFolder}/vcpkg_installed/x64-linux/lib",
+				"-L",
+				"${workspaceFolder}/vcpkg_installed/x64-linux/lib/manual-link",
+				/**
+				 * Below are source files: (can be from multiples folders)
+				*/
+				"${workspaceFolder}/source/ChampSim/*.cc",
 				// branch:
-				"${workspaceFolder}/src/ChampSim/branch/bimodal/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/gshare/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/hashed_perceptron/*.cc",
-				"${workspaceFolder}/src/ChampSim/branch/perceptron/*.cc",
+				"${workspaceFolder}/source/ChampSim/branch/bimodal/*.cc",
+				"${workspaceFolder}/source/ChampSim/branch/gshare/*.cc",
+				"${workspaceFolder}/source/ChampSim/branch/hashed_perceptron/*.cc",
+				"${workspaceFolder}/source/ChampSim/branch/perceptron/*.cc",
 				// prefetcher:
-				"${workspaceFolder}/src/ChampSim/prefetcher/no/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/ip_stride/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/no_instr/*.cc",
-				"${workspaceFolder}/src/ChampSim/prefetcher/next_line_instr/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/no/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/next_line/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/ip_stride/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/no_instr/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/next_line_instr/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/spp_dev/*.cc",
+				"${workspaceFolder}/source/ChampSim/prefetcher/va_ampm_lite/*.cc",
 				// replacement:
-				"${workspaceFolder}/src/ChampSim/replacement/lru/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/ship/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/srrip/*.cc",
-				"${workspaceFolder}/src/ChampSim/replacement/drrip/*.cc",
-				"${workspaceFolder}/src/ChampSim/btb/basic_btb/*.cc",
-				"${workspaceFolder}/src/Ramulator/*.cpp",
-				"${workspaceFolder}/src/*.cc",
-				// Below is the executable file's name
-				"-o",
+				"${workspaceFolder}/source/ChampSim/replacement/lru/*.cc",
+				"${workspaceFolder}/source/ChampSim/replacement/ship/*.cc",
+				"${workspaceFolder}/source/ChampSim/replacement/srrip/*.cc",
+				"${workspaceFolder}/source/ChampSim/replacement/drrip/*.cc",
+				"${workspaceFolder}/source/ChampSim/btb/basic_btb/*.cc",
+				"${workspaceFolder}/source/Ramulator/*.cpp",
+				"${workspaceFolder}/source/*.cc",
+				/**
+                 * Below are library names:
+				 * e.g., -l library. Search the library named [library] when linking.
+				 * 
+				 * The linker searches and processes libraries and object files in the order they are specified.
+				 * Thus, [foo.o -lz bar.o] searches library [z] after file [foo.o] but before [bar.o]. If bar.o refers to functions in [z], those functions may not be loaded.
+				 *
+				 * The linker searches a standard list of directories plus any that you specify with [-L] for the library, which is actually a file named [liblibrary.a]=[a file name library surrounded with lib and .a].
+				 */
+				"-l",
+				"lzma",
+				"-l",
+				"z",
+				"-l",
+				"bz2",
+				"-l",
+				"fmt",
+				/**
+				 * Below is the executable file's name
+				*/
+				"-o", // e.g., -o file1. This means placing the primary output in file [file1].
 				"${workspaceFolder}/bin/champsim_plus_ramulator"
 			],
 			"options": {
@@ -109,7 +163,7 @@
 			],
 			"group": {
 				"kind": "build",
-				"isDefault": true
+				"isDefault": false
 			},
 			"detail": "compiler: /usr/bin/g++"
 		}
