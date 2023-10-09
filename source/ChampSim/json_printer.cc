@@ -18,6 +18,7 @@
 #include <nlohmann/json.hpp>
 #include <utility>
 
+#include "ChampSim/phase_info.h"
 #include "ChampSim/stats_printer.h"
 
 void to_json(nlohmann::json& j, const O3_CPU::stats_type stats)

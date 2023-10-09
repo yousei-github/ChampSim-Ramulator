@@ -24,6 +24,16 @@
 #include "ChampSim/champsim.h"
 #include "ChampSim/instruction.h"
 
+#if (RAMULATOR == ENABLE)
+DRAM_CHANNEL::request_type::request_type(typename champsim::channel::request_type req)
+: pf_metadata(req.pf_metadata), address(req.address), v_address(req.address), data(req.data), instr_depend_on_me(req.instr_depend_on_me)
+{
+    asid[0] = req.asid[0];
+    asid[1] = req.asid[1];
+}
+
+#endif // RAMULATOR
+
 champsim::channel::channel(std::size_t rq_size, std::size_t pq_size, std::size_t wq_size, unsigned offset_bits, bool match_offset)
 : RQ_SIZE(rq_size), PQ_SIZE(pq_size), WQ_SIZE(wq_size), OFFSET_BITS(offset_bits), match_offset_bits(match_offset)
 {

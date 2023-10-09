@@ -33,14 +33,13 @@
 #include <type_traits>
 #include <vector>
 
-#include "ChampSim/champsim.h"
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/channel.h"
 #include "ChampSim/instruction.h"
 #include "ChampSim/module_impl.h"
 #include "ChampSim/operable.h"
 #include "ChampSim/util/lru_table.h"
-#include "ProjectConfiguration.h" // user file
+#include "ProjectConfiguration.h" // User file
 
 enum STATUS
 {

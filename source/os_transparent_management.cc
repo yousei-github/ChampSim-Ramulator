@@ -5,11 +5,11 @@
 #if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
 
 OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address)
-    : total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
-    fast_memory_capacity_at_data_block_granularity(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS),
-    fast_memory_offset_bit(lg2(fast_memory_max_address)),   // note here only support integers of 2's power.
-    counter_table(*(new std::vector<COUNTER_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, COUNTER_DEFAULT_VALUE))),
-    hotness_table(*(new std::vector<HOTNESS_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, HOTNESS_DEFAULT_VALUE)))
+: total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
+  fast_memory_capacity_at_data_block_granularity(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS),
+  fast_memory_offset_bit(champsim::lg2(fast_memory_max_address)), // Note here only support integers of 2's power.
+  counter_table(*(new std::vector<COUNTER_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, COUNTER_DEFAULT_VALUE))),
+  hotness_table(*(new std::vector<HOTNESS_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, HOTNESS_DEFAULT_VALUE)))
 {
     hotness_threshold = HOTNESS_THRESHOLD;
 };
@@ -17,8 +17,8 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint6
 OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 {
     output_statistics.remapping_request_queue_congestion = remapping_request_queue_congestion;
-    delete& counter_table;
-    delete& hotness_table;
+    delete &counter_table;
+    delete &hotness_table;
 };
 
 bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8_t type, float queue_busy_degree)
@@ -32,13 +32,11 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
     return true;
 };
 
-void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(PACKET& packet)
-{
+void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packet) {
 
 };
 
-void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
-{
+void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address) {
 
 };
 
@@ -63,8 +61,8 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
     else
     {
         std::cout << __func__ << ": remapping error." << std::endl;
-        assert(0);
-        return false;   // error
+        assert(false);
+        return false; // Error
     }
 
     return true;
@@ -85,5 +83,5 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
     return false;
 }
 
-#endif  // NO_METHOD_FOR_RUN_HYBRID_MEMORY
-#endif  // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif // NO_METHOD_FOR_RUN_HYBRID_MEMORY
+#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT

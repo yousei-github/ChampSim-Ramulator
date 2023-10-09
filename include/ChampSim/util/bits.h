@@ -31,6 +31,14 @@ using msl::bitmask;
 using msl::lg2;
 using msl::splice_bits;
 
+#if (USER_CODES == ENABLE)
+using msl::clear_bits;
+using msl::get_bits;
+using msl::replace_bits;
+using msl::set_bits;
+
+#endif // USER_CODES
+
 /*
  * A forward-port of C++23's function of the same name.
  * This avoids static_cast'ing an enumeration to an integer type other than its underlying type,

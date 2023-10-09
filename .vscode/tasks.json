@@ -27,6 +27,7 @@
 				/**
 				 * Below are source files: (can be from multiples folders)
 				*/
+				/* ChampSim */
 				"${workspaceFolder}/source/ChampSim/*.cc",
 				// branch:
 				"${workspaceFolder}/source/ChampSim/branch/bimodal/*.cc",
@@ -47,7 +48,9 @@
 				"${workspaceFolder}/source/ChampSim/replacement/srrip/*.cc",
 				"${workspaceFolder}/source/ChampSim/replacement/drrip/*.cc",
 				"${workspaceFolder}/source/ChampSim/btb/basic_btb/*.cc",
+				/* Ramulator */
 				"${workspaceFolder}/source/Ramulator/*.cpp",
+				/* User */
 				"${workspaceFolder}/source/*.cc",
 				/**
                  * Below are library names:
@@ -90,7 +93,7 @@
 			"command": "/usr/bin/g++", // The path of compiler
 			"args": [
 				"-fdiagnostics-color=always",
-				// "-O3", // O1/O2/O3
+				//"-O3", // O1/O2/O3
 				"-g", // Produce debugging information in the operationg system's native format
 				"-Wall", // Turns on all optional warnings which are desirable for normal code
 				// "-Werror", // Make all warnings into hard errors. Source code which triggers warnings will be rejected
@@ -110,6 +113,7 @@
 				/**
 				 * Below are source files: (can be from multiples folders)
 				*/
+				/* ChampSim */
 				"${workspaceFolder}/source/ChampSim/*.cc",
 				// branch:
 				"${workspaceFolder}/source/ChampSim/branch/bimodal/*.cc",
@@ -130,7 +134,9 @@
 				"${workspaceFolder}/source/ChampSim/replacement/srrip/*.cc",
 				"${workspaceFolder}/source/ChampSim/replacement/drrip/*.cc",
 				"${workspaceFolder}/source/ChampSim/btb/basic_btb/*.cc",
+				/* Ramulator */
 				"${workspaceFolder}/source/Ramulator/*.cpp",
+				/* User */
 				"${workspaceFolder}/source/*.cc",
 				/**
                  * Below are library names:
@@ -163,7 +169,7 @@
 			],
 			"group": {
 				"kind": "build",
-				"isDefault": false
+				"isDefault": true
 			},
 			"detail": "compiler: /usr/bin/g++"
 		}

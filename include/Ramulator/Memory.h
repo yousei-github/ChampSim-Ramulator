@@ -1,14 +1,13 @@
 #ifndef __MEMORY_H
 #define __MEMORY_H
 
-#include <ProjectConfiguration.h> // User file
-
 #include <cassert>
 #include <cmath>
 #include <functional>
 #include <tuple>
 #include <vector>
 
+#include "ProjectConfiguration.h" // User file
 #include "Ramulator/Config.h"
 #include "Ramulator/Controller.h"
 #include "Ramulator/DRAM.h"
@@ -24,7 +23,7 @@
 
 #if (USER_CODES == ENABLE)
 #include "ChampSim/champsim_constants.h"
-#endif // USER_CODES
+#endif
 
 using namespace std;
 

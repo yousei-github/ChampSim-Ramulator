@@ -69,10 +69,11 @@
         "stop_token": "cpp",
         "thread": "cpp",
         "cinttypes": "cpp",
-        "any": "cpp",
+        "cfenv": "cpp",
         "regex": "cpp",
-        "span": "cpp",
-        "valarray": "cpp"
+        "future": "cpp",
+        "any": "cpp",
+        "variant": "cpp"
     },
     "editor.tabSize": 4,
     "editor.indentSize": "tabSize",

@@ -1,5 +1,6 @@
 #ifndef VARIABLE_GRANULARITY_H
 #define VARIABLE_GRANULARITY_H
+
 #include <cassert>
 #include <deque>
 #include <iostream>
@@ -7,13 +8,12 @@
 #include <vector>
 
 #include "ChampSim/champsim_constants.h"
+#include "ChampSim/util/bits.h"
 #include "ProjectConfiguration.h" // User file
-// #include "util.h"
 
 /** @note Abbreviation:
  *  FM -> Fast memory (e.g., HBM, DDR4)
  *  SM -> Slow memory (e.g., DDR4, PCM)
- *
 */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -26,9 +26,9 @@
 #define HOTNESS_WIDTH                    bool
 #define HOTNESS_DEFAULT_VALUE            (false)
 
-#define REMAPPING_LOCATION_WIDTH         uint8_t // default: uint8_t
-#define REMAPPING_LOCATION_WIDTH_SIGN    int8_t  // default: int8_t
-#define REMAPPING_LOCATION_WIDTH_BITS    (lg2(64))
+#define REMAPPING_LOCATION_WIDTH         uint8_t // Default: uint8_t
+#define REMAPPING_LOCATION_WIDTH_SIGN    int8_t  // Default: int8_t
+#define REMAPPING_LOCATION_WIDTH_BITS    (champsim::lg2(64))
 
 #define START_ADDRESS_WIDTH              uint8_t
 #define START_ADDRESS_WIDTH_BITS         (6)
@@ -36,23 +36,26 @@
 #define MIGRATION_GRANULARITY_WIDTH      uint8_t
 #define MIGRATION_GRANULARITY_WIDTH_BITS (3)
 
-#define NUMBER_OF_BLOCK                  (5) // default: 5
+#define NUMBER_OF_BLOCK                  (5) // Default: 5
 
 #define REMAPPING_REQUEST_QUEUE_LENGTH   (64) // 1024/4096
 #define QUEUE_BUSY_DEGREE_THRESHOLD      (0.8f)
 
-#define INTERVAL_FOR_DECREMENT           (1000000) // default: 1000000
+#define INTERVAL_FOR_DECREMENT           (1000000) // Default: 1000000
 
 class OS_TRANSPARENT_MANAGEMENT
 {
+    using channel_type = champsim::channel;
+    using request_type = typename channel_type::request_type;
+
 public:
     uint64_t cycle                  = 0;
     COUNTER_WIDTH hotness_threshold = 0;
-    uint64_t total_capacity;       // uint is byte
-    uint64_t fast_memory_capacity; // uint is byte
+    uint64_t total_capacity;       // Uint is byte
+    uint64_t fast_memory_capacity; // Uint is byte
     uint64_t total_capacity_at_data_block_granularity;
     uint64_t fast_memory_capacity_at_data_block_granularity;
-    uint8_t fast_memory_offset_bit; // address format in the data management granularity
+    uint8_t fast_memory_offset_bit; // Address format in the data management granularity
 
     std::vector<COUNTER_WIDTH>& counter_table; // A counter for every data block
     std::vector<HOTNESS_WIDTH>& hotness_table; // A hotness bit for every data block, true -> data block is hot, false -> data block is cold.
@@ -60,18 +63,18 @@ public:
     /* Remapping request */
     struct RemappingRequest
     {
-        uint64_t address_in_fm, address_in_sm; // hardware address in fast and slow memories
+        uint64_t address_in_fm, address_in_sm; // Hardware address in fast and slow memories
         REMAPPING_LOCATION_WIDTH fm_location, sm_location;
-        uint8_t size; // number of cache lines to remap
+        uint8_t size; // Number of cache lines to remap
     };
 
     std::deque<RemappingRequest> remapping_request_queue;
     uint64_t remapping_request_queue_congestion;
 
-    // scoped enumerations
+    // Scoped enumerations
     /** @brief
-   *  it is used to store the migrated page's block number, which is to represent the location in a set.
-  */
+     * It is used to store the migrated page's block number, which is to represent the location in a set.
+     */
     enum class RemappingLocation : REMAPPING_LOCATION_WIDTH
     {
         Zero = 0,
@@ -82,11 +85,11 @@ public:
         Max = NUMBER_OF_BLOCK
     };
 
-    uint8_t set_msb; // most significant bit of set, and its address format is in the byte granularity
+    uint8_t set_msb; // Most significant bit of set, and its address format is in the byte granularity
 
     /** @brief
-   *  it is used to store the first address of the migrated part of the migrated pages.
-  */
+     *  It is used to store the first address of the migrated part of the migrated pages.
+     */
     enum class StartAddress : START_ADDRESS_WIDTH
     {
         Zero = 0,
@@ -98,8 +101,8 @@ public:
     };
 
     /** @brief
-   *  it is used to store the migrated page's migration granularity.
-  */
+     *  It is used to store the migrated page's migration granularity.
+     */
     enum class MigrationGranularity : MIGRATION_GRANULARITY_WIDTH
     {
         None     = 0,
@@ -118,13 +121,14 @@ public:
         bool access[START_ADDRESS_WIDTH(StartAddress::Max)];
 
 #if (STATISTICS_INFORMATION == ENABLE)
-        bool access_flag = false;                                           // mark whether this page has ever been accessed.
-        bool access_stats[START_ADDRESS_WIDTH(StartAddress::Max)];          // record the accessed data line
-        bool temporal_access_stats[START_ADDRESS_WIDTH(StartAddress::Max)]; // record the accessed data line for a fix intervsal (clear is possible)
-        MIGRATION_GRANULARITY_WIDTH estimated_spatial_locality_stats = 0;   // store the estimated spatial locality for this page
-        MIGRATION_GRANULARITY_WIDTH granularity_stats                = 0;   // store the best granularity for this page
-        MIGRATION_GRANULARITY_WIDTH granularity_predict_stats        = 0;   // store the predicted granularity for this page
-#endif                                                                      // STATISTICS_INFORMATION
+        bool access_flag = false;                                           // Mark whether this page has ever been accessed.
+        bool access_stats[START_ADDRESS_WIDTH(StartAddress::Max)];          // Record the accessed data line
+        bool temporal_access_stats[START_ADDRESS_WIDTH(StartAddress::Max)]; // Record the accessed data line for a fix intervsal (clear is possible)
+        MIGRATION_GRANULARITY_WIDTH estimated_spatial_locality_stats = 0;   // Store the estimated spatial locality for this page
+        MIGRATION_GRANULARITY_WIDTH granularity_stats                = 0;   // Store the best granularity for this page
+        MIGRATION_GRANULARITY_WIDTH granularity_predict_stats        = 0;   // Store the predicted granularity for this page
+
+#endif // STATISTICS_INFORMATION
 
         AccessDistribution()
         {
@@ -148,7 +152,7 @@ public:
 
     struct PlacementEntry
     {
-        REMAPPING_LOCATION_WIDTH cursor; // this cursor is used to track the position of next available group for migration in the placement entry.
+        REMAPPING_LOCATION_WIDTH cursor; // This cursor is used to track the position of next available group for migration in the placement entry.
         REMAPPING_LOCATION_WIDTH tag[NUMBER_OF_BLOCK];
         START_ADDRESS_WIDTH start_address[NUMBER_OF_BLOCK];
         MIGRATION_GRANULARITY_WIDTH granularity[NUMBER_OF_BLOCK];
@@ -175,38 +179,38 @@ public:
     OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address);
     ~OS_TRANSPARENT_MANAGEMENT();
 
-    // address is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, uint8_t type, float queue_busy_degree);
+    // Address is physical address and at byte granularity
+    bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree);
 
-    // translate the physical address to hardware address
-    void physical_to_hardware_address(PACKET& packet);
+    // Translate the physical address to hardware address
+    void physical_to_hardware_address(request_type& packet);
     void physical_to_hardware_address(uint64_t& address);
 
     bool issue_remapping_request(RemappingRequest& remapping_request);
     bool finish_remapping_request();
 
-    // detect cold data block
+    // Detect cold data block
     void cold_data_detection();
 
 private:
 #if (COLD_DATA_DETECTION_IN_GROUP == ENABLE)
-    // detect cold data block in group
+    // Detect cold data block in group
     void cold_data_detection_in_group(uint64_t source_address);
 #endif // COLD_DATA_DETECTION_IN_GROUP
 
-    // evict cold data block
+    // Evict cold data block
     bool cold_data_eviction(uint64_t source_address, float queue_busy_degree);
 
-    // add new remapping request into the remapping_request_queue
+    // Add new remapping request into the remapping_request_queue
     bool enqueue_remapping_request(RemappingRequest& remapping_request);
 
     // Member functions for migration granularity:
 
-    // calculate the migration granularity based on start_address and end_address.
+    // Calculate the migration granularity based on start_address and end_address.
     MIGRATION_GRANULARITY_WIDTH calculate_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address);
-    // check whether this migration granularity is beyond the block's range and adjust it to a proper value, this function returns updated end_address
+    // Check whether this migration granularity is beyond the block's range and adjust it to a proper value, this function returns updated end_address
     START_ADDRESS_WIDTH adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
-    // check whether this migration granularity is beyond the block's end address and adjust it to a proper value, this function returns updated end_address
+    // Check whether this migration granularity is beyond the block's end address and adjust it to a proper value, this function returns updated end_address
     START_ADDRESS_WIDTH round_down_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
 };
 

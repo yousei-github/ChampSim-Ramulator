@@ -29,6 +29,7 @@
 
 #if (USER_CODES == ENABLE)
 
+/** @brief For CPU */
 struct ooo_model_instr;
 
 enum class access_type : unsigned
@@ -157,6 +158,57 @@ public:
     void check_collision();
 };
 } // namespace champsim
+
+#if (RAMULATOR == ENABLE)
+struct dram_stats
+{
+    std::string name {};
+    uint64_t dbus_cycle_congested = 0, dbus_count_congested = 0;
+
+    unsigned WQ_ROW_BUFFER_HIT = 0, WQ_ROW_BUFFER_MISS = 0, RQ_ROW_BUFFER_HIT = 0, RQ_ROW_BUFFER_MISS = 0, WQ_FULL = 0;
+};
+
+struct DRAM_CHANNEL
+{
+    struct request_type
+    {
+        using response_type  = typename champsim::channel::response_type;
+
+        bool scheduled       = false;
+        bool forward_checked = false;
+
+        uint8_t asid[2]      = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
+
+        uint32_t pf_metadata = 0;
+
+        uint64_t address     = 0;
+        uint64_t v_address   = 0;
+        uint64_t data        = 0;
+        uint64_t event_cycle = std::numeric_limits<uint64_t>::max();
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+        /* h_address (hardware address), which is the address used by memory chips */
+        uint64_t h_address = 0;
+
+#if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
+        /* h_address_fm, corresponding hardware address in fast memory */
+        uint64_t h_address_fm = 0;
+#endif // COLOCATED_LINE_LOCATION_TABLE
+
+#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+
+        std::vector<std::reference_wrapper<ooo_model_instr>> instr_depend_on_me {};
+        std::vector<std::deque<response_type>*> to_return {}; // Store the response queue
+
+        explicit request_type(typename champsim::channel::request_type);
+        request_type() {};
+    };
+
+    using stats_type = dram_stats;
+    stats_type roi_stats, sim_stats;
+};
+
+#endif // RAMULATOR
 
 #else
 struct ooo_model_instr;

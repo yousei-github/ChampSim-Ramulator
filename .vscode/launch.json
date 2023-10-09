@@ -18,9 +18,10 @@
                 "--json",
                 "test.json",
                 "--stats",
-                "649.fotonik3d_s-1176B.champsimtrace.xz.HBM_DDR4.stats",
+                "605.mcf_s-665B.champsimtrace.xz.HBM_DDR4.stats",
+                "configs/HBM-config.cfg",
                 "configs/DDR4-config.cfg",
-                "../dpc3_traces/649.fotonik3d_s-1176B.champsimtrace.xz"
+                "../dpc3_traces/605.mcf_s-665B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",

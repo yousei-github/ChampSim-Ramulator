@@ -1,9 +1,9 @@
 #ifndef __STATISTICS_H
 #define __STATISTICS_H
 
-#include <ProjectConfiguration.h> // User file
-
 #include <string>
+
+#include "ProjectConfiguration.h" // User file
 
 // FIXME Find better way to decide where does it come from
 #if ! defined(RAMULATOR)

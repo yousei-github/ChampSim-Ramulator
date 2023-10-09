@@ -24,9 +24,6 @@ DATA_OUTPUT::~DATA_OUTPUT()
 
 void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t number)
 {
-    assert(string_array != nullptr);
-    assert(number > 0);
-
     std::string benchmark_names;
     for (uint32_t i = 0; i < number; i++)
     {
@@ -108,7 +105,7 @@ SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
         {
             fprintf(file_handler, "Level: %ld, valid_pte_count: %ld.\n", i, valid_pte_count[i]);
         }
-        fprintf(file_handler, "virtual_page_count: %ld, main memory footprint: %f MiB.\n", virtual_page_count, virtual_page_count * 4.0 / KiB);
+        fprintf(file_handler, "virtual_page_count: %ld, main memory footprint: %f MB.\n", virtual_page_count, virtual_page_count * 4.0 / KiB);
 
         uint64_t total_access_request_in_memory = read_request_in_memory + read_request_in_memory2 + write_request_in_memory + write_request_in_memory2;
 

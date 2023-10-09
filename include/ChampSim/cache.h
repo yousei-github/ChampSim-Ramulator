@@ -31,7 +31,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "ChampSim/champsim.h"
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/channel.h"
 #include "ChampSim/module_impl.h"

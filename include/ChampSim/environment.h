@@ -26,6 +26,22 @@
 #include "ChampSim/operable.h"
 #include "ChampSim/ptw.h"
 
+#if (USER_CODES == ENABLE)
+
+#if (RAMULATOR == ENABLE)
+namespace champsim
+{
+struct environment
+{
+    virtual std::vector<std::reference_wrapper<O3_CPU>> cpu_view()          = 0;
+    virtual std::vector<std::reference_wrapper<CACHE>> cache_view()         = 0;
+    virtual std::vector<std::reference_wrapper<PageTableWalker>> ptw_view() = 0;
+    virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
+};
+} // namespace champsim
+
+#else
+
 namespace champsim
 {
 struct environment
@@ -37,5 +53,23 @@ struct environment
     virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
 };
 } // namespace champsim
+
+#endif // RAMULATOR
+
+#else
+/* Original code of ChampSim */
+
+namespace champsim
+{
+struct environment
+{
+    virtual std::vector<std::reference_wrapper<O3_CPU>> cpu_view()          = 0;
+    virtual std::vector<std::reference_wrapper<CACHE>> cache_view()         = 0;
+    virtual std::vector<std::reference_wrapper<PageTableWalker>> ptw_view() = 0;
+    virtual MEMORY_CONTROLLER& dram_view()                                  = 0;
+    virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
+};
+} // namespace champsim
+#endif // USER_CODES
 
 #endif

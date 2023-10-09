@@ -19,7 +19,11 @@
 
 #include <cstdint>
 #include <exception>
+#include <vector>
 
+#include "ChampSim/environment.h"
+#include "ChampSim/phase_info.h"
+#include "ChampSim/tracereader.h"
 #include "ProjectConfiguration.h" // User file
 
 namespace champsim
@@ -36,6 +40,11 @@ constexpr bool debug_print = true;
 #else
 constexpr bool debug_print = false;
 #endif
+
+#if (USER_CODES == ENABLE)
+std::vector<phase_stats> main(environment& env, std::vector<phase_info>& phases, std::vector<tracereader>& traces);
+#endif // USER_CODES
+
 } // namespace champsim
 
 #endif
