@@ -30,7 +30,10 @@
 #include "ProjectConfiguration.h" // User file
 
 #if (USER_CODES == ENABLE)
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
+#endif // USE_VCPKG
 
 #include <cassert>
 #include <cstdint>
@@ -237,29 +240,32 @@ void MEMORY_CONTROLLER<T, T2>::initialize()
 {
     long long int dram_size = (memory.max_address + memory2.max_address) / MiB; // in MiB
 
+#if (USE_VCPKG == ENABLE)
     fmt::print("Memory Subsystem Size: ");
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "Memory Subsystem Size: ");
-#endif // PRINT_STATISTICS_INTO_FILE
-
     if (dram_size > 1024)
     {
         fmt::print("{} GiB", dram_size / 1024);
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "%lld GiB", dram_size / 1024);
-#endif // PRINT_STATISTICS_INTO_FILE
     }
     else
     {
         fmt::print("{} MiB", dram_size);
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "%lld MiB", dram_size);
-#endif // PRINT_STATISTICS_INTO_FILE
     }
-
     fmt::print("\n");
+
+#endif // USE_VCPKG
+
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    std::fprintf(output_statistics.file_handler, "Memory Subsystem Size: ");
+    if (dram_size > 1024)
+    {
+        std::fprintf(output_statistics.file_handler, "%lld GiB", dram_size / 1024);
+    }
+    else
+    {
+        std::fprintf(output_statistics.file_handler, "%lld MiB", dram_size);
+    }
     std::fprintf(output_statistics.file_handler, "\n");
+
 #endif // PRINT_STATISTICS_INTO_FILE
 }
 
@@ -1446,29 +1452,32 @@ void MEMORY_CONTROLLER<T>::initialize()
 {
     long long int dram_size = memory.max_address / MiB; // in MiB
 
+#if (USE_VCPKG == ENABLE)
     fmt::print("Memory Subsystem Size: ");
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "Memory Subsystem Size: ");
-#endif // PRINT_STATISTICS_INTO_FILE
-
     if (dram_size > 1024)
     {
         fmt::print("{} GiB", dram_size / 1024);
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "%lld GiB", dram_size / 1024);
-#endif // PRINT_STATISTICS_INTO_FILE
     }
     else
     {
         fmt::print("{} MiB", dram_size);
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "%lld MiB", dram_size);
-#endif // PRINT_STATISTICS_INTO_FILE
     }
-
     fmt::print("\n");
+
+#endif // USE_VCPKG
+
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    std::fprintf(output_statistics.file_handler, "Memory Subsystem Size: ");
+    if (dram_size > 1024)
+    {
+        std::fprintf(output_statistics.file_handler, "%lld GiB", dram_size / 1024);
+    }
+    else
+    {
+        std::fprintf(output_statistics.file_handler, "%lld MiB", dram_size);
+    }
     std::fprintf(output_statistics.file_handler, "\n");
+
 #endif // PRINT_STATISTICS_INTO_FILE
 }
 

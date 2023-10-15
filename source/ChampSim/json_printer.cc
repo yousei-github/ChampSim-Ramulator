@@ -15,12 +15,17 @@
  */
 
 #include <algorithm>
-#include <nlohmann/json.hpp>
 #include <utility>
+
+#include "ProjectConfiguration.h" // User file
+#if (USE_VCPKG == ENABLE)
+#include <nlohmann/json.hpp>
+#endif // USE_VCPKG
 
 #include "ChampSim/phase_info.h"
 #include "ChampSim/stats_printer.h"
 
+#if (USE_VCPKG == ENABLE)
 void to_json(nlohmann::json& j, const O3_CPU::stats_type stats)
 {
     std::array<std::pair<std::string, std::size_t>, 6> types {
@@ -108,3 +113,4 @@ void to_json(nlohmann::json& j, const champsim::phase_stats stats)
 } // namespace champsim
 
 void champsim::json_printer::print(std::vector<phase_stats>& stats) { stream << nlohmann::json::array_t {std::begin(stats), std::end(stats)}; }
+#endif // USE_VCPKG

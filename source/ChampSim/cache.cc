@@ -16,8 +16,12 @@
 
 #include "ChampSim/cache.h"
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+#endif // USE_VCPKG
 
 #include <algorithm>
 #include <cassert>
@@ -68,6 +72,7 @@ CACHE::mshr_type CACHE::mshr_type::merge(mshr_type predecessor, mshr_type succes
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         if (successor.type == access_type::PREFETCH)
         {
             fmt::print("[MSHR] {} address {:#x} type: {} into address {:#x} type: {} event: {}\n", __func__, successor.address, access_type_names.at(champsim::to_underlying(successor.type)), predecessor.address, access_type_names.at(champsim::to_underlying(successor.type)), retval.event_cycle);
@@ -76,6 +81,7 @@ CACHE::mshr_type CACHE::mshr_type::merge(mshr_type predecessor, mshr_type succes
         {
             fmt::print("[MSHR] {} address {:#x} type: {} into address {:#x} type: {} event: {}\n", __func__, predecessor.address, access_type_names.at(champsim::to_underlying(predecessor.type)), successor.address, access_type_names.at(champsim::to_underlying(successor.type)), retval.event_cycle);
         }
+#endif // USE_VCPKG
     }
 
     return retval;
@@ -103,10 +109,12 @@ bool CACHE::handle_fill(const mshr_type& fill_mshr)
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print(
             "[{}] {} instr_id: {} address: {:#x} v_address: {:#x} set: {} way: {} type: {} prefetch_metadata: {} cycle_enqueued: {} cycle: {}\n",
             NAME, __func__, fill_mshr.instr_id, fill_mshr.address, fill_mshr.v_address, get_set_index(fill_mshr.address), way_idx,
             access_type_names.at(champsim::to_underlying(fill_mshr.type)), fill_mshr.pf_metadata, fill_mshr.cycle_enqueued, current_cycle);
+#endif // USE_VCPKG
     }
 
     bool success       = true;
@@ -132,8 +140,10 @@ bool CACHE::handle_fill(const mshr_type& fill_mshr)
 
             if constexpr (champsim::debug_print)
             {
+#if (USE_VCPKG == ENABLE)
                 fmt::print("[{}] {} evict address: {:#x} v_address: {:#x} prefetch_metadata: {}\n", NAME,
                     __func__, writeback_packet.address, writeback_packet.v_address, fill_mshr.pf_metadata);
+#endif // USE_VCPKG
             }
 
             success = lower_level->add_wq(writeback_packet);
@@ -197,9 +207,11 @@ bool CACHE::try_hit(const tag_lookup_type& handle_pkt)
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[{}] {} instr_id: {} address: {:#x} v_address: {:#x} data: {:#x} set: {} way: {} ({}) type: {} cycle: {}\n", NAME, __func__, handle_pkt.instr_id,
             handle_pkt.address, handle_pkt.v_address, handle_pkt.data, get_set_index(handle_pkt.address), std::distance(set_begin, way), hit ? "HIT" : "MISS",
             access_type_names.at(champsim::to_underlying(handle_pkt.type)), current_cycle);
+#endif // USE_VCPKG
     }
 
     // update prefetcher on load instructions and prefetches from upper levels
@@ -240,9 +252,11 @@ bool CACHE::handle_miss(const tag_lookup_type& handle_pkt)
 {
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[{}] {} instr_id: {} address: {:#x} v_address: {:#x} type: {} local_prefetch: {} cycle: {}\n", NAME, __func__,
             handle_pkt.instr_id, handle_pkt.address, handle_pkt.v_address,
             access_type_names.at(champsim::to_underlying(handle_pkt.type)), handle_pkt.prefetch_from_this, current_cycle);
+#endif // USE_VCPKG
     }
 
     mshr_type to_allocate {handle_pkt, current_cycle};
@@ -268,10 +282,13 @@ bool CACHE::handle_miss(const tag_lookup_type& handle_pkt)
     else
     {
         if (mshr_full)
-        { // not enough MSHR resource
+        {
+            // not enough MSHR resource
             if constexpr (champsim::debug_print)
             {
+#if (USE_VCPKG == ENABLE)
                 fmt::print("[{}] {} MSHR full\n", NAME, __func__);
+#endif // USE_VCPKG
             }
 
             return false; // TODO should we allow prefetches anyway if they will not be filled to this level?
@@ -304,7 +321,9 @@ bool CACHE::handle_miss(const tag_lookup_type& handle_pkt)
         {
             if constexpr (champsim::debug_print)
             {
+#if (USE_VCPKG == ENABLE)
                 fmt::print("[{}] {} could not send to lower\n", NAME, __func__);
+#endif // USE_VCPKG
             }
 
             return false;
@@ -327,9 +346,11 @@ bool CACHE::handle_write(const tag_lookup_type& handle_pkt)
 {
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[{}] {} instr_id: {} address: {:#x} v_address: {:#x} type: {} local_prefetch: {} cycle: {}\n", NAME, __func__, handle_pkt.instr_id,
             handle_pkt.address, handle_pkt.v_address, access_type_names.at(champsim::to_underlying(handle_pkt.type)), handle_pkt.prefetch_from_this,
             current_cycle);
+#endif // USE_VCPKG
     }
 
     inflight_writes.emplace_back(handle_pkt, current_cycle);
@@ -356,8 +377,10 @@ auto CACHE::initiate_tag_check(champsim::channel* ul)
 
         if constexpr (champsim::debug_print)
         {
+#if (USE_VCPKG == ENABLE)
             fmt::print("[TAG] initiate_tag_check instr_id: {} address: {:#x} v_address: {:#x} type: {} response_requested: {} event: {}\n", retval.instr_id, retval.address,
                 retval.v_address, access_type_names.at(champsim::to_underlying(retval.type)), ! std::empty(retval.to_return), retval.event_cycle);
+#endif // USE_VCPKG
         }
 
         return retval;
@@ -453,7 +476,7 @@ long CACHE::operate()
             [cycle = current_cycle](const auto& pkt)
             { return pkt.event_cycle <= cycle && pkt.is_translated; });
     auto finish_tag_check_end = std::find_if_not(tag_check_ready_begin, tag_check_ready_end, do_tag_check);
-    auto tag_bw_consumed      = std::distance(tag_check_ready_begin, finish_tag_check_end);
+
     progress += std::distance(tag_check_ready_begin, finish_tag_check_end);
     inflight_tag_check.erase(tag_check_ready_begin, finish_tag_check_end);
 
@@ -461,10 +484,14 @@ long CACHE::operate()
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
+        auto tag_bw_consumed = std::distance(tag_check_ready_begin, finish_tag_check_end);
+
         fmt::print("[{}] {} cycle completed: {} tags checked: {} remaining: {} stash consumed: {} remaining: {} channel consumed: {} pq consumed {} unused consume bw {}\n", NAME, __func__, current_cycle,
             tag_bw_consumed, std::size(inflight_tag_check),
             stash_bandwidth_consumed, std::size(translation_stash),
             channels_bandwidth_consumed, pq_bandwidth_consumed, tag_bw);
+#endif // USE_VCPKG
     }
 
     return progress;
@@ -563,7 +590,9 @@ void CACHE::finish_packet(const response_type& packet)
     // sanity check
     if (mshr_entry == MSHR.end())
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print(stderr, "[{}_MSHR] {} cannot find a matching entry! address: {:#x} v_address: {:#x}\n", NAME, __func__, packet.address, packet.v_address);
+#endif // USE_VCPKG
         assert(0);
     }
 
@@ -574,9 +603,11 @@ void CACHE::finish_packet(const response_type& packet)
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[{}_MSHR] {} instr_id: {} address: {:#x} data: {:#x} type: {} to_finish: {} event: {} current: {}\n", NAME, __func__, mshr_entry->instr_id,
             mshr_entry->address, mshr_entry->data, access_type_names.at(champsim::to_underlying(mshr_entry->type)), std::size(lower_level->returned),
             mshr_entry->event_cycle, current_cycle);
+#endif // USE_VCPKG
     }
 
     // Order this entry after previously-returned entries, but before non-returned
@@ -597,7 +628,9 @@ void CACHE::finish_translation(const response_type& packet)
 
         if constexpr (champsim::debug_print)
         {
+#if (USE_VCPKG == ENABLE)
             fmt::print("[{}_TRANSLATE] finish_translation paddr: {:#x} vaddr: {:#x} cycle: {}\n", this->NAME, entry.address, entry.v_address, this->current_cycle);
+#endif // USE_VCPKG
         }
     };
 
@@ -643,8 +676,10 @@ void CACHE::issue_translation()
             {
                 if (q_entry.translate_issued)
                 {
+#if (USE_VCPKG == ENABLE)
                     fmt::print("[TRANSLATE] do_issue_translation instr_id: {} paddr: {:#x} vaddr: {:#x} cycle: {}\n", q_entry.instr_id, q_entry.address, q_entry.v_address,
                         access_type_names.at(champsim::to_underlying(q_entry.type)));
+#endif // USE_VCPKG
                 }
             }
         }
@@ -826,6 +861,7 @@ bool CACHE::should_activate_prefetcher(const T& pkt) const
 // LCOV_EXCL_START Exclude the following function from LCOV
 void CACHE::print_deadlock()
 {
+#if (USE_VCPKG == ENABLE)
     std::string_view mshr_write {"instr_id: {} address: {:#x} v_addr: {:#x} type: {} event: {}"};
     auto mshr_pack = [](const auto& entry)
     {
@@ -855,11 +891,13 @@ void CACHE::print_deadlock()
         champsim::range_print_deadlock(ul->WQ, NAME + "_WQ", q_writer, q_entry_pack);
         champsim::range_print_deadlock(ul->PQ, NAME + "_PQ", q_writer, q_entry_pack);
     }
+#endif // USE_VCPKG
 }
 
 // LCOV_EXCL_STOP
 
 #else
+/* Original code of ChampSim */
 
 CACHE::tag_lookup_type::tag_lookup_type(request_type req, bool local_pref, bool skip)
 : address(req.address), v_address(req.v_address), data(req.data), ip(req.ip), instr_id(req.instr_id), pf_metadata(req.pf_metadata), cpu(req.cpu),

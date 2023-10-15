@@ -16,7 +16,11 @@
 
 #include "ChampSim/ptw.h"
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
+#endif // USE_VCPKG
 
 #include <numeric>
 
@@ -26,7 +30,6 @@
 #include "ChampSim/instruction.h"
 #include "ChampSim/util/span.h"
 #include "ChampSim/vmem.h"
-#include "ProjectConfiguration.h" // User file
 
 PageTableWalker::PageTableWalker(Builder b)
 : champsim::operable(b.m_freq_scale), upper_levels(b.m_uls), lower_level(b.m_ll), NAME(b.m_name), MSHR_SIZE(b.m_mshr_size), MAX_READ(b.m_max_tag_check),
@@ -70,8 +73,10 @@ auto PageTableWalker::handle_read(const request_type& handle_pkt, channel_type* 
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[{}] {} address: {:#x} v_address: {:#x} pt_page_offset: {} translation_level: {}\n", NAME, __func__, fwd_mshr.address, fwd_mshr.v_address,
             walk_offset / PTE_BYTES, walk_init.level);
+#endif // USE_VCPKG
     }
 
     return step_translation(fwd_mshr);
@@ -81,9 +86,11 @@ auto PageTableWalker::handle_fill(const mshr_type& fill_mshr) -> std::optional<m
 {
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[{}] {} address: {:#x} v_address: {:#x} data: {:#x} pt_page_offset: {} translation_level: {} event: {} current: {}\n", NAME, __func__,
             fill_mshr.address, fill_mshr.v_address, fill_mshr.data, (fill_mshr.data & champsim::bitmask(LOG2_PAGE_SIZE)) >> champsim::lg2(PTE_BYTES),
             fill_mshr.translation_level, fill_mshr.event_cycle, current_cycle);
+#endif // USE_VCPKG
     }
 
     const auto pscl_idx = std::size(pscl) - fill_mshr.translation_level;
@@ -184,8 +191,10 @@ void PageTableWalker::finish_packet(const response_type& packet)
 
         if constexpr (champsim::debug_print)
         {
+#if (USE_VCPKG == ENABLE)
             fmt::print("[{}] finish_packet address: {:#x} v_address: {:#x} data: {:#x} translation_level: {}\n", NAME, mshr_entry.address, mshr_entry.v_address,
                 mshr_entry.data, mshr_entry.translation_level);
+#endif // USE_VCPKG
         }
     };
 
@@ -197,8 +206,10 @@ void PageTableWalker::finish_packet(const response_type& packet)
 
         if constexpr (champsim::debug_print)
         {
+#if (USE_VCPKG == ENABLE)
             fmt::print("[{}] complete_packet address: {:#x} v_address: {:#x} data: {:#x} translation_level: {}\n", this->NAME, mshr_entry.address, mshr_entry.v_address,
                 mshr_entry.data, mshr_entry.translation_level);
+#endif // USE_VCPKG
         }
     };
 
@@ -232,8 +243,10 @@ void PageTableWalker::begin_phase()
 // LCOV_EXCL_START Exclude the following function from LCOV
 void PageTableWalker::print_deadlock()
 {
+#if (USE_VCPKG == ENABLE)
     champsim::range_print_deadlock(MSHR, NAME + "_MSHR", "address: {:#x} v_addr: {:#x} translation_level: {} event_cycle: {}", [](const auto& entry)
         { return std::tuple {entry.address, entry.v_address, entry.translation_level, entry.event_cycle}; });
+#endif // USE_VCPKG
 }
 
 // LCOV_EXCL_STOP

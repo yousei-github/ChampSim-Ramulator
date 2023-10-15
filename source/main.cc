@@ -91,8 +91,6 @@ int main(int argc, char** argv)
     }
 #endif // USE_OPENMP
 
-    CLI::App app {"A microarchitecture simulator for research and education"};
-
     simulator_input_parameter input_parameter;
 
     /** @note Process the input parameters */
@@ -622,7 +620,9 @@ void simulation_run(const ramulator::Config& configs, ramulator::Memory<T, ramul
             cpu.show_heartbeat = false;
     }
 
+#if (USE_VCPKG == ENABLE)
     fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
+#endif // USE_VCPKG
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %ld\nSimulation Instructions: %ld\nNumber of CPUs: %ld\nPage size: %d\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
 #endif // PRINT_STATISTICS_INTO_FILE
@@ -702,7 +702,9 @@ void simulation_run(const ramulator::Config& configs, ramulator::Memory<T, ramul
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
+#if (USE_VCPKG == ENABLE)
     fmt::print("\nChampSim completed all CPUs\n\n");
+#endif // USE_VCPKG
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
 #endif // PRINT_STATISTICS_INTO_FILE
@@ -855,14 +857,18 @@ void simulation_run(const ramulator::Config& configs, ramulator::Memory<T, ramul
             cpu.show_heartbeat = false;
     }
 
+#if (USE_VCPKG == ENABLE)
     fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
+#endif // USE_VCPKG
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %ld\nSimulation Instructions: %ld\nNumber of CPUs: %ld\nPage size: %d\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
 #endif // PRINT_STATISTICS_INTO_FILE
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
+#if (USE_VCPKG == ENABLE)
     fmt::print("\nChampSim completed all CPUs\n\n");
+#endif // USE_VCPKG
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
 #endif // PRINT_STATISTICS_INTO_FILE

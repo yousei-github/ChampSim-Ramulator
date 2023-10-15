@@ -16,7 +16,11 @@
 
 #include "ChampSim/channel.h"
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
+#endif // USE_VCPKG
 
 #include <cassert>
 
@@ -150,16 +154,20 @@ bool champsim::channel::do_add_queue(R& queue, std::size_t queue_size, const typ
     {
         if constexpr (champsim::debug_print)
         {
+#if (USE_VCPKG == ENABLE)
             fmt::print("[channel] {} instr_id: {} address: {:#x} v_address: {:#x} type: {} FULL\n", __func__, packet.instr_id, packet.address, packet.v_address,
                 access_type_names.at(champsim::to_underlying(packet.type)));
+#endif // USE_VCPKG
         }
         return false; // cannot handle this request
     }
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[channel] {} instr_id: {} address: {:#x} v_address: {:#x} type: {}\n", __func__, packet.instr_id, packet.address, packet.v_address,
             access_type_names.at(champsim::to_underlying(packet.type)));
+#endif // USE_VCPKG
     }
 
     // Insert the packet ahead of the translation misses

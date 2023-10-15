@@ -16,9 +16,13 @@
 
 #include "ChampSim/ooo_cpu.h"
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/chrono.h>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+#endif // USE_VCPKG
 
 #include <algorithm>
 #include <chrono>
@@ -30,7 +34,6 @@
 #include "ChampSim/deadlock.h"
 #include "ChampSim/instruction.h"
 #include "ChampSim/util/span.h"
-#include "ProjectConfiguration.h" // User file
 
 std::chrono::seconds elapsed_time();
 
@@ -56,6 +59,7 @@ long O3_CPU::operate()
     // heartbeat
     if (show_heartbeat && (num_retired >= next_print_instruction))
     {
+#if (USE_VCPKG == ENABLE)
         auto heartbeat_instr {std::ceil(num_retired - last_heartbeat_instr)};
         auto heartbeat_cycle {std::ceil(current_cycle - last_heartbeat_cycle)};
 
@@ -64,6 +68,9 @@ long O3_CPU::operate()
 
         fmt::print("Heartbeat CPU {} instructions: {} cycles: {} heartbeat IPC: {:.4g} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", cpu,
             num_retired, current_cycle, heartbeat_instr / heartbeat_cycle, phase_instr / phase_cycle, elapsed_time());
+
+#endif // USE_VCPKG
+
         next_print_instruction += STAT_PRINTING_PERIOD;
 
         last_heartbeat_instr = num_retired;
@@ -166,7 +173,9 @@ bool O3_CPU::do_predict_branch(ooo_model_instr& arch_instr)
     {
         if constexpr (champsim::debug_print)
         {
+#if (USE_VCPKG == ENABLE)
             fmt::print("[BRANCH] instr_id: {} ip: {:#x} taken: {}\n", arch_instr.instr_id, arch_instr.ip, arch_instr.branch_taken);
+#endif // USE_VCPKG
         }
 
         // call code prefetcher every time the branch predictor is used
@@ -285,8 +294,10 @@ bool O3_CPU::do_fetch_instruction(std::deque<ooo_model_instr>::iterator begin, s
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[IFETCH] {} instr_id: {} ip: {:#x} dependents: {} event_cycle: {}\n", __func__, begin->instr_id, begin->ip,
             std::size(fetch_packet.instr_depend_on_me), begin->event_cycle);
+#endif // USE_VCPKG
     }
 
     return L1I_bus.issue_read(fetch_packet);
@@ -444,7 +455,9 @@ void O3_CPU::do_execution(ooo_model_instr& rob_entry)
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[ROB] {} instr_id: {} event_cycle: {}\n", __func__, rob_entry.instr_id, rob_entry.event_cycle);
+#endif // USE_VCPKG
     }
 }
 
@@ -469,7 +482,11 @@ void O3_CPU::do_memory_scheduling(ooo_model_instr& instr)
                 ++instr.completed_mem_ops;
 
                 if constexpr (champsim::debug_print)
+                {
+#if (USE_VCPKG == ENABLE)
                     fmt::print("[DISPATCH] {} instr_id: {} forwards_from: {}\n", __func__, instr.instr_id, sq_it->event_cycle);
+#endif // USE_VCPKG
+                }
             }
             else
             {
@@ -478,7 +495,11 @@ void O3_CPU::do_memory_scheduling(ooo_model_instr& instr)
                 (*q_entry)->producer_id = sq_it->instr_id;  // The load waits on the store to finish
 
                 if constexpr (champsim::debug_print)
+                {
+#if (USE_VCPKG == ENABLE)
                     fmt::print("[DISPATCH] {} instr_id: {} waits on: {}\n", __func__, instr.instr_id, sq_it->event_cycle);
+#endif // USE_VCPKG
+                }
             }
         }
     }
@@ -489,8 +510,10 @@ void O3_CPU::do_memory_scheduling(ooo_model_instr& instr)
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[DISPATCH] {} instr_id: {} loads: {} stores: {}\n", __func__, instr.instr_id, std::size(instr.source_memory),
             std::size(instr.destination_memory));
+#endif // USE_VCPKG
     }
 }
 
@@ -562,7 +585,9 @@ bool O3_CPU::do_complete_store(const LSQ_ENTRY& sq_entry)
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[SQ] {} instr_id: {} vaddr: {:x}\n", __func__, data_packet.instr_id, data_packet.v_address);
+#endif // USE_VCPKG
     }
 
     return L1D_bus.issue_write(data_packet);
@@ -577,7 +602,9 @@ bool O3_CPU::execute_load(const LSQ_ENTRY& lq_entry)
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[LQ] {} instr_id: {} vaddr: {:#x}\n", __func__, data_packet.instr_id, data_packet.v_address);
+#endif // USE_VCPKG
     }
 
     return L1D_bus.issue_read(data_packet);
@@ -645,7 +672,9 @@ long O3_CPU::handle_memory_return()
 
                 if constexpr (champsim::debug_print)
                 {
+#if (USE_VCPKG == ENABLE)
                     fmt::print("[IFETCH] {} instr_id: {} fetch completed\n", __func__, fetched.instr_id);
+#endif // USE_VCPKG
                 }
             }
 
@@ -685,8 +714,10 @@ long O3_CPU::retire_rob()
         { return x.executed == COMPLETED; });
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         std::for_each(retire_begin, retire_end, [](const auto& x)
             { fmt::print("[ROB] retire_rob instr_id: {} is retired\n", x.instr_id); });
+#endif // USE_VCPKG
     }
     auto retire_count = std::distance(retire_begin, retire_end);
     num_retired += retire_count;
@@ -698,6 +729,7 @@ long O3_CPU::retire_rob()
 // LCOV_EXCL_START Exclude the following function from LCOV
 void O3_CPU::print_deadlock()
 {
+#if (USE_VCPKG == ENABLE)
     fmt::print("DEADLOCK! CPU {} cycle {}\n", cpu, current_cycle);
 
     auto instr_pack = [](const auto& entry)
@@ -705,6 +737,7 @@ void O3_CPU::print_deadlock()
         return std::tuple {entry.instr_id, +entry.fetched, +entry.scheduled, +entry.executed, +entry.num_reg_dependent, entry.num_mem_ops() - entry.completed_mem_ops, entry.event_cycle};
     };
     std::string_view instr_fmt {"instr_id: {} fetched: {} scheduled: {} executed: {} num_reg_dependent: {} num_mem_ops: {} event: {}"};
+
     champsim::range_print_deadlock(IFETCH_BUFFER, "cpu" + std::to_string(cpu) + "_IFETCH", instr_fmt, instr_pack);
     champsim::range_print_deadlock(DECODE_BUFFER, "cpu" + std::to_string(cpu) + "_DECODE", instr_fmt, instr_pack);
     champsim::range_print_deadlock(DISPATCH_BUFFER, "cpu" + std::to_string(cpu) + "_DISPATCH", instr_fmt, instr_pack);
@@ -733,6 +766,7 @@ void O3_CPU::print_deadlock()
     std::string_view sq_fmt {"instr_id: {} address: {:#x} fetch_issued: {} event_cycle: {} LQ waiting: {}"};
     champsim::range_print_deadlock(LQ, "cpu" + std::to_string(cpu) + "_LQ", lq_fmt, lq_pack);
     champsim::range_print_deadlock(SQ, "cpu" + std::to_string(cpu) + "_SQ", sq_fmt, sq_pack);
+#endif // USE_VCPKG
 }
 
 // LCOV_EXCL_STOP
@@ -754,8 +788,10 @@ void LSQ_ENTRY::finish(std::deque<ooo_model_instr>::iterator begin, std::deque<o
 
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[LSQ] {} instr_id: {} full_address: {:#x} remain_mem_ops: {} event_cycle: {}\n", __func__, instr_id, virtual_address,
             rob_entry->num_mem_ops() - rob_entry->completed_mem_ops, event_cycle);
+#endif // USE_VCPKG
     }
 }
 

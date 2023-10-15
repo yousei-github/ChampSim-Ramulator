@@ -16,7 +16,11 @@
 
 #include "ChampSim/dram_controller.h"
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
+#endif // USE_VCPKG
 
 #include <algorithm>
 #include <cfenv>
@@ -26,7 +30,6 @@
 #include "ChampSim/deadlock.h"
 #include "ChampSim/instruction.h"
 #include "ChampSim/util/span.h"
-#include "ProjectConfiguration.h" // User file
 
 #if (USER_CODES == ENABLE)
 
@@ -199,32 +202,33 @@ long MEMORY_CONTROLLER::operate()
 void MEMORY_CONTROLLER::initialize()
 {
     long long int dram_size = DRAM_CHANNELS * DRAM_RANKS * DRAM_BANKS * DRAM_ROWS * DRAM_COLUMNS * BLOCK_SIZE / 1024 / 1024; // in MiB
+
+#if (USE_VCPKG == ENABLE)
     fmt::print("Off-chip DRAM Size: ");
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: ");
-#endif // PRINT_STATISTICS_INTO_FILE
-
     if (dram_size > 1024)
     {
         fmt::print("{} GiB", dram_size / 1024);
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "%lld GiB", dram_size / 1024);
-#endif // PRINT_STATISTICS_INTO_FILE
     }
     else
     {
         fmt::print("{} MiB", dram_size);
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "%lld MiB", dram_size);
-#endif // PRINT_STATISTICS_INTO_FILE
     }
     fmt::print(" Channels: {} Width: {}-bit Data Race: {} MT/s\n", DRAM_CHANNELS, 8 * DRAM_CHANNEL_WIDTH, DRAM_IO_FREQ);
 
+#endif // USE_VCPKG
+
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: ");
+    if (dram_size > 1024)
+    {
+        std::fprintf(output_statistics.file_handler, "%lld GiB", dram_size / 1024);
+    }
+    else
+    {
+        std::fprintf(output_statistics.file_handler, "%lld MiB", dram_size);
+    }
     std::fprintf(output_statistics.file_handler, " Channels: %ld Width: %ld-bit Data Race: %ld MT/s\n", DRAM_CHANNELS, 8 * DRAM_CHANNEL_WIDTH, DRAM_IO_FREQ);
+
 #endif // PRINT_STATISTICS_INTO_FILE
 }
 
@@ -432,13 +436,22 @@ void MEMORY_CONTROLLER::print_deadlock()
     int j = 0;
     for (auto& chan : channels)
     {
-        fmt::print("DRAM Channel {}\n", j++);
+#if (USE_VCPKG == ENABLE)
+        fmt::print("DRAM Channel {}\n", j);
+#endif // USE_VCPKG
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+        std::fprintf(output_statistics.file_handler, "DRAM Channel %d\n", j);
+#endif // PRINT_STATISTICS_INTO_FILE
+
         chan.print_deadlock();
+        j++;
     }
 }
 
 void DRAM_CHANNEL::print_deadlock()
 {
+#if (USE_VCPKG == ENABLE)
     std::string_view q_writer {"instr_id: {} address: {:#x} v_addr: {:#x} type: {} translated: {}"};
 
     auto q_entry_pack = [](const auto& entry)
@@ -448,6 +461,7 @@ void DRAM_CHANNEL::print_deadlock()
 
     champsim::range_print_deadlock(RQ, "RQ", q_writer, q_entry_pack);
     champsim::range_print_deadlock(WQ, "WQ", q_writer, q_entry_pack);
+#endif // USE_VCPKG
 }
 
 // LCOV_EXCL_STOP

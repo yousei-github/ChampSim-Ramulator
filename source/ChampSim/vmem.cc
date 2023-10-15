@@ -16,13 +16,16 @@
 
 #include "ChampSim/vmem.h"
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
+#endif // USE_VCPKG
 
 #include <cassert>
 
 #include "ChampSim/champsim.h"
 #include "ChampSim/champsim_constants.h"
-#include "ProjectConfiguration.h" // User file
 
 #if (USER_CODES == ENABLE)
 
@@ -36,10 +39,29 @@ VirtualMemory::VirtualMemory(uint64_t page_table_page_size, std::size_t page_tab
     assert(last_ppage > VMEM_RESERVE_CAPACITY);
 
     auto required_bits = champsim::lg2(last_ppage);
+#if (USE_VCPKG == ENABLE)
     if (required_bits > 64)
-        fmt::print("WARNING: virtual memory configuration would require {} bits of addressing.\n", required_bits); // LCOV_EXCL_LINE
+    {
+        fmt::print("WARNING: virtual memory configuration would require {} bits of addressing.\n", required_bits);
+    } // LCOV_EXCL_LINE
     if (required_bits > champsim::lg2(memory_size))
-        fmt::print("WARNING: physical memory size is smaller than virtual memory size.\n"); // LCOV_EXCL_LINE
+    {
+        fmt::print("WARNING: physical memory size is smaller than virtual memory size.\n");
+    } // LCOV_EXCL_LINE
+
+#endif // USE_VCPKG
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    if (required_bits > 64)
+    {
+        std::fprintf(output_statistics.file_handler, "WARNING: virtual memory configuration would require %d bits of addressing.\n", required_bits);
+    } // LCOV_EXCL_LINE
+    if (required_bits > champsim::lg2(memory_size))
+    {
+        std::fprintf(output_statistics.file_handler, "WARNING: physical memory size is smaller than virtual memory size.\n");
+    } // LCOV_EXCL_LINE
+
+#endif // PRINT_STATISTICS_INTO_FILE
 }
 
 uint64_t VirtualMemory::shamt(std::size_t level) const { return LOG2_PAGE_SIZE + champsim::lg2(pte_page_size / PTE_BYTES) * (level - 1); }
@@ -79,7 +101,9 @@ std::pair<uint64_t, uint64_t> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t
     auto paddr = champsim::splice_bits(ppage->second, vaddr, LOG2_PAGE_SIZE);
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[VMEM] {} paddr: {:x} vaddr: {:x} fault: {}\n", __func__, paddr, vaddr, fault);
+#endif // USE_VCPKG
     }
 
     return {paddr, fault ? minor_fault_penalty : 0};
@@ -115,13 +139,16 @@ std::pair<uint64_t, uint64_t> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64
     auto paddr  = champsim::splice_bits(ppage->second, offset * PTE_BYTES, champsim::lg2(pte_page_size));
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[VMEM] {} paddr: {:x} vaddr: {:x} pt_page_offset: {} translation_level: {} fault: {}\n", __func__, paddr, vaddr, offset, level, fault);
+#endif // USE_VCPKG
     }
 
     return {paddr, fault ? minor_fault_penalty : 0};
 }
 
 #else
+
 VirtualMemory::VirtualMemory(uint64_t page_table_page_size, std::size_t page_table_levels, uint64_t minor_penalty, MEMORY_CONTROLLER& dram)
 : next_ppage(VMEM_RESERVE_CAPACITY), last_ppage(1ull << (LOG2_PAGE_SIZE + champsim::lg2(page_table_page_size / PTE_BYTES) * page_table_levels)),
   minor_fault_penalty(minor_penalty), pt_levels(page_table_levels), pte_page_size(page_table_page_size)
@@ -131,10 +158,29 @@ VirtualMemory::VirtualMemory(uint64_t page_table_page_size, std::size_t page_tab
     assert(last_ppage > VMEM_RESERVE_CAPACITY);
 
     auto required_bits = champsim::lg2(last_ppage);
+#if (USE_VCPKG == ENABLE)
     if (required_bits > 64)
-        fmt::print("WARNING: virtual memory configuration would require {} bits of addressing.\n", required_bits); // LCOV_EXCL_LINE
+    {
+        fmt::print("WARNING: virtual memory configuration would require {} bits of addressing.\n", required_bits);
+    } // LCOV_EXCL_LINE
     if (required_bits > champsim::lg2(dram.size()))
-        fmt::print("WARNING: physical memory size is smaller than virtual memory size.\n"); // LCOV_EXCL_LINE
+    {
+        fmt::print("WARNING: physical memory size is smaller than virtual memory size.\n");
+    } // LCOV_EXCL_LINE
+
+#endif // USE_VCPKG
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    if (required_bits > 64)
+    {
+        std::fprintf(output_statistics.file_handler, "WARNING: virtual memory configuration would require %d bits of addressing.\n", required_bits);
+    } // LCOV_EXCL_LINE
+    if (required_bits > champsim::lg2(dram.size()))
+    {
+        std::fprintf(output_statistics.file_handler, "WARNING: physical memory size is smaller than virtual memory size.\n");
+    } // LCOV_EXCL_LINE
+
+#endif // PRINT_STATISTICS_INTO_FILE
 }
 
 uint64_t VirtualMemory::shamt(std::size_t level) const { return LOG2_PAGE_SIZE + champsim::lg2(pte_page_size / PTE_BYTES) * (level - 1); }
@@ -174,7 +220,9 @@ std::pair<uint64_t, uint64_t> VirtualMemory::va_to_pa(uint32_t cpu_num, uint64_t
     auto paddr = champsim::splice_bits(ppage->second, vaddr, LOG2_PAGE_SIZE);
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[VMEM] {} paddr: {:x} vaddr: {:x} fault: {}\n", __func__, paddr, vaddr, fault);
+#endif // USE_VCPKG
     }
 
     return {paddr, fault ? minor_fault_penalty : 0};
@@ -210,7 +258,9 @@ std::pair<uint64_t, uint64_t> VirtualMemory::get_pte_pa(uint32_t cpu_num, uint64
     auto paddr  = champsim::splice_bits(ppage->second, offset * PTE_BYTES, champsim::lg2(pte_page_size));
     if constexpr (champsim::debug_print)
     {
+#if (USE_VCPKG == ENABLE)
         fmt::print("[VMEM] {} paddr: {:x} vaddr: {:x} pt_page_offset: {} translation_level: {} fault: {}\n", __func__, paddr, vaddr, offset, level, fault);
+#endif // USE_VCPKG
     }
 
     return {paddr, fault ? minor_fault_penalty : 0};

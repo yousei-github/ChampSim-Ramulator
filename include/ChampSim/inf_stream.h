@@ -17,9 +17,13 @@
 #ifndef INF_STREAM_H
 #define INF_STREAM_H
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <bzlib.h>
 #include <lzma.h>
 #include <zlib.h>
+#endif // USE_VCPKG
 
 #include <cassert>
 #include <iostream>

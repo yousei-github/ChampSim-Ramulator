@@ -17,8 +17,12 @@
 #ifndef DEADLOCK_H
 #define DEADLOCK_H
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+#endif // USE_VCPKG
 
 #include <optional>
 #include <string>
@@ -28,6 +32,8 @@
 
 namespace champsim
 {
+#if (USE_VCPKG == ENABLE)
+
 namespace detail
 {
 template<typename>
@@ -81,6 +87,8 @@ void range_print_deadlock(const R& range, std::string kind_name, detail::fmtstr_
 }
 
 // LCOV_EXCL_STOP
+#endif // USE_VCPKG
+
 } // namespace champsim
 
 #endif

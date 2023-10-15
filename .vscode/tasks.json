@@ -2,7 +2,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "cppbuild",
+			"type": "shell",
 			"label": "C/C++: g++ build all files in optimization level 3",
 			"command": "/usr/bin/g++", // The path of compiler
 			"args": [
@@ -88,7 +88,7 @@
 			"detail": "compiler: /usr/bin/g++"
 		},
 		{
-			"type": "cppbuild",
+			"type": "shell",
 			"label": "C/C++: g++ build all files in default optimization",
 			"command": "/usr/bin/g++", // The path of compiler
 			"args": [

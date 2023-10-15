@@ -16,8 +16,12 @@
 
 #include "ChampSim/champsim.h"
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/chrono.h>
 #include <fmt/core.h>
+#endif // USE_VCPKG
 
 #include <algorithm>
 #include <chrono>
@@ -109,19 +113,23 @@ phase_stats do_phase(phase_info phase, environment& env, std::vector<tracereader
                 for (champsim::operable& op : operables)
                     op.end_phase(cpu.cpu);
 
+#if (USE_VCPKG == ENABLE)
                 fmt::print("{} finished CPU {} instructions: {} cycles: {} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", phase_name, cpu.cpu,
                     cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time());
+#endif // USE_VCPKG
             }
         }
 
         phase_complete = next_phase_complete;
     }
 
+#if (USE_VCPKG == ENABLE)
     for (O3_CPU& cpu : env.cpu_view())
     {
         fmt::print("{} complete CPU {} instructions: {} cycles: {} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", phase_name, cpu.cpu,
             cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time());
     }
+#endif // USE_VCPKG
 
     phase_stats stats;
     stats.name = phase.name;
@@ -238,19 +246,23 @@ phase_stats do_phase(phase_info phase, environment& env, std::vector<tracereader
                 for (champsim::operable& op : operables)
                     op.end_phase(cpu.cpu);
 
+#if (USE_VCPKG == ENABLE)
                 fmt::print("{} finished CPU {} instructions: {} cycles: {} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", phase_name, cpu.cpu,
                     cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time());
+#endif // USE_VCPKG
             }
         }
 
         phase_complete = next_phase_complete;
     }
 
+#if (USE_VCPKG == ENABLE)
     for (O3_CPU& cpu : env.cpu_view())
     {
         fmt::print("{} complete CPU {} instructions: {} cycles: {} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", phase_name, cpu.cpu,
             cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time());
     }
+#endif // USE_VCPKG
 
     phase_stats stats;
     stats.name = phase.name;
@@ -302,6 +314,7 @@ std::vector<phase_stats> main(environment& env, std::vector<phase_info>& phases,
 #endif // RAMULATOR
 
 #else
+/* Original code of ChampSim */
 
 namespace champsim
 {

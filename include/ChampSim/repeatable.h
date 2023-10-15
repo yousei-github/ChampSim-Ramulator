@@ -17,7 +17,11 @@
 #ifndef REPEATABLE_H
 #define REPEATABLE_H
 
+#include "ProjectConfiguration.h" // User file
+
+#if (USE_VCPKG == ENABLE)
 #include <fmt/ranges.h>
+#endif // USE_VCPKG
 
 #include <memory>
 #include <string>
@@ -43,7 +47,10 @@ struct repeatable
         // Reopen trace if we've reached the end of the file
         if (intern_.eof())
         {
+#if (USE_VCPKG == ENABLE)
             fmt::print("*** Reached end of trace: {}\n", args_);
+#endif // USE_VCPKG
+
             intern_ = T {std::apply([](auto... x)
                 { return T {x...}; },
                 args_)};

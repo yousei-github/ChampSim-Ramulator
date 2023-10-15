@@ -2,10 +2,16 @@
 #define __MAIN_H
 
 /* Header */
+// Includes for this project
+#include "ProjectConfiguration.h" // User file
+
 // Includes for ChampSim
+#if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
 
 #include <CLI/CLI.hpp>
+#endif // USE_VCPKG
+
 #include <algorithm>
 #include <fstream>
 #include <numeric>
@@ -55,9 +61,6 @@
 #include "Ramulator/TLDRAM.h"
 #include "Ramulator/WideIO.h"
 #include "Ramulator/WideIO2.h"
-
-// Includes for this project
-#include "ProjectConfiguration.h" // User file
 
 /* Macro */
 
