@@ -303,7 +303,7 @@ int main(int argc, char** argv)
 
     for (auto& p : input_parameter.phases)
     {
-        std::iota(std::begin(p.trace_index), std::end(p.trace_index), 0);
+        std::iota(std::begin(p.trace_index), std::end(p.trace_index), 0); // Initialize the trace index
     }
 
     /** @note Prepare the Ramulator framework */
@@ -709,11 +709,6 @@ void simulation_run(const ramulator::Config& configs, ramulator::Memory<T, ramul
     std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
 #endif // PRINT_STATISTICS_INTO_FILE
 
-#if (CPU_USE_MULTIPLE_CORES == ENABLE)
-    /** @todo Waiting for updating*/
-
-#endif // CPU_USE_MULTIPLE_CORES
-
     // This a workaround for statistics set only initially lost in the end
     memory.finish();
     memory2.finish();
@@ -872,11 +867,6 @@ void simulation_run(const ramulator::Config& configs, ramulator::Memory<T, ramul
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
 #endif // PRINT_STATISTICS_INTO_FILE
-
-#if (CPU_USE_MULTIPLE_CORES == ENABLE)
-    /** @todo Waiting for updating*/
-
-#endif // CPU_USE_MULTIPLE_CORES
 
     // This a workaround for statistics set only initially lost in the end
     memory.finish();

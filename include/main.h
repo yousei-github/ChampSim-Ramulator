@@ -93,6 +93,21 @@ public:
     champsim::channel cpu0_L1D_to_cpu0_DTLB_queues {16, 16, 16, LOG2_PAGE_SIZE, 1};
     champsim::channel cpu0_L2C_to_LLC_queues {32, 32, 32, LOG2_BLOCK_SIZE, 0};
 
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    champsim::channel cpu1_STLB_to_cpu1_PTW_queues {32, 0, 0, LOG2_PAGE_SIZE, 0};
+    champsim::channel cpu1_DTLB_to_cpu1_STLB_queues {32, 32, 32, LOG2_PAGE_SIZE, 0};
+    champsim::channel cpu1_ITLB_to_cpu1_STLB_queues {32, 32, 32, LOG2_PAGE_SIZE, 0};
+    champsim::channel cpu1_L2C_to_cpu1_STLB_queues {32, 32, 32, LOG2_PAGE_SIZE, 0};
+    champsim::channel cpu1_L1D_to_cpu1_L2C_queues {32, 32, 32, LOG2_BLOCK_SIZE, 0};
+    champsim::channel cpu1_L1I_to_cpu1_L2C_queues {32, 32, 32, LOG2_BLOCK_SIZE, 0};
+    champsim::channel cpu1_to_cpu1_L1I_queues {32, 32, 32, LOG2_BLOCK_SIZE, 1};
+    champsim::channel cpu1_PTW_to_cpu1_L1D_queues {32, 32, 32, LOG2_BLOCK_SIZE, 1};
+    champsim::channel cpu1_to_cpu1_L1D_queues {32, 32, 32, LOG2_BLOCK_SIZE, 1};
+    champsim::channel cpu1_L1I_to_cpu1_ITLB_queues {16, 16, 16, LOG2_PAGE_SIZE, 1};
+    champsim::channel cpu1_L1D_to_cpu1_DTLB_queues {16, 16, 16, LOG2_PAGE_SIZE, 1};
+    champsim::channel cpu1_L2C_to_LLC_queues {32, 32, 32, LOG2_BLOCK_SIZE, 0};
+#endif // CPU_USE_MULTIPLE_CORES
+
     // Memory controller
     MEMORY_CONTROLLER<MEMORY_TYPE, MEMORY_TYPE2> memory_controller;
 
@@ -105,12 +120,28 @@ public:
                                   .virtual_memory(&vmem)
                                   .upper_levels({&cpu0_STLB_to_cpu0_PTW_queues})
                                   .lower_level(&cpu0_PTW_to_cpu0_L1D_queues)};
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    PageTableWalker cpu1_PTW {PageTableWalker::Builder {champsim::defaults::default_ptw}
+                                  .name("cpu1_PTW")
+                                  .cpu(PTW_CPU_ID)
+                                  .virtual_memory(&vmem)
+                                  .upper_levels({&cpu1_STLB_to_cpu1_PTW_queues})
+                                  .lower_level(&cpu1_PTW_to_cpu1_L1D_queues)};
+#endif // CPU_USE_MULTIPLE_CORES
 
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    CACHE LLC {CACHE::Builder {champsim::defaults::default_llc}
+                   .name("LLC")
+                   .frequency(CACHE_CLOCK_SCALE)
+                   .upper_levels({&cpu0_L2C_to_LLC_queues, &cpu1_L2C_to_LLC_queues})
+                   .lower_level(&LLC_to_MEMORY_CONTROLLER_queues)};
+#else
     CACHE LLC {CACHE::Builder {champsim::defaults::default_llc}
                    .name("LLC")
                    .frequency(CACHE_CLOCK_SCALE)
                    .upper_levels({&cpu0_L2C_to_LLC_queues})
                    .lower_level(&LLC_to_MEMORY_CONTROLLER_queues)};
+#endif // CPU_USE_MULTIPLE_CORES
 
     CACHE cpu0_DTLB {CACHE::Builder {champsim::defaults::default_dtlb}
                          .name("cpu0_DTLB")
@@ -124,15 +155,12 @@ public:
                          .upper_levels({&cpu0_L1I_to_cpu0_ITLB_queues})
                          .lower_level(&cpu0_ITLB_to_cpu0_STLB_queues)};
 
-    CACHE cpu0_L1D {
-        CACHE::Builder {                         champsim::defaults::default_l1d}
-            .name("cpu0_L1D")
-            .frequency(CACHE_CLOCK_SCALE)
-            .upper_levels({{&cpu0_PTW_to_cpu0_L1D_queues, &cpu0_to_cpu0_L1D_queues}}
-         )
-            .lower_level(&cpu0_L1D_to_cpu0_L2C_queues)
-            .lower_translate(&cpu0_L1D_to_cpu0_DTLB_queues)
-    };
+    CACHE cpu0_L1D {CACHE::Builder {champsim::defaults::default_l1d}
+                        .name("cpu0_L1D")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu0_PTW_to_cpu0_L1D_queues, &cpu0_to_cpu0_L1D_queues})
+                        .lower_level(&cpu0_L1D_to_cpu0_L2C_queues)
+                        .lower_translate(&cpu0_L1D_to_cpu0_DTLB_queues)};
 
     CACHE cpu0_L1I {CACHE::Builder {champsim::defaults::default_l1i}
                         .name("cpu0_L1I")
@@ -141,24 +169,18 @@ public:
                         .lower_level(&cpu0_L1I_to_cpu0_L2C_queues)
                         .lower_translate(&cpu0_L1I_to_cpu0_ITLB_queues)};
 
-    CACHE cpu0_L2C {
-        CACHE::Builder {                             champsim::defaults::default_l2c}
-            .name("cpu0_L2C")
-            .frequency(CACHE_CLOCK_SCALE)
-            .upper_levels({{&cpu0_L1D_to_cpu0_L2C_queues, &cpu0_L1I_to_cpu0_L2C_queues}}
-         )
-            .lower_level(&cpu0_L2C_to_LLC_queues)
-            .lower_translate(&cpu0_L2C_to_cpu0_STLB_queues)
-    };
+    CACHE cpu0_L2C {CACHE::Builder {champsim::defaults::default_l2c}
+                        .name("cpu0_L2C")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu0_L1D_to_cpu0_L2C_queues, &cpu0_L1I_to_cpu0_L2C_queues})
+                        .lower_level(&cpu0_L2C_to_LLC_queues)
+                        .lower_translate(&cpu0_L2C_to_cpu0_STLB_queues)};
 
-    CACHE cpu0_STLB {
-        CACHE::Builder {                                                               champsim::defaults::default_stlb}
-            .name("cpu0_STLB")
-            .frequency(CACHE_CLOCK_SCALE)
-            .upper_levels({{&cpu0_DTLB_to_cpu0_STLB_queues, &cpu0_ITLB_to_cpu0_STLB_queues, &cpu0_L2C_to_cpu0_STLB_queues}}
-         )
-            .lower_level(&cpu0_STLB_to_cpu0_PTW_queues)
-    };
+    CACHE cpu0_STLB {CACHE::Builder {champsim::defaults::default_stlb}
+                         .name("cpu0_STLB")
+                         .frequency(CACHE_CLOCK_SCALE)
+                         .upper_levels({&cpu0_DTLB_to_cpu0_STLB_queues, &cpu0_ITLB_to_cpu0_STLB_queues, &cpu0_L2C_to_cpu0_STLB_queues})
+                         .lower_level(&cpu0_STLB_to_cpu0_PTW_queues)};
 
     // CPU 0
     O3_CPU cpu0 {O3_CPU::Builder {champsim::defaults::default_core}
@@ -172,9 +194,62 @@ public:
                      .fetch_queues(&cpu0_to_cpu0_L1I_queues)
                      .data_queues(&cpu0_to_cpu0_L1D_queues)};
 
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    CACHE cpu1_DTLB {CACHE::Builder {champsim::defaults::default_dtlb}
+                         .name("cpu1_DTLB")
+                         .frequency(CACHE_CLOCK_SCALE)
+                         .upper_levels({&cpu1_L1D_to_cpu1_DTLB_queues})
+                         .lower_level(&cpu1_DTLB_to_cpu1_STLB_queues)};
+
+    CACHE cpu1_ITLB {CACHE::Builder {champsim::defaults::default_itlb}
+                         .name("cpu1_ITLB")
+                         .frequency(CACHE_CLOCK_SCALE)
+                         .upper_levels({&cpu1_L1I_to_cpu1_ITLB_queues})
+                         .lower_level(&cpu1_ITLB_to_cpu1_STLB_queues)};
+
+    CACHE cpu1_L1D {CACHE::Builder {champsim::defaults::default_l1d}
+                        .name("cpu1_L1D")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu1_PTW_to_cpu1_L1D_queues, &cpu1_to_cpu1_L1D_queues})
+                        .lower_level(&cpu1_L1D_to_cpu1_L2C_queues)
+                        .lower_translate(&cpu1_L1D_to_cpu1_DTLB_queues)};
+
+    CACHE cpu1_L1I {CACHE::Builder {champsim::defaults::default_l1i}
+                        .name("cpu1_L1I")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu1_to_cpu1_L1I_queues})
+                        .lower_level(&cpu1_L1I_to_cpu1_L2C_queues)
+                        .lower_translate(&cpu1_L1I_to_cpu1_ITLB_queues)};
+
+    CACHE cpu1_L2C {CACHE::Builder {champsim::defaults::default_l2c}
+                        .name("cpu1_L2C")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu1_L1D_to_cpu1_L2C_queues, &cpu1_L1I_to_cpu1_L2C_queues})
+                        .lower_level(&cpu1_L2C_to_LLC_queues)
+                        .lower_translate(&cpu1_L2C_to_cpu1_STLB_queues)};
+
+    CACHE cpu1_STLB {CACHE::Builder {champsim::defaults::default_stlb}
+                         .name("cpu1_STLB")
+                         .frequency(CACHE_CLOCK_SCALE)
+                         .upper_levels({&cpu1_DTLB_to_cpu1_STLB_queues, &cpu1_ITLB_to_cpu1_STLB_queues, &cpu1_L2C_to_cpu1_STLB_queues})
+                         .lower_level(&cpu1_STLB_to_cpu1_PTW_queues)};
+
+    // CPU 1
+    O3_CPU cpu1 {O3_CPU::Builder {champsim::defaults::default_core}
+                     .index(CPU_1)
+                     .frequency(O3_CPU_CLOCK_SCALE)
+                     .l1i(&cpu1_L1I)
+                     .l1i_bandwidth(cpu1_L1I.MAX_TAG)
+                     .l1d_bandwidth(cpu1_L1D.MAX_TAG)
+                     .branch_predictor<BRANCH_PREDICTOR>()
+                     .btb<BRANCH_TARGET_BUFFER>()
+                     .fetch_queues(&cpu1_to_cpu1_L1I_queues)
+                     .data_queues(&cpu1_to_cpu1_L1D_queues)};
+#endif // CPU_USE_MULTIPLE_CORES
+
     generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory, ramulator::Memory<MEMORY_TYPE2, ramulator::Controller>& memory2)
     : memory_controller(MEMORY_CONTROLLER_CLOCK_SCALE, CPU_FREQUENCY / memory.spec->speed_entry.freq, CPU_FREQUENCY / memory2.spec->speed_entry.freq, {&LLC_to_MEMORY_CONTROLLER_queues}, memory, memory2),
-      vmem(4096, PAGE_TABLE_LEVELS, MINOR_FAULT_PENALTY, memory.max_address + memory2.max_address)
+      vmem(PAGE_SIZE, PAGE_TABLE_LEVELS, MINOR_FAULT_PENALTY, memory.max_address + memory2.max_address)
     {
     }
 
@@ -184,22 +259,38 @@ public:
 
     std::vector<std::reference_wrapper<O3_CPU>> cpu_view() override
     {
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        return {std::ref(cpu0), std::ref(cpu1)};
+#else
         return {std::ref(cpu0)};
+#endif // CPU_USE_MULTIPLE_CORES
     }
 
     std::vector<std::reference_wrapper<CACHE>> cache_view() override
     {
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        return {LLC, cpu0_DTLB, cpu0_ITLB, cpu0_L1D, cpu0_L1I, cpu0_L2C, cpu0_STLB, cpu1_DTLB, cpu1_ITLB, cpu1_L1D, cpu1_L1I, cpu1_L2C, cpu1_STLB};
+#else
         return {LLC, cpu0_DTLB, cpu0_ITLB, cpu0_L1D, cpu0_L1I, cpu0_L2C, cpu0_STLB};
+#endif // CPU_USE_MULTIPLE_CORES
     }
 
     std::vector<std::reference_wrapper<PageTableWalker>> ptw_view() override
     {
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        return {cpu0_PTW, cpu1_PTW};
+#else
         return {cpu0_PTW};
+#endif // CPU_USE_MULTIPLE_CORES
     }
 
     std::vector<std::reference_wrapper<champsim::operable>> operable_view() override
     {
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        return {cpu0, cpu0_PTW, cpu1, cpu1_PTW, LLC, cpu0_DTLB, cpu0_ITLB, cpu0_L1D, cpu0_L1I, cpu0_L2C, cpu0_STLB, cpu1_DTLB, cpu1_ITLB, cpu1_L1D, cpu1_L1I, cpu1_L2C, cpu1_STLB, memory_controller};
+#else
         return {cpu0, cpu0_PTW, LLC, cpu0_DTLB, cpu0_ITLB, cpu0_L1D, cpu0_L1I, cpu0_L2C, cpu0_STLB, memory_controller};
+#endif // CPU_USE_MULTIPLE_CORES
     }
 };
 } // namespace champsim::configured
@@ -226,6 +317,21 @@ public:
     champsim::channel cpu0_L1D_to_cpu0_DTLB_queues {16, 16, 16, LOG2_PAGE_SIZE, 1};
     champsim::channel cpu0_L2C_to_LLC_queues {32, 32, 32, LOG2_BLOCK_SIZE, 0};
 
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    champsim::channel cpu1_STLB_to_cpu1_PTW_queues {32, 0, 0, LOG2_PAGE_SIZE, 0};
+    champsim::channel cpu1_DTLB_to_cpu1_STLB_queues {32, 32, 32, LOG2_PAGE_SIZE, 0};
+    champsim::channel cpu1_ITLB_to_cpu1_STLB_queues {32, 32, 32, LOG2_PAGE_SIZE, 0};
+    champsim::channel cpu1_L2C_to_cpu1_STLB_queues {32, 32, 32, LOG2_PAGE_SIZE, 0};
+    champsim::channel cpu1_L1D_to_cpu1_L2C_queues {32, 32, 32, LOG2_BLOCK_SIZE, 0};
+    champsim::channel cpu1_L1I_to_cpu1_L2C_queues {32, 32, 32, LOG2_BLOCK_SIZE, 0};
+    champsim::channel cpu1_to_cpu1_L1I_queues {32, 32, 32, LOG2_BLOCK_SIZE, 1};
+    champsim::channel cpu1_PTW_to_cpu1_L1D_queues {32, 32, 32, LOG2_BLOCK_SIZE, 1};
+    champsim::channel cpu1_to_cpu1_L1D_queues {32, 32, 32, LOG2_BLOCK_SIZE, 1};
+    champsim::channel cpu1_L1I_to_cpu1_ITLB_queues {16, 16, 16, LOG2_PAGE_SIZE, 1};
+    champsim::channel cpu1_L1D_to_cpu1_DTLB_queues {16, 16, 16, LOG2_PAGE_SIZE, 1};
+    champsim::channel cpu1_L2C_to_LLC_queues {32, 32, 32, LOG2_BLOCK_SIZE, 0};
+#endif // CPU_USE_MULTIPLE_CORES
+
     // Memory controller
     MEMORY_CONTROLLER<MEMORY_TYPE> memory_controller;
 
@@ -238,12 +344,28 @@ public:
                                   .virtual_memory(&vmem)
                                   .upper_levels({&cpu0_STLB_to_cpu0_PTW_queues})
                                   .lower_level(&cpu0_PTW_to_cpu0_L1D_queues)};
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    PageTableWalker cpu1_PTW {PageTableWalker::Builder {champsim::defaults::default_ptw}
+                                  .name("cpu1_PTW")
+                                  .cpu(PTW_CPU_ID)
+                                  .virtual_memory(&vmem)
+                                  .upper_levels({&cpu1_STLB_to_cpu1_PTW_queues})
+                                  .lower_level(&cpu1_PTW_to_cpu1_L1D_queues)};
+#endif // CPU_USE_MULTIPLE_CORES
 
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    CACHE LLC {CACHE::Builder {champsim::defaults::default_llc}
+                   .name("LLC")
+                   .frequency(CACHE_CLOCK_SCALE)
+                   .upper_levels({&cpu0_L2C_to_LLC_queues, &cpu1_L2C_to_LLC_queues})
+                   .lower_level(&LLC_to_MEMORY_CONTROLLER_queues)};
+#else
     CACHE LLC {CACHE::Builder {champsim::defaults::default_llc}
                    .name("LLC")
                    .frequency(CACHE_CLOCK_SCALE)
                    .upper_levels({&cpu0_L2C_to_LLC_queues})
                    .lower_level(&LLC_to_MEMORY_CONTROLLER_queues)};
+#endif // CPU_USE_MULTIPLE_CORES
 
     CACHE cpu0_DTLB {CACHE::Builder {champsim::defaults::default_dtlb}
                          .name("cpu0_DTLB")
@@ -257,15 +379,12 @@ public:
                          .upper_levels({&cpu0_L1I_to_cpu0_ITLB_queues})
                          .lower_level(&cpu0_ITLB_to_cpu0_STLB_queues)};
 
-    CACHE cpu0_L1D {
-        CACHE::Builder {                         champsim::defaults::default_l1d}
-            .name("cpu0_L1D")
-            .frequency(CACHE_CLOCK_SCALE)
-            .upper_levels({{&cpu0_PTW_to_cpu0_L1D_queues, &cpu0_to_cpu0_L1D_queues}}
-         )
-            .lower_level(&cpu0_L1D_to_cpu0_L2C_queues)
-            .lower_translate(&cpu0_L1D_to_cpu0_DTLB_queues)
-    };
+    CACHE cpu0_L1D {CACHE::Builder {champsim::defaults::default_l1d}
+                        .name("cpu0_L1D")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu0_PTW_to_cpu0_L1D_queues, &cpu0_to_cpu0_L1D_queues})
+                        .lower_level(&cpu0_L1D_to_cpu0_L2C_queues)
+                        .lower_translate(&cpu0_L1D_to_cpu0_DTLB_queues)};
 
     CACHE cpu0_L1I {CACHE::Builder {champsim::defaults::default_l1i}
                         .name("cpu0_L1I")
@@ -274,24 +393,18 @@ public:
                         .lower_level(&cpu0_L1I_to_cpu0_L2C_queues)
                         .lower_translate(&cpu0_L1I_to_cpu0_ITLB_queues)};
 
-    CACHE cpu0_L2C {
-        CACHE::Builder {                             champsim::defaults::default_l2c}
-            .name("cpu0_L2C")
-            .frequency(CACHE_CLOCK_SCALE)
-            .upper_levels({{&cpu0_L1D_to_cpu0_L2C_queues, &cpu0_L1I_to_cpu0_L2C_queues}}
-         )
-            .lower_level(&cpu0_L2C_to_LLC_queues)
-            .lower_translate(&cpu0_L2C_to_cpu0_STLB_queues)
-    };
+    CACHE cpu0_L2C {CACHE::Builder {champsim::defaults::default_l2c}
+                        .name("cpu0_L2C")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu0_L1D_to_cpu0_L2C_queues, &cpu0_L1I_to_cpu0_L2C_queues})
+                        .lower_level(&cpu0_L2C_to_LLC_queues)
+                        .lower_translate(&cpu0_L2C_to_cpu0_STLB_queues)};
 
-    CACHE cpu0_STLB {
-        CACHE::Builder {                                                               champsim::defaults::default_stlb}
-            .name("cpu0_STLB")
-            .frequency(CACHE_CLOCK_SCALE)
-            .upper_levels({{&cpu0_DTLB_to_cpu0_STLB_queues, &cpu0_ITLB_to_cpu0_STLB_queues, &cpu0_L2C_to_cpu0_STLB_queues}}
-         )
-            .lower_level(&cpu0_STLB_to_cpu0_PTW_queues)
-    };
+    CACHE cpu0_STLB {CACHE::Builder {champsim::defaults::default_stlb}
+                         .name("cpu0_STLB")
+                         .frequency(CACHE_CLOCK_SCALE)
+                         .upper_levels({&cpu0_DTLB_to_cpu0_STLB_queues, &cpu0_ITLB_to_cpu0_STLB_queues, &cpu0_L2C_to_cpu0_STLB_queues})
+                         .lower_level(&cpu0_STLB_to_cpu0_PTW_queues)};
 
     // CPU 0
     O3_CPU cpu0 {O3_CPU::Builder {champsim::defaults::default_core}
@@ -305,9 +418,62 @@ public:
                      .fetch_queues(&cpu0_to_cpu0_L1I_queues)
                      .data_queues(&cpu0_to_cpu0_L1D_queues)};
 
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+    CACHE cpu1_DTLB {CACHE::Builder {champsim::defaults::default_dtlb}
+                         .name("cpu1_DTLB")
+                         .frequency(CACHE_CLOCK_SCALE)
+                         .upper_levels({&cpu1_L1D_to_cpu1_DTLB_queues})
+                         .lower_level(&cpu1_DTLB_to_cpu1_STLB_queues)};
+
+    CACHE cpu1_ITLB {CACHE::Builder {champsim::defaults::default_itlb}
+                         .name("cpu1_ITLB")
+                         .frequency(CACHE_CLOCK_SCALE)
+                         .upper_levels({&cpu1_L1I_to_cpu1_ITLB_queues})
+                         .lower_level(&cpu1_ITLB_to_cpu1_STLB_queues)};
+
+    CACHE cpu1_L1D {CACHE::Builder {champsim::defaults::default_l1d}
+                        .name("cpu1_L1D")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu1_PTW_to_cpu1_L1D_queues, &cpu1_to_cpu1_L1D_queues})
+                        .lower_level(&cpu1_L1D_to_cpu1_L2C_queues)
+                        .lower_translate(&cpu1_L1D_to_cpu1_DTLB_queues)};
+
+    CACHE cpu1_L1I {CACHE::Builder {champsim::defaults::default_l1i}
+                        .name("cpu1_L1I")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu1_to_cpu1_L1I_queues})
+                        .lower_level(&cpu1_L1I_to_cpu1_L2C_queues)
+                        .lower_translate(&cpu1_L1I_to_cpu1_ITLB_queues)};
+
+    CACHE cpu1_L2C {CACHE::Builder {champsim::defaults::default_l2c}
+                        .name("cpu1_L2C")
+                        .frequency(CACHE_CLOCK_SCALE)
+                        .upper_levels({&cpu1_L1D_to_cpu1_L2C_queues, &cpu1_L1I_to_cpu1_L2C_queues})
+                        .lower_level(&cpu1_L2C_to_LLC_queues)
+                        .lower_translate(&cpu1_L2C_to_cpu1_STLB_queues)};
+
+    CACHE cpu1_STLB {CACHE::Builder {champsim::defaults::default_stlb}
+                         .name("cpu1_STLB")
+                         .frequency(CACHE_CLOCK_SCALE)
+                         .upper_levels({&cpu1_DTLB_to_cpu1_STLB_queues, &cpu1_ITLB_to_cpu1_STLB_queues, &cpu1_L2C_to_cpu1_STLB_queues})
+                         .lower_level(&cpu1_STLB_to_cpu1_PTW_queues)};
+
+    // CPU 1
+    O3_CPU cpu1 {O3_CPU::Builder {champsim::defaults::default_core}
+                     .index(CPU_1)
+                     .frequency(O3_CPU_CLOCK_SCALE)
+                     .l1i(&cpu1_L1I)
+                     .l1i_bandwidth(cpu1_L1I.MAX_TAG)
+                     .l1d_bandwidth(cpu1_L1D.MAX_TAG)
+                     .branch_predictor<BRANCH_PREDICTOR>()
+                     .btb<BRANCH_TARGET_BUFFER>()
+                     .fetch_queues(&cpu1_to_cpu1_L1I_queues)
+                     .data_queues(&cpu1_to_cpu1_L1D_queues)};
+#endif // CPU_USE_MULTIPLE_CORES
+
     generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory)
     : memory_controller(MEMORY_CONTROLLER_CLOCK_SCALE, CPU_FREQUENCY / memory.spec->speed_entry.freq, {&LLC_to_MEMORY_CONTROLLER_queues}, memory),
-      vmem(4096, PAGE_TABLE_LEVELS, MINOR_FAULT_PENALTY, memory.max_address)
+      vmem(PAGE_SIZE, PAGE_TABLE_LEVELS, MINOR_FAULT_PENALTY, memory.max_address)
 
     {
     }
@@ -318,22 +484,38 @@ public:
 
     std::vector<std::reference_wrapper<O3_CPU>> cpu_view() override
     {
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        return {std::ref(cpu0), std::ref(cpu1)};
+#else
         return {std::ref(cpu0)};
+#endif // CPU_USE_MULTIPLE_CORES
     }
 
     std::vector<std::reference_wrapper<CACHE>> cache_view() override
     {
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        return {LLC, cpu0_DTLB, cpu0_ITLB, cpu0_L1D, cpu0_L1I, cpu0_L2C, cpu0_STLB, cpu1_DTLB, cpu1_ITLB, cpu1_L1D, cpu1_L1I, cpu1_L2C, cpu1_STLB};
+#else
         return {LLC, cpu0_DTLB, cpu0_ITLB, cpu0_L1D, cpu0_L1I, cpu0_L2C, cpu0_STLB};
+#endif // CPU_USE_MULTIPLE_CORES
     }
 
     std::vector<std::reference_wrapper<PageTableWalker>> ptw_view() override
     {
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        return {cpu0_PTW, cpu1_PTW};
+#else
         return {cpu0_PTW};
+#endif // CPU_USE_MULTIPLE_CORES
     }
 
     std::vector<std::reference_wrapper<champsim::operable>> operable_view() override
     {
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        return {cpu0, cpu0_PTW, cpu1, cpu1_PTW, LLC, cpu0_DTLB, cpu0_ITLB, cpu0_L1D, cpu0_L1I, cpu0_L2C, cpu0_STLB, cpu1_DTLB, cpu1_ITLB, cpu1_L1D, cpu1_L1I, cpu1_L2C, cpu1_STLB, memory_controller};
+#else
         return {cpu0, cpu0_PTW, LLC, cpu0_DTLB, cpu0_ITLB, cpu0_L1D, cpu0_L1I, cpu0_L2C, cpu0_STLB, memory_controller};
+#endif // CPU_USE_MULTIPLE_CORES
     }
 };
 } // namespace champsim::configured
