@@ -1,10 +1,10 @@
 # This file is used to list the file patterns for ignoring the tracking in git
 # ignore all files in below directories
-/bin/
 tracer/pin/obj-intel64/
 vcpkg_installed/
 
 # ignore the specified type of files (.stats/.statistics/.trace/Dockerfile/.sh)
+/bin/*
 /*.stats
 /*.statistics
 /*.trace

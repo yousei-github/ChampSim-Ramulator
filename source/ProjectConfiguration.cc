@@ -8,18 +8,37 @@ DATA_OUTPUT::DATA_OUTPUT(std::string v1, std::string v2)
 {
 }
 
+DATA_OUTPUT::DATA_OUTPUT(std::string v1, std::string v2, const char* string)
+: data_name(v1), file_extension(v2)
+{
+    output_file_initialization(string);
+}
+
+DATA_OUTPUT::DATA_OUTPUT(std::string v1, std::string v2, char** string_array, uint32_t number)
+: data_name(v1), file_extension(v2)
+{
+    output_file_initialization(string_array, number);
+}
+
 DATA_OUTPUT::~DATA_OUTPUT()
 {
-    if (file_handler) // check the validity of this file handler
+    if (file_handler) // Check the validity of this file handler
     {
         fclose(file_handler);
     }
 
-    if (file_name) // check the validity of this file name string
+    if (file_name) // Check the validity of this file name string
     {
         printf("Output %s into %s\n", data_name.c_str(), file_name);
         free(file_name);
     }
+}
+
+void DATA_OUTPUT::output_file_initialization(const char* string)
+{
+    file_handler = fopen(string, "w");
+    file_name    = (char*) malloc(strlen(string) + 1);
+    strcpy(file_name, string);
 }
 
 void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t number)
@@ -35,10 +54,10 @@ void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t numbe
         char* token           = empty;
         char* last_token      = empty;
 
-        /* get the first token */
+        /* Get the first token */
         token                 = strtok(string_temp, delimiter);
 
-        /* walk through other tokens */
+        /* Walk through other tokens */
         while (token != NULL)
         {
             last_token = token;
@@ -51,7 +70,7 @@ void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t numbe
     }
     benchmark_names.erase(benchmark_names.size() - 1);
 
-    // append file_extension to benchmark_names.
+    // Append file_extension to benchmark_names.
     benchmark_names += file_extension.c_str();
 
     file_handler = fopen(benchmark_names.c_str(), "w");
@@ -65,14 +84,13 @@ MEMORY_TRACE::MEMORY_TRACE(std::string v1, std::string v2)
 }
 
 MEMORY_TRACE::MEMORY_TRACE(std::string v1, std::string v2, char** string_array, uint32_t number)
-: DATA_OUTPUT(v1, v2)
+: DATA_OUTPUT(v1, v2, string_array, number)
 {
-    output_file_initialization(string_array, number);
 }
 
 MEMORY_TRACE::~MEMORY_TRACE()
 {
-    if (file_handler) // check the validity of this file handler
+    if (file_handler) // Check the validity of this file handler
     {
     }
 }
@@ -90,15 +108,14 @@ SIMULATOR_STATISTICS::SIMULATOR_STATISTICS(std::string v1, std::string v2)
 }
 
 SIMULATOR_STATISTICS::SIMULATOR_STATISTICS(std::string v1, std::string v2, char** string_array, uint32_t number)
-: DATA_OUTPUT(v1, v2)
+: DATA_OUTPUT(v1, v2, string_array, number)
 {
-    output_file_initialization(string_array, number);
     statistics_initialization();
 }
 
 SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
 {
-    if (file_handler) // check the validity of this file handler
+    if (file_handler) // Check the validity of this file handler
     {
         fprintf(file_handler, "\n\nInformation about virtual memory\n\n");
         for (uint64_t i = 0; i < valid_pte_count.size(); i++)

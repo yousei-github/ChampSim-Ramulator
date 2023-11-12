@@ -13,7 +13,7 @@
 #define USE_OPENMP                           (ENABLE)  // Whether use OpenMP to speedup the simulation
 #define USE_VCPKG                            (ENABLE)  // Whether use Vcpkg (Not work currently)
 #define RAMULATOR                            (ENABLE)  // Whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
-#define MEMORY_USE_HYBRID                    (DISABLE) // Whether use hybrid memory system instead of single memory systems
+#define MEMORY_USE_HYBRID                    (ENABLE)  // Whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE           (ENABLE)  // Whether print simulation statistics into files
 #define PRINT_MEMORY_TRACE                   (ENABLE)  // Whether print memory trace into files
 #define MEMORY_USE_SWAPPING_UNIT             (ENABLE)  // Whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
@@ -141,18 +141,36 @@
 
 /* Prototype */
 
-// Data output class
+/** 
+ * The primitive class for data output.
+ */
 class DATA_OUTPUT
 {
 public:
-    const std::string data_name;
-    FILE* file_handler = NULL;
-    char* file_name    = NULL;
-    const std::string file_extension;
+    const std::string data_name;      // The name of data to output
+    const std::string file_extension; // The name of file extension
+    FILE* file_handler = nullptr;
+    char* file_name    = nullptr;
 
     DATA_OUTPUT(std::string v1, std::string v2);
+    DATA_OUTPUT(std::string v1, std::string v2, const char* string);
+    DATA_OUTPUT(std::string v1, std::string v2, char** string_array, uint32_t number);
     ~DATA_OUTPUT();
 
+    /**
+     *  Initialize the output file's name based on the name of input @p string.
+     * 
+     * @param[in] string The name string.
+     */
+    void output_file_initialization(const char* string);
+
+    /**
+     *  Initialize the output file's name based on the name of input @p string_array[number].
+     *  It extracts the last name of each string from @p string_array using the delimiter "/" and concatenates them to form a single string as the result.
+     * 
+     * @param[in] string_array The string array containing a string.
+     * @param[in] number The number of strings in the string_array.
+     */
     void output_file_initialization(char** string_array, uint32_t number);
 };
 
