@@ -50,6 +50,9 @@ vcpkg_installed/
 # (6) Removing files from tracking (and your working directory):
 # git rm [name]
 
+# Removing files from tracking but leaving them in the working directory
+# git rm --cached [name]
+
 # (7) Moving files (or renaming files):
 # git mv [name_old] [name_new]
 
@@ -166,5 +169,3 @@ vcpkg_installed/
 
 # (24) Undoing your last commit, the git add and git commit commands, and all the work in your working directory:
 # git reset --hard [commit_number]
-
-
