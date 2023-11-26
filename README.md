@@ -72,7 +72,6 @@ $ ./vcpkg/vcpkg install
 Professor Daniel Jimenez at Texas A&M University kindly provided traces for DPC-3. Use the following script to download these traces (~20GB size and max simpoint only).
 ```sh
 $ cd scripts
-
 $ ./download_dpc3_traces.sh
 ```
 

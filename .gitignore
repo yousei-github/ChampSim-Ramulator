@@ -29,6 +29,9 @@ vcpkg_installed/
 # Cloning a repository from the remote using a specified name:
 # git clone -o [name] [path]
 
+# Cloning a repository from the remote as a submodule:
+# git submodule add [path]
+
 # (3) Beginning to track new files, stage files, mark merge-conflict files as resolved (i.e., add precisely this content to the next commit):
 # git add [name]
 
