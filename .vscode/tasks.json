@@ -172,6 +172,19 @@
 				"isDefault": true
 			},
 			"detail": "compiler: /usr/bin/g++"
+		},
+		{
+			"type": "shell",
+			"label": "Remove build files",
+			"command": "rm",
+			"args": [
+				"-f",
+				"Cplusplus/bin/*"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
 		}
 	]
 }
