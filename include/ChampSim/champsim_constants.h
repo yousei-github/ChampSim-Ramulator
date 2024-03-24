@@ -245,7 +245,6 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #define LLC_FILL_BANDWIDTH             (NUM_CPUS)
 
 /* PTW */
-#define PTW_CPU_ID                     (CPU_0)
 #define PTW_MSHR_SIZE                  (5)
 
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)

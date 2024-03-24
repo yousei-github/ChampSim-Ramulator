@@ -116,14 +116,14 @@ public:
 
     PageTableWalker cpu0_PTW {PageTableWalker::Builder {champsim::defaults::default_ptw}
                                   .name("cpu0_PTW")
-                                  .cpu(PTW_CPU_ID)
+                                  .cpu(CPU_0)
                                   .virtual_memory(&vmem)
                                   .upper_levels({&cpu0_STLB_to_cpu0_PTW_queues})
                                   .lower_level(&cpu0_PTW_to_cpu0_L1D_queues)};
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)
     PageTableWalker cpu1_PTW {PageTableWalker::Builder {champsim::defaults::default_ptw}
                                   .name("cpu1_PTW")
-                                  .cpu(PTW_CPU_ID)
+                                  .cpu(CPU_1)
                                   .virtual_memory(&vmem)
                                   .upper_levels({&cpu1_STLB_to_cpu1_PTW_queues})
                                   .lower_level(&cpu1_PTW_to_cpu1_L1D_queues)};
@@ -340,14 +340,14 @@ public:
 
     PageTableWalker cpu0_PTW {PageTableWalker::Builder {champsim::defaults::default_ptw}
                                   .name("cpu0_PTW")
-                                  .cpu(PTW_CPU_ID)
+                                  .cpu(CPU_0)
                                   .virtual_memory(&vmem)
                                   .upper_levels({&cpu0_STLB_to_cpu0_PTW_queues})
                                   .lower_level(&cpu0_PTW_to_cpu0_L1D_queues)};
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)
     PageTableWalker cpu1_PTW {PageTableWalker::Builder {champsim::defaults::default_ptw}
                                   .name("cpu1_PTW")
-                                  .cpu(PTW_CPU_ID)
+                                  .cpu(CPU_1)
                                   .virtual_memory(&vmem)
                                   .upper_levels({&cpu1_STLB_to_cpu1_PTW_queues})
                                   .lower_level(&cpu1_PTW_to_cpu1_L1D_queues)};

@@ -165,7 +165,7 @@ void champsim::plain_printer::print(champsim::phase_stats& stats)
         fmt::print(stream, "CPU {} runs {}", i, tn);
 #endif // USE_VCPKG
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "CPU %d runs %s", i, tn.c_str());
+        std::fprintf(output_statistics.file_handler, "CPU %d runs %s\n", i, tn.c_str());
 #endif // PRINT_STATISTICS_INTO_FILE
 
         i++;
