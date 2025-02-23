@@ -110,6 +110,12 @@ vcpkg_installed/
 # Deleting a branch in your remote:
 # git push [remote] --delete [your_branch]
 
+# Overwriting the history in your remote:
+# git push --force
+
+# Overwriting the history of a branch in your remote:
+# git push [remote] [remote_branch] --force
+
 # (16) Renaming and removing remotes:
 # git remote rename [name_old] [name_new]
 # git remote remove [name]
@@ -138,13 +144,25 @@ vcpkg_installed/
 # (20) Deleting a branch:
 # git branch -d [name]
 
-# (21) Merging a branch into the merge into branch (e.g., main):
+# (21) Merging a branch (called the merge_with_name) into the merge into branch (called the merge_into_name) which has the common ancestor (e.g., main):
 # git switch [merge_into_name]
-# git merge [merge_in_name]
+# git merge [merge_with_name]
 
 # Note you need to commit again after fixing merge conflicts if happened.
 
-# (22) Listing your current branches (parameter -v shows the last commit):
+# (22) Reapplying the patch of the change in a branch (called the merge_with_name) into the merge into branch (called the merge_into_name) which has the common ancestor (e.g., main):
+# git switch [merge_with_name]
+# git rebase [merge_into_name]
+# git switch [merge_into_name]
+# git merge [merge_with_name]
+
+# Note there is no difference in the end product of the integration between the merging and rebasing, but rebasing makes for a cleaner history.
+
+# (23) Reapplying the patch of the change of a single Git commit in a branch (called the merge_with_name) into the merge into branch (called the merge_into_name) which has the common ancestor (e.g., main):
+# git switch [merge_into_name]
+# git cherry-pick [commit_ID]
+
+# (24) Listing your current branches (parameter -v shows the last commit):
 # git branch [-v]
 
 # parameter -vv shows the last commit and the tracking branches:
@@ -161,7 +179,7 @@ vcpkg_installed/
 
 # Note using the git fetch command to update the newest data from the remotes.
 
-# (23) Seeing the changes but not yet staged:
+# (25) Seeing the changes but not yet staged:
 # git diff
 
 # Seeing the staged changes to your last commit:
@@ -170,5 +188,5 @@ vcpkg_installed/
 # Seeing a full difference between your current branch with another branch:
 # git diff [name]
 
-# (24) Undoing your last commit, the git add and git commit commands, and all the work in your working directory:
+# (26) Undoing your last commit, the git add and git commit commands, and all the work in your working directory:
 # git reset --hard [commit_number]
