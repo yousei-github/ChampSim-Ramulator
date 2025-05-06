@@ -1,72 +1,74 @@
+#include "ChampSim/replacement/lru/lru.h"
+
 #include <algorithm>
 #include <cassert>
-#include <map>
-#include <vector>
 
 #include "ChampSim/cache.h"
+#include "ProjectConfiguration.h" // User file
 
 #if (USER_CODES == ENABLE)
 
-namespace
-{
-std::map<CACHE*, std::vector<uint64_t>> last_used_cycles;
-} // namespace
+lru::lru(CACHE* cache): lru(cache, cache->NUM_SET, cache->NUM_WAY) {}
 
-void CACHE::repl_replacementDlru_initialize_replacement()
-{
-    ::last_used_cycles[this] = std::vector<uint64_t>(NUM_SET * NUM_WAY);
-}
+lru::lru(CACHE* cache, long sets, long ways): replacement(cache), NUM_WAY(ways), last_used_cycles(static_cast<std::size_t>(sets * ways), 0) {}
 
-uint32_t CACHE::repl_replacementDlru_find_victim(uint32_t triggering_cpu, uint64_t instr_id, uint32_t set, const BLOCK* current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+long lru::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, const champsim::cache_block* current_set, champsim::address ip, champsim::address full_addr, access_type type)
 {
-    auto begin  = std::next(std::begin(::last_used_cycles[this]), set * NUM_WAY);
+    auto begin  = std::next(std::begin(last_used_cycles), set * NUM_WAY);
     auto end    = std::next(begin, NUM_WAY);
 
     // Find the way whose last use cycle is most distant
     auto victim = std::min_element(begin, end);
     assert(begin <= victim);
     assert(victim < end);
-    return static_cast<uint32_t>(std::distance(begin, victim)); // cast protected by prior asserts
+    return std::distance(begin, victim);
 }
 
-void CACHE::repl_replacementDlru_update_replacement_state(uint32_t triggering_cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit)
+void lru::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, champsim::address victim_addr, access_type type)
 {
     // Mark the way as being used on the current cycle
-    if (! hit || access_type {type} != access_type::WRITE) // Skip this for writeback hits
-        ::last_used_cycles[this].at(set * NUM_WAY + way) = current_cycle;
+    last_used_cycles.at((std::size_t)(set * NUM_WAY + way)) = cycle++;
 }
 
-void CACHE::repl_replacementDlru_replacement_final_stats() {}
+void lru::update_replacement_state(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, champsim::address victim_addr, access_type type, uint8_t hit)
+{
+    // Mark the way as being used on the current cycle
+    if (hit && access_type {type} != access_type::WRITE) // Skip this for writeback hits
+        last_used_cycles.at((std::size_t)(set * NUM_WAY + way)) = cycle++;
+}
 
 #else
 
-namespace
-{
-std::map<CACHE*, std::vector<uint64_t>> last_used_cycles;
-} // namespace
+lru::lru(CACHE* cache): lru(cache, cache->NUM_SET, cache->NUM_WAY) {}
 
-void CACHE::initialize_replacement() { ::last_used_cycles[this] = std::vector<uint64_t>(NUM_SET * NUM_WAY); }
+lru::lru(CACHE* cache, long sets, long ways): replacement(cache), NUM_WAY(ways), last_used_cycles(static_cast<std::size_t>(sets * ways), 0) {}
 
-uint32_t CACHE::find_victim(uint32_t triggering_cpu, uint64_t instr_id, uint32_t set, const BLOCK* current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+long lru::find_victim(uint32_t triggering_cpu, uint64_t instr_id, long set, const champsim::cache_block* current_set, champsim::address ip,
+    champsim::address full_addr, access_type type)
 {
-    auto begin  = std::next(std::begin(::last_used_cycles[this]), set * NUM_WAY);
+    auto begin  = std::next(std::begin(last_used_cycles), set * NUM_WAY);
     auto end    = std::next(begin, NUM_WAY);
 
     // Find the way whose last use cycle is most distant
     auto victim = std::min_element(begin, end);
     assert(begin <= victim);
     assert(victim < end);
-    return static_cast<uint32_t>(std::distance(begin, victim)); // cast protected by prior asserts
+    return std::distance(begin, victim);
 }
 
-void CACHE::update_replacement_state(uint32_t triggering_cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type,
-    uint8_t hit)
+void lru::replacement_cache_fill(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip, champsim::address victim_addr,
+    access_type type)
 {
     // Mark the way as being used on the current cycle
-    if (! hit || access_type {type} != access_type::WRITE) // Skip this for writeback hits
-        ::last_used_cycles[this].at(set * NUM_WAY + way) = current_cycle;
+    last_used_cycles.at((std::size_t)(set * NUM_WAY + way)) = cycle++;
 }
 
-void CACHE::replacement_final_stats() {}
+void lru::update_replacement_state(uint32_t triggering_cpu, long set, long way, champsim::address full_addr, champsim::address ip,
+    champsim::address victim_addr, access_type type, uint8_t hit)
+{
+    // Mark the way as being used on the current cycle
+    if (hit && access_type {type} != access_type::WRITE) // Skip this for writeback hits
+        last_used_cycles.at((std::size_t)(set * NUM_WAY + way)) = cycle++;
+}
 
 #endif // USER_CODES

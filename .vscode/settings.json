@@ -73,10 +73,16 @@
         "regex": "cpp",
         "future": "cpp",
         "any": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "span": "cpp",
+        "valarray": "cpp",
+        "format": "cpp",
+        "forward_list": "cpp",
+        "charconv": "cpp"
     },
     "editor.tabSize": 4,
     "editor.indentSize": "tabSize",
     "editor.formatOnSave": true, // To format when you save your file
-    "C_Cpp.clang_format_path": "/usr/bin/clang-format", // The full path of the clang-format executable. For Linux: "/usr/bin/clang-format".
+    // Use https://marketplace.visualstudio.com/items?itemName=xaver.clang-format extension
+    "clang-format.executable": "/usr/bin/clang-format", // The full path of the clang-format executable. For Linux: "/usr/bin/clang-format".
 }

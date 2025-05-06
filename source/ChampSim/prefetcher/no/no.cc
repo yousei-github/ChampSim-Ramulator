@@ -1,39 +1,36 @@
-#include "ChampSim/cache.h"
+#include "ChampSim/prefetcher/no/no.h"
+
+#include "ProjectConfiguration.h" // User file
 
 #if (USER_CODES == ENABLE)
 
-void CACHE::pref_prefetcherDno_prefetcher_initialize() {}
+uint32_t no::prefetcher_cache_operate(champsim::address addr, champsim::address ip, uint8_t cache_hit, bool useful_prefetch, access_type type, uint32_t metadata_in)
+{
+    // assert(addr == ip); // Invariant for instruction prefetchers
+    return metadata_in;
+}
 
-uint32_t CACHE::pref_prefetcherDno_prefetcher_cache_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, bool useful_prefetch, uint8_t type, uint32_t metadata_in)
+uint32_t no::prefetcher_cache_fill(champsim::address addr, long set, long way, uint8_t prefetch, champsim::address evicted_addr, uint32_t metadata_in)
 {
     return metadata_in;
 }
 
-uint32_t CACHE::pref_prefetcherDno_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
-{
-    return metadata_in;
-}
+// uint32_t CACHE::pref_prefetcherDno_prefetcher_cache_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, bool useful_prefetch, uint8_t type, uint32_t metadata_in)
 
-void CACHE::pref_prefetcherDno_prefetcher_cycle_operate() {}
-
-void CACHE::pref_prefetcherDno_prefetcher_final_stats() {}
+// uint32_t CACHE::pref_prefetcherDno_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
 
 #else
 
-void CACHE::prefetcher_initialize() {}
-
-uint32_t CACHE::prefetcher_cache_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, bool useful_prefetch, uint8_t type, uint32_t metadata_in)
+uint32_t no::prefetcher_cache_operate(champsim::address addr, champsim::address ip, uint8_t cache_hit, bool useful_prefetch, access_type type,
+    uint32_t metadata_in)
 {
+    // assert(addr == ip); // Invariant for instruction prefetchers
     return metadata_in;
 }
 
-uint32_t CACHE::prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
+uint32_t no::prefetcher_cache_fill(champsim::address addr, long set, long way, uint8_t prefetch, champsim::address evicted_addr, uint32_t metadata_in)
 {
     return metadata_in;
 }
-
-void CACHE::prefetcher_cycle_operate() {}
-
-void CACHE::prefetcher_final_stats() {}
 
 #endif // USER_CODES

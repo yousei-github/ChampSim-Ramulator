@@ -25,10 +25,14 @@
 #include "ChampSim/ooo_cpu.h"
 #include "ChampSim/operable.h"
 #include "ChampSim/ptw.h"
+#include "ProjectConfiguration.h" // User file
 
 #if (USER_CODES == ENABLE)
 
 #if (RAMULATOR == ENABLE)
+
+#if (MEMORY_USE_HYBRID == ENABLE)
+
 namespace champsim
 {
 struct environment
@@ -38,6 +42,13 @@ struct environment
     virtual std::vector<std::reference_wrapper<PageTableWalker>> ptw_view() = 0;
     virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
 };
+
+namespace configured
+{
+template<unsigned long long ID>
+struct generated_environment;
+} // namespace configured
+
 } // namespace champsim
 
 #else
@@ -49,12 +60,20 @@ struct environment
     virtual std::vector<std::reference_wrapper<O3_CPU>> cpu_view()          = 0;
     virtual std::vector<std::reference_wrapper<CACHE>> cache_view()         = 0;
     virtual std::vector<std::reference_wrapper<PageTableWalker>> ptw_view() = 0;
-    virtual MEMORY_CONTROLLER& dram_view()                                  = 0;
     virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
 };
+
+namespace configured
+{
+
+template<unsigned long long ID, typename MEMORY_TYPE>
+struct generated_environment;
+
+} // namespace configured
+
 } // namespace champsim
 
-#endif // RAMULATOR
+#endif /* MEMORY_USE_HYBRID */
 
 #else
 /* Original code of ChampSim */
@@ -69,7 +88,17 @@ struct environment
     virtual MEMORY_CONTROLLER& dram_view()                                  = 0;
     virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
 };
+
+namespace configured
+{
+template<unsigned long long ID>
+struct generated_environment;
+} // namespace configured
+
 } // namespace champsim
-#endif // USER_CODES
+
+#endif /* RAMULATOR */
+
+#endif /* USER_CODES */
 
 #endif

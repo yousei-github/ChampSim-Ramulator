@@ -12,8 +12,8 @@
 /** Main functionalities selection */
 #define USE_OPENMP                           (ENABLE)  // Whether use OpenMP to speedup the simulation
 #define USE_VCPKG                            (ENABLE)  // Whether use Vcpkg (Not work currently)
-#define RAMULATOR                            (ENABLE)  // Whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
-#define MEMORY_USE_HYBRID                    (ENABLE)  // Whether use hybrid memory system instead of single memory systems
+#define RAMULATOR                            (DISABLE) // Whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
+#define MEMORY_USE_HYBRID                    (DISABLE) // Whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE           (ENABLE)  // Whether print simulation statistics into files
 #define PRINT_MEMORY_TRACE                   (ENABLE)  // Whether print memory trace into files
 #define MEMORY_USE_SWAPPING_UNIT             (ENABLE)  // Whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
@@ -28,7 +28,7 @@
 #define ADD_HBM_128MB      (ENABLE)
 #else
 #define NUMBER_OF_MEMORIES (1u)
-#endif // MEMORY_USE_HYBRID
+#endif /* MEMORY_USE_HYBRID */
 
 /** Configuration for swapping unit in the memory controller */
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -38,7 +38,7 @@
 #define SWAPPING_SEGMENT_NUMBER      (2)
 #define TEST_SWAPPING_UNIT           (DISABLE) /** @todo Use unit testing to test this unit */
 
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 
 /* Research proposal selection */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -51,13 +51,13 @@
 
 #if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE) && (IDEAL_SINGLE_MEMPOD == DISABLE)
 #define NO_METHOD_FOR_RUN_HYBRID_MEMORY (ENABLE)
-#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD
+#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD */
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE) // Note: it might be better become part of configurations of TRACKING_LOAD_STORE_STATISTICS like IDEAL_SINGLE_MEMPOD in line 71
 /* Option for research */
 #define TRACKING_LOAD_ONLY (ENABLE)
 #define TRACKING_READ_ONLY (ENABLE)
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
 /** Configuration for each research proposal */
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
@@ -75,18 +75,18 @@
 #define PRINT_SWAPS_PER_EPOCH_MEMPOD (DISABLE)
 #else
 #define HOTNESS_THRESHOLD (1u)
-#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD
+#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD */
 
 // Check
 #if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
 #error OS-transparent management designs need to be enabled.
-#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE */
 
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (PRINT_MEMORY_TRACE == ENABLE)
 #define CONTINUOUS_ADDRESS (ENABLE)
-#endif // PRINT_MEMORY_TRACE
+#endif /* PRINT_MEMORY_TRACE */
 
 // Data block management granularity
 #define DATA_GRANULARITY_64B   (64u)
@@ -105,21 +105,22 @@
 #define DATA_LINE_OFFSET_BITS       (champsim::lg2(DATA_GRANULARITY_64B))
 #else
 #define DATA_MANAGEMENT_GRANULARITY (DATA_GRANULARITY_64B)
-#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY
+#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY */
 
 #define DATA_MANAGEMENT_OFFSET_BITS    (champsim::lg2(DATA_MANAGEMENT_GRANULARITY)) // Data management granularity means how the hardware cluster the data
 #define DATA_GRANULARITY_IN_CACHE_LINE (DATA_MANAGEMENT_GRANULARITY / DATA_GRANULARITY_64B)
-#endif // IDEAL_SINGLE_MEMPOD
+#endif /* IDEAL_SINGLE_MEMPOD */
 
 #if (USE_OPENMP == ENABLE)
 #define SET_THREADS_NUMBER (6)
-#endif // USE_OPENMP
+#endif /* USE_OPENMP */
 
 #define KiB (1024ul) // Unit is byte
 #define MiB (KiB * KiB)
 #define GiB (MiB * KiB)
 
 /* Header */
+
 // Standard libraries
 #include <ctype.h>
 #include <stdint.h>
@@ -231,7 +232,7 @@ extern SIMULATOR_STATISTICS output_statistics;
 
 /* Function */
 
-#endif // USER_CODES
+#endif /* USER_CODES */
 
 /** @note
  *  600.perlbench_s-210B.champsimtrace.xz

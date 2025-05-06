@@ -18,14 +18,22 @@
 #define DRAM_CONTROLLER_H
 
 /* Header */
+
 #include <array>
 #include <cmath>
+#include <cstddef>  // for size_t
+#include <cstdint>  // for uint64_t, uint32_t, uint8_t
+#include <deque>    // for deque
+#include <iterator> // for end
 #include <limits>
 #include <optional>
 #include <string>
 
-#include "ChampSim/champsim_constants.h"
+#include "ChampSim/address.h"
 #include "ChampSim/channel.h"
+#include "ChampSim/chrono.h"
+#include "ChampSim/dram_stats.h"
+#include "ChampSim/extent_set.h"
 #include "ChampSim/operable.h"
 #include "ProjectConfiguration.h" // User file
 
@@ -33,7 +41,7 @@
 
 #if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
-#endif // USE_VCPKG
+#endif /* USE_VCPKG */
 
 #include <cassert>
 #include <cstdint>
@@ -44,6 +52,7 @@
 
 // Define the MEMORY_CONTROLLER class
 #if (RAMULATOR == ENABLE)
+// Use Ramulator to simulate the memory
 #include "Ramulator/Memory.h"
 #include "Ramulator/Request.h"
 
@@ -52,7 +61,10 @@
 /* Type */
 
 /* Prototype */
+
 #if (MEMORY_USE_HYBRID == ENABLE)
+// Enable hybrid memory system
+
 template<typename T, typename T2>
 class MEMORY_CONTROLLER : public champsim::operable
 {
@@ -65,8 +77,8 @@ class MEMORY_CONTROLLER : public champsim::operable
     std::vector<channel_type*> queues;
 
     void initiate_requests();
-    bool add_rq(request_type& pkt, champsim::channel* ul);
-    bool add_wq(request_type& pkt);
+    bool add_rq(request_type& packet, champsim::channel* ul);
+    bool add_wq(request_type& packet);
 
 public:
     // Note here they are the references to escape memory deallocation here.
@@ -78,7 +90,7 @@ public:
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     OS_TRANSPARENT_MANAGEMENT& os_transparent_management;
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Swapping unit */
@@ -110,14 +122,14 @@ public:
 #if (TEST_SWAPPING_UNIT == ENABLE)
 #define MEMORY_DATA_NUMBER (128)
     std::array<uint8_t, BLOCK_SIZE> memory_data[MEMORY_DATA_NUMBER] = {0};
-#endif // TEST_SWAPPING_UNIT
+#endif /* TEST_SWAPPING_UNIT */
 
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     uint64_t load_request_in_memory, load_request_in_memory2;
     uint64_t store_request_in_memory, store_request_in_memory2;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     uint64_t read_request_in_memory, read_request_in_memory2;
     uint64_t write_request_in_memory, write_request_in_memory2;
@@ -126,23 +138,29 @@ public:
     MEMORY_CONTROLLER(double freq_scale, double clock_scale, double clock_scale2, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory, ramulator::Memory<T2, ramulator::Controller>& memory2);
     ~MEMORY_CONTROLLER();
 
-    void initialize() override final;
-    long operate() override final;
-    void begin_phase() override final;
-    void end_phase(unsigned cpu) override final;
-    void print_deadlock() override final;
+    void initialize() final;
+    long operate() final;
+    void begin_phase() final;
+    void end_phase(unsigned cpu) final;
+    void print_deadlock() final;
 
-    std::size_t size() const;
+    /** 
+     * @brief
+     * Get the size of the physical space of the memory system.
+     */
+    [[nodiscard]] champsim::data::bytes size() const;
 
-    /** @brief
-     *  Get the number of valid member in the related write/read queue.
-     *  The address is physical address.
+    /** 
+     * @brief
+     * Get the number of valid member in the related write/read queue.
+     * The address is physical address.
      */
     uint32_t get_occupancy(ramulator::Request::Type queue_type, uint64_t address);
 
-    /** @brief
-     *  Get the capacity of the related write/read queue.
-     *  The address is physical address.
+    /** 
+     * @brief
+     * Get the capacity of the related write/read queue.
+     * The address is physical address.
      */
     uint32_t get_size(ramulator::Request::Type queue_type, uint64_t address);
 
@@ -169,7 +187,7 @@ private:
     uint8_t check_request(request_type& packet, ramulator::Request::Type type); // Packet needs to prepare its hardware address.
     uint8_t check_address(uint64_t address, uint8_t type);                      // The address is physical address.
 
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 };
 
 template<typename T, typename T2>
@@ -181,18 +199,18 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
 #else
 : champsim::operable(freq_scale), clock_scale(clock_scale), clock_scale2(clock_scale2),
   queues(std::move(ul)), memory(memory), memory2(memory2)
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 {
     std::printf("clock_scale: %f, clock_scale2: %f.\n", clock_scale, clock_scale2);
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     swapping_count = swapping_traffic_in_bytes = 0;
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     load_request_in_memory = load_request_in_memory2 = 0;
     store_request_in_memory = store_request_in_memory2 = 0;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     read_request_in_memory = read_request_in_memory2 = 0;
     write_request_in_memory = write_request_in_memory2 = 0;
@@ -205,25 +223,25 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scal
     {
         memory_data[i][0] = i;
     }
-#endif // TEST_SWAPPING_UNIT
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* TEST_SWAPPING_UNIT */
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 }
 
 template<typename T, typename T2>
 MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
 {
-// Print information to output_statistics
+    // Print information to output_statistics
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     output_statistics.swapping_count            = swapping_count;
     output_statistics.swapping_traffic_in_bytes = swapping_traffic_in_bytes;
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     output_statistics.load_request_in_memory   = load_request_in_memory;
     output_statistics.store_request_in_memory  = store_request_in_memory;
     output_statistics.load_request_in_memory2  = load_request_in_memory2;
     output_statistics.store_request_in_memory2 = store_request_in_memory2;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     output_statistics.read_request_in_memory   = read_request_in_memory;
     output_statistics.read_request_in_memory2  = read_request_in_memory2;
@@ -232,7 +250,7 @@ MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     delete &os_transparent_management;
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 }
 
 template<typename T, typename T2>
@@ -252,7 +270,7 @@ void MEMORY_CONTROLLER<T, T2>::initialize()
     }
     fmt::print("\n");
 
-#endif // USE_VCPKG
+#endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     std::fprintf(output_statistics.file_handler, "Memory Subsystem Size: ");
@@ -266,7 +284,7 @@ void MEMORY_CONTROLLER<T, T2>::initialize()
     }
     std::fprintf(output_statistics.file_handler, "\n");
 
-#endif // PRINT_STATISTICS_INTO_FILE
+#endif /* PRINT_STATISTICS_INTO_FILE */
 }
 
 template<typename T, typename T2>
@@ -361,8 +379,8 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             }
         }
     }
-#endif // COLOCATED_LINE_LOCATION_TABLE
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* COLOCATED_LINE_LOCATION_TABLE */
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Operate swapping below */
@@ -380,9 +398,9 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             start_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
 #elif (IDEAL_SINGLE_MEMPOD == ENABLE)
             start_swapping_segments(remapping_request.h_address_in_fm, remapping_request.h_address_in_sm, remapping_request.size);
-#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD
+#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD */
         }
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
     }
     break;
     case 1: // The swapping unit is busy
@@ -404,7 +422,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             std::cout << __func__ << ": issue_remapping_request error." << std::endl;
             assert(false);
         }
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
     }
     break;
     case 2: // The swapping unit finishes a swapping request
@@ -420,7 +438,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             is_updated = update_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
 #elif (IDEAL_SINGLE_MEMPOD == ENABLE)
             is_updated = update_swapping_segments(remapping_request.h_address_in_fm, remapping_request.h_address_in_sm, remapping_request.size);
-#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD
+#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD */
         }
         else
         {
@@ -436,7 +454,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
 #else
 
         initialize_swapping();
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
     }
     break;
     default:
@@ -452,14 +470,14 @@ long MEMORY_CONTROLLER<T, T2>::operate()
     {
         os_transparent_management.finish_remapping_request();
     }
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 #if (IDEAL_SINGLE_MEMPOD == ENABLE)
     os_transparent_management.check_interval_swap(swapping_states, warmup);
-#endif // IDEAL_SINGLE_MEMPOD
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* IDEAL_SINGLE_MEMPOD */
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     /* Operate memories below */
     static double leap_operation = 0, leap_operation2 = 0;
@@ -503,7 +521,7 @@ void MEMORY_CONTROLLER<T, T2>::begin_phase()
 template<typename T, typename T2>
 void MEMORY_CONTROLLER<T, T2>::end_phase(unsigned)
 {
-    /** No code here */
+    /* No code here */
 }
 
 // LCOV_EXCL_START Exclude the following function from LCOV
@@ -514,15 +532,15 @@ void MEMORY_CONTROLLER<T, T2>::print_deadlock()
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     std::printf("base_address[0]: %ld, base_address[1]: %ld.\n", base_address[0], base_address[1]);
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 }
 
 // LCOV_EXCL_STOP
 
 template<typename T, typename T2>
-std::size_t MEMORY_CONTROLLER<T, T2>::size() const
+champsim::data::bytes MEMORY_CONTROLLER<T, T2>::size() const
 {
-    return (memory.max_address + memory2.max_address);
+    return champsim::data::bytes {(memory.max_address + memory2.max_address)};
 }
 
 template<typename T, typename T2>
@@ -556,7 +574,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     access_type type_origin = packet.type_origin;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -565,8 +583,8 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
     os_transparent_management.memory_activity_tracking(packet.address, type, packet.type_origin, float(get_occupancy(type, packet.address)) / get_size(type, packet.address));
 #else
     os_transparent_management.memory_activity_tracking(packet.address, type, float(get_occupancy(type, packet.address)) / get_size(type, packet.address));
-#endif // TRACKING_LOAD_STORE_STATISTICS
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Check swapping below */
@@ -595,7 +613,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
     default:
         break;
     }
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 
     DRAM_CHANNEL::request_type rq_it = DRAM_CHANNEL::request_type {packet};
     rq_it.forward_checked            = false;
@@ -628,11 +646,11 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
             return false;
         }
     }
-#endif // COLOCATED_LINE_LOCATION_TABLE
+#endif /* COLOCATED_LINE_LOCATION_TABLE */
 
 #else
     address = packet.address;
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
     if (address < memory.max_address)
@@ -656,7 +674,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
                     store_request_in_memory++;
                 }
             }
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
             if (is_sm_request)
@@ -670,7 +688,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 
                 os_transparent_management.incomplete_read_request_queue.push_back(read_request);
             }
-#endif // COLOCATED_LINE_LOCATION_TABLE
+#endif /* COLOCATED_LINE_LOCATION_TABLE */
         }
     }
     else if (address < memory.max_address + memory2.max_address)
@@ -697,7 +715,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
         {
             std::printf("%s: Error!\n", __FUNCTION__);
         }
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
     }
     else
     {
@@ -707,7 +725,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 #if (PRINT_MEMORY_TRACE == ENABLE)
     // Output memory trace
     output_memorytrace.output_memory_trace_hexadecimal(address, 'R');
-#endif // PRINT_MEMORY_TRACE
+#endif /* PRINT_MEMORY_TRACE */
 
     if (stall == true)
     {
@@ -731,8 +749,8 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
     os_transparent_management.memory_activity_tracking(packet.address, type, packet.type_origin, float(get_occupancy(type, packet.address)) / get_size(type, packet.address));
 #else
     os_transparent_management.memory_activity_tracking(packet.address, type, float(get_occupancy(type, packet.address)) / get_size(type, packet.address));
-#endif // TRACKING_LOAD_STORE_STATISTICS
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Check swapping below */
@@ -754,7 +772,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
     default:
         break;
     }
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 
     DRAM_CHANNEL::request_type wq_it = DRAM_CHANNEL::request_type {packet};
     wq_it.forward_checked            = false;
@@ -792,11 +810,11 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
     {
         return false;
     }
-#endif // COLOCATED_LINE_LOCATION_TABLE
+#endif /* COLOCATED_LINE_LOCATION_TABLE */
 
 #else
     address = packet.address;
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
     if (address < memory.max_address)
@@ -828,7 +846,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
 #if (PRINT_MEMORY_TRACE == ENABLE)
     // Output memory trace.
     output_memorytrace.output_memory_trace_hexadecimal(address, 'W');
-#endif // PRINT_MEMORY_TRACE
+#endif /* PRINT_MEMORY_TRACE */
 
     if (stall == true)
     {
@@ -845,7 +863,7 @@ uint32_t MEMORY_CONTROLLER<T, T2>::get_occupancy(ramulator::Request::Type queue_
 {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management.physical_to_hardware_address(address);
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
     if (address < memory.max_address)
@@ -872,7 +890,7 @@ uint32_t MEMORY_CONTROLLER<T, T2>::get_size(ramulator::Request::Type queue_type,
 {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management.physical_to_hardware_address(address);
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
     if (address < memory.max_address)
@@ -958,7 +976,7 @@ void MEMORY_CONTROLLER<T, T2>::return_data(ramulator::Request& request)
     {
         ret->push_back(response); // Fill the response into the response queue
     }
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT && COLOCATED_LINE_LOCATION_TABLE
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT && COLOCATED_LINE_LOCATION_TABLE */
 };
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -1090,7 +1108,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
 #if (PRINT_MEMORY_TRACE == ENABLE)
                         // Output memory trace.
                         output_memorytrace.output_memory_trace_hexadecimal(address, 'R');
-#endif // PRINT_MEMORY_TRACE
+#endif /* PRINT_MEMORY_TRACE */
 
                         if (stall == true)
                         {
@@ -1143,7 +1161,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
 #if (PRINT_MEMORY_TRACE == ENABLE)
                             // Output memory trace.
                             output_memorytrace.output_memory_trace_hexadecimal(address, 'W');
-#endif // PRINT_MEMORY_TRACE
+#endif /* PRINT_MEMORY_TRACE */
 
                             if (stall == true)
                             {
@@ -1162,7 +1180,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
 
 #if (TEST_SWAPPING_UNIT == ENABLE)
                                 memory_data[i + j * MEMORY_DATA_NUMBER / 2] = buffer[i].data[j];
-#endif // TEST_SWAPPING_UNIT
+#endif /* TEST_SWAPPING_UNIT */
                             }
                         }
                     }
@@ -1234,7 +1252,7 @@ void MEMORY_CONTROLLER<T, T2>::return_swapping_data(ramulator::Request& request)
 
 #if (TEST_SWAPPING_UNIT == ENABLE)
         request.data = memory_data[entry_index];
-#endif // TEST_SWAPPING_UNIT
+#endif /* TEST_SWAPPING_UNIT */
     }
     else if ((base_address[SWAPPING_SEGMENT_TWO] <= address) && (address < (base_address[SWAPPING_SEGMENT_TWO] + active_entry_number)))
     {
@@ -1243,7 +1261,7 @@ void MEMORY_CONTROLLER<T, T2>::return_swapping_data(ramulator::Request& request)
 
 #if (TEST_SWAPPING_UNIT == ENABLE)
         request.data = memory_data[entry_index + MEMORY_DATA_NUMBER / 2];
-#endif // TEST_SWAPPING_UNIT
+#endif /* TEST_SWAPPING_UNIT */
     }
     else
     {
@@ -1330,7 +1348,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::check_address(uint64_t address, uint8_t type)
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management.physical_to_hardware_address(address);
 #else
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     address >>= LOG2_BLOCK_SIZE;
     uint8_t segment_index;
@@ -1374,9 +1392,10 @@ uint8_t MEMORY_CONTROLLER<T, T2>::check_address(uint64_t address, uint8_t type)
     return 0; // This address is under swapping.
 };
 
-#endif // MEMORY_USE_SWAPPING_UNIT
+#endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #else
+// Disable hybrid memory system
 
 template<typename T>
 class MEMORY_CONTROLLER : public champsim::operable
@@ -1411,17 +1430,23 @@ public:
     void end_phase(unsigned cpu) override final;
     void print_deadlock() override final;
 
-    std::size_t size() const;
+    /**
+     * @brief
+     * Get the size of the physical space of the memory system.
+     */
+    [[nodiscard]] champsim::data::bytes size() const;
 
-    /** @brief
-     *  Get the number of valid members in the related write/read queue.
-     *  The address is physical address.
+    /**
+     * @brief
+     * Get the number of valid members in the related write/read queue.
+     * The address is physical address.
      */
     uint32_t get_occupancy(ramulator::Request::Type queue_type, uint64_t address);
 
-    /** @brief
-     *  Get the capacity of the related write/read queue.
-     *  The address is physical address.
+    /**
+     * @brief
+     * Get the capacity of the related write/read queue.
+     * The address is physical address.
      */
     uint32_t get_size(ramulator::Request::Type queue_type, uint64_t address);
 
@@ -1464,7 +1489,7 @@ void MEMORY_CONTROLLER<T>::initialize()
     }
     fmt::print("\n");
 
-#endif // USE_VCPKG
+#endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     std::fprintf(output_statistics.file_handler, "Memory Subsystem Size: ");
@@ -1478,7 +1503,7 @@ void MEMORY_CONTROLLER<T>::initialize()
     }
     std::fprintf(output_statistics.file_handler, "\n");
 
-#endif // PRINT_STATISTICS_INTO_FILE
+#endif /* PRINT_STATISTICS_INTO_FILE */
 }
 
 template<typename T>
@@ -1520,7 +1545,7 @@ void MEMORY_CONTROLLER<T>::begin_phase()
 template<typename T>
 void MEMORY_CONTROLLER<T>::end_phase(unsigned)
 {
-    /** No code here */
+    /* No code here */
 }
 
 // LCOV_EXCL_START Exclude the following function from LCOV
@@ -1533,9 +1558,9 @@ void MEMORY_CONTROLLER<T>::print_deadlock()
 // LCOV_EXCL_STOP
 
 template<typename T>
-std::size_t MEMORY_CONTROLLER<T>::size() const
+champsim::data::bytes MEMORY_CONTROLLER<T>::size() const
 {
-    return memory.max_address;
+    return champsim::data::bytes {memory.max_address};
 }
 
 template<typename T>
@@ -1593,7 +1618,7 @@ bool MEMORY_CONTROLLER<T>::add_rq(const request_type& packet, champsim::channel*
 #if (PRINT_MEMORY_TRACE == ENABLE)
     // Output memory trace
     output_memorytrace.output_memory_trace_hexadecimal(address, 'R');
-#endif // PRINT_MEMORY_TRACE
+#endif /* PRINT_MEMORY_TRACE */
 
     if (stall == true)
     {
@@ -1638,7 +1663,7 @@ bool MEMORY_CONTROLLER<T>::add_wq(const request_type& packet)
 #if (PRINT_MEMORY_TRACE == ENABLE)
     // Output memory trace.
     output_memorytrace.output_memory_trace_hexadecimal(address, 'W');
-#endif // PRINT_MEMORY_TRACE
+#endif /* PRINT_MEMORY_TRACE */
 
     if (stall == true)
     {
@@ -1698,74 +1723,129 @@ void MEMORY_CONTROLLER<T>::return_data(ramulator::Request& request)
 #endif // MEMORY_USE_HYBRID
 
 #else
+// Use ChampSim to simulate the memory
 
-struct dram_stats
+struct DRAM_ADDRESS_MAPPING
 {
-    std::string name {};
-    uint64_t dbus_cycle_congested = 0, dbus_count_congested = 0;
+    constexpr static std::size_t SLICER_OFFSET_IDX    = 0;
+    constexpr static std::size_t SLICER_CHANNEL_IDX   = 1;
+    constexpr static std::size_t SLICER_BANKGROUP_IDX = 2;
+    constexpr static std::size_t SLICER_BANK_IDX      = 3;
+    constexpr static std::size_t SLICER_COLUMN_IDX    = 4;
+    constexpr static std::size_t SLICER_RANK_IDX      = 5;
+    constexpr static std::size_t SLICER_ROW_IDX       = 6;
 
-    unsigned WQ_ROW_BUFFER_HIT = 0, WQ_ROW_BUFFER_MISS = 0, RQ_ROW_BUFFER_HIT = 0, RQ_ROW_BUFFER_MISS = 0, WQ_FULL = 0;
+    using slicer_type                                 = champsim::extent_set<champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent>;
+    const slicer_type address_slicer;
+
+    const std::size_t prefetch_size;
+
+    DRAM_ADDRESS_MAPPING(champsim::data::bytes channel_width, std::size_t pref_size, std::size_t channels, std::size_t bankgroups, std::size_t banks, std::size_t columns, std::size_t ranks, std::size_t rows);
+    static slicer_type make_slicer(champsim::data::bytes channel_width, std::size_t pref_size, std::size_t channels, std::size_t bankgroups, std::size_t banks, std::size_t columns, std::size_t ranks, std::size_t rows);
+
+    unsigned long get_channel(champsim::address address) const;
+    unsigned long get_rank(champsim::address address) const;
+    unsigned long get_bankgroup(champsim::address address) const;
+    unsigned long get_bank(champsim::address address) const;
+    unsigned long get_row(champsim::address address) const;
+    unsigned long get_column(champsim::address address) const;
+
+    /**
+     * Perform the hashing operations for indexing our channels, banks, and bankgroups.
+     * This is done to increase parallelism when serving requests at the DRAM level.
+     *
+     * :param address: The physical address at which the hashing operation is occurring.
+     * :param segment_size: The number of row bits extracted during each iteration. (# of row bits / segment_size) == # of XOR operations
+     * :param segment_offset: The bit offset within the segment that the XOR operation will occur at. The bits taken from the segment will be [segment_offset +
+     * field_bits : segment_offset]
+     *
+     * :param field: The input index that is being permuted by the operation.
+     * :param field_bits: The length of the index in bits.
+     *
+     * Each iteration of the operation takes the selected bits of the segment and XORs them with the entirety of the field
+     * which should be equal or greater than length (in the case of the last iteration). This continues until no bits remain
+     * within the row that have not been XOR'd with the field.
+     */
+    unsigned long swizzle_bits(champsim::address address, unsigned long segment_size, champsim::data::bits segment_offset, unsigned long field, unsigned long field_bits) const;
+
+    bool is_collision(champsim::address a, champsim::address b) const;
+
+    std::size_t rows() const;
+    std::size_t columns() const;
+    std::size_t ranks() const;
+    std::size_t bankgroups() const;
+    std::size_t banks() const;
+    std::size_t channels() const;
 };
 
-struct DRAM_CHANNEL
+struct DRAM_CHANNEL final : public champsim::operable
 {
     using response_type = typename champsim::channel::response_type;
 
+    const DRAM_ADDRESS_MAPPING address_mapping;
+
     struct request_type
     {
-        bool scheduled       = false;
-        bool forward_checked = false;
+        bool scheduled                                 = false;
+        bool forward_checked                           = false;
 
-        uint8_t asid[2]      = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
+        uint8_t asid[2]                                = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
 
-        uint32_t pf_metadata = 0;
+        uint32_t pf_metadata                           = 0;
 
-        uint64_t address     = 0;
-        uint64_t v_address   = 0;
-        uint64_t data        = 0;
-        uint64_t event_cycle = std::numeric_limits<uint64_t>::max();
+        champsim::address address                      = 0;
+        champsim::address v_address                    = 0;
+        champsim::address data                         = 0;
+        champsim::chrono::clock::time_point ready_time = champsim::chrono::clock::time_point::max();
 
-        std::vector<std::reference_wrapper<ooo_model_instr> > instr_depend_on_me {};
+        std::vector<uint64_t> instr_depend_on_me {};
         std::vector<std::deque<response_type>*> to_return {};
 
-        explicit request_type(typename champsim::channel::request_type);
+        explicit request_type(const typename champsim::channel::request_type& req);
     };
 
     using value_type = request_type;
     using queue_type = std::vector<std::optional<value_type> >;
-    queue_type WQ {DRAM_WQ_SIZE}, RQ {DRAM_RQ_SIZE};
+    queue_type WQ;
+    queue_type RQ;
+
+    /*
+     * | row address | rank index | column address | bank index | channel | block
+     * offset |
+     */
 
     struct BANK_REQUEST
     {
-        bool valid = false, row_buffer_hit = false;
+        bool valid = false, row_buffer_hit = false, need_refresh = false, under_refresh = false;
 
-        std::size_t open_row = std::numeric_limits<uint32_t>::max();
+        std::optional<std::size_t> open_row {};
 
-        uint64_t event_cycle = 0;
+        champsim::chrono::clock::time_point ready_time {};
 
         queue_type::iterator pkt;
     };
 
-    using request_array_type                    = std::array<BANK_REQUEST, DRAM_RANKS * DRAM_BANKS>;
-    request_array_type bank_request             = {};
-    request_array_type::iterator active_request = std::end(bank_request);
+    const champsim::data::bytes channel_width;
 
-    bool write_mode                             = false;
-    uint64_t dbus_cycle_available               = 0;
+    using request_array_type = std::vector<BANK_REQUEST>;
+    request_array_type bank_request;
+    request_array_type::iterator active_request;
 
-    using stats_type                            = dram_stats;
+    // track bankgroup accesses
+    std::vector<champsim::chrono::clock::time_point> bankgroup_readytime {address_mapping.ranks() * address_mapping.bankgroups(), champsim::chrono::clock::time_point {}};
+
+    std::size_t bank_request_index(champsim::address addr) const;
+    std::size_t bankgroup_request_index(champsim::address addr) const;
+
+    bool write_mode = false;
+    champsim::chrono::clock::time_point dbus_cycle_available {};
+
+    std::size_t refresh_row = 0;
+    champsim::chrono::clock::time_point last_refresh {};
+    std::size_t DRAM_ROWS_PER_REFRESH;
+
+    using stats_type = dram_stats;
     stats_type roi_stats, sim_stats;
-
-    void check_collision();
-    void print_deadlock();
-};
-
-class MEMORY_CONTROLLER : public champsim::operable
-{
-    using channel_type  = champsim::channel;
-    using request_type  = typename channel_type::request_type;
-    using response_type = typename channel_type::response_type;
-    std::vector<channel_type*> queues;
 
     /** @note
      *  DRAM_IO_FREQ defined in champsim_constants.h
@@ -1791,101 +1871,33 @@ class MEMORY_CONTROLLER : public champsim::operable
      *  [reference](https://www.micron.com/-/media/client/global/documents/products/data-sheet/ddr4/8gb_ddr4_sdram.pdf, Micron 8Gb: x4, x8, x16 DDR4 SDRAM Features)
      */
     // Latencies
-    const uint64_t tRP, tRCD, tCAS, DRAM_DBUS_TURN_AROUND_TIME, DRAM_DBUS_RETURN_TIME;
+    const champsim::chrono::clock::duration tRP, tRCD, tCAS, tRAS, tREF, tRFC, DRAM_DBUS_TURN_AROUND_TIME, DRAM_DBUS_RETURN_TIME, DRAM_DBUS_BANKGROUP_STALL;
 
-    // These values control when to send out a burst of writes
-    constexpr static std::size_t DRAM_WRITE_HIGH_WM         = ((DRAM_WQ_SIZE * 7) >> 3); // 7/8th
-    constexpr static std::size_t DRAM_WRITE_LOW_WM          = ((DRAM_WQ_SIZE * 6) >> 3); // 6/8th
-    constexpr static std::size_t MIN_DRAM_WRITES_PER_SWITCH = ((DRAM_WQ_SIZE * 1) >> 2); // 1/4
+    // data bus period
+    champsim::chrono::picoseconds data_bus_period {};
 
-    void initiate_requests();
-    bool add_rq(const request_type& pkt, champsim::channel* ul);
-    bool add_wq(const request_type& pkt);
+    DRAM_CHANNEL(champsim::chrono::picoseconds dbus_period, champsim::chrono::picoseconds mc_period, std::size_t t_rp, std::size_t t_rcd, std::size_t t_cas,
+        std::size_t t_ras, champsim::chrono::microseconds refresh_period, std::size_t refreshes_per_period, champsim::data::bytes width,
+        std::size_t rq_size, std::size_t wq_size, DRAM_ADDRESS_MAPPING addr_mapping);
 
-public:
-    std::array<DRAM_CHANNEL, DRAM_CHANNELS> channels;
+    void check_write_collision();
+    void check_read_collision();
+    long finish_dbus_request();
+    long schedule_refresh();
+    void swap_write_mode();
+    long populate_dbus();
+    DRAM_CHANNEL::queue_type::iterator schedule_packet();
+    long service_packet(DRAM_CHANNEL::queue_type::iterator pkt);
 
-    MEMORY_CONTROLLER(double freq_scale, int io_freq, double t_rp, double t_rcd, double t_cas, double turnaround, std::vector<channel_type*>&& ul);
+    void initialize() final;
+    long operate() final;
+    void begin_phase() final;
+    void end_phase(unsigned cpu) final;
+    void print_deadlock() final;
 
-    void initialize() override final;
-    long operate() override final;
-    void begin_phase() override final;
-    void end_phase(unsigned cpu) override final;
-    void print_deadlock() override final;
-
-    std::size_t size() const;
-
-    uint32_t dram_get_channel(uint64_t address);
-    uint32_t dram_get_rank(uint64_t address);
-    uint32_t dram_get_bank(uint64_t address);
-    uint32_t dram_get_row(uint64_t address);
-    uint32_t dram_get_column(uint64_t address);
-};
-
-#endif // RAMULATOR
-
-#else
-/* Original code of ChampSim */
-
-struct dram_stats
-{
-    std::string name {};
-    uint64_t dbus_cycle_congested = 0, dbus_count_congested = 0;
-
-    unsigned WQ_ROW_BUFFER_HIT = 0, WQ_ROW_BUFFER_MISS = 0, RQ_ROW_BUFFER_HIT = 0, RQ_ROW_BUFFER_MISS = 0, WQ_FULL = 0;
-};
-
-struct DRAM_CHANNEL
-{
-    using response_type = typename champsim::channel::response_type;
-
-    struct request_type
-    {
-        bool scheduled       = false;
-        bool forward_checked = false;
-
-        uint8_t asid[2]      = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
-
-        uint32_t pf_metadata = 0;
-
-        uint64_t address     = 0;
-        uint64_t v_address   = 0;
-        uint64_t data        = 0;
-        uint64_t event_cycle = std::numeric_limits<uint64_t>::max();
-
-        std::vector<std::reference_wrapper<ooo_model_instr> > instr_depend_on_me {};
-        std::vector<std::deque<response_type>*> to_return {};
-
-        explicit request_type(typename champsim::channel::request_type);
-    };
-
-    using value_type = request_type;
-    using queue_type = std::vector<std::optional<value_type> >;
-    queue_type WQ {DRAM_WQ_SIZE}, RQ {DRAM_RQ_SIZE};
-
-    struct BANK_REQUEST
-    {
-        bool valid = false, row_buffer_hit = false;
-
-        std::size_t open_row = std::numeric_limits<uint32_t>::max();
-
-        uint64_t event_cycle = 0;
-
-        queue_type::iterator pkt;
-    };
-
-    using request_array_type                    = std::array<BANK_REQUEST, DRAM_RANKS * DRAM_BANKS>;
-    request_array_type bank_request             = {};
-    request_array_type::iterator active_request = std::end(bank_request);
-
-    bool write_mode                             = false;
-    uint64_t dbus_cycle_available               = 0;
-
-    using stats_type                            = dram_stats;
-    stats_type roi_stats, sim_stats;
-
-    void check_collision();
-    void print_deadlock();
+    std::size_t bank_request_capacity() const;
+    std::size_t bankgroup_request_capacity() const;
+    [[nodiscard]] champsim::data::bytes density() const;
 };
 
 class MEMORY_CONTROLLER : public champsim::operable
@@ -1894,43 +1906,229 @@ class MEMORY_CONTROLLER : public champsim::operable
     using request_type  = typename channel_type::request_type;
     using response_type = typename channel_type::response_type;
     std::vector<channel_type*> queues;
-
-    // Latencies
-    const uint64_t tRP, tRCD, tCAS, DRAM_DBUS_TURN_AROUND_TIME, DRAM_DBUS_RETURN_TIME;
-
-    // these values control when to send out a burst of writes
-    constexpr static std::size_t DRAM_WRITE_HIGH_WM         = ((DRAM_WQ_SIZE * 7) >> 3); // 7/8th
-    constexpr static std::size_t DRAM_WRITE_LOW_WM          = ((DRAM_WQ_SIZE * 6) >> 3); // 6/8th
-    constexpr static std::size_t MIN_DRAM_WRITES_PER_SWITCH = ((DRAM_WQ_SIZE * 1) >> 2); // 1/4
+    const champsim::data::bytes channel_width;
 
     void initiate_requests();
-    bool add_rq(const request_type& pkt, champsim::channel* ul);
-    bool add_wq(const request_type& pkt);
+    bool add_rq(const request_type& packet, champsim::channel* ul);
+    bool add_wq(const request_type& packet);
+
+    const DRAM_ADDRESS_MAPPING address_mapping;
+
+    // data bus period
+    champsim::chrono::picoseconds data_bus_period {};
 
 public:
-    std::array<DRAM_CHANNEL, DRAM_CHANNELS> channels;
+    std::vector<DRAM_CHANNEL> channels;
 
-    MEMORY_CONTROLLER(double freq_scale, int io_freq, double t_rp, double t_rcd, double t_cas, double turnaround, std::vector<channel_type*>&& ul);
+    MEMORY_CONTROLLER(champsim::chrono::picoseconds dbus_period, champsim::chrono::picoseconds mc_period, std::size_t t_rp, std::size_t t_rcd, std::size_t t_cas,
+        std::size_t t_ras, champsim::chrono::microseconds refresh_period, std::vector<channel_type*>&& ul, std::size_t rq_size, std::size_t wq_size,
+        std::size_t chans, champsim::data::bytes chan_width, std::size_t rows, std::size_t columns, std::size_t ranks, std::size_t bankgroups,
+        std::size_t banks, std::size_t refreshes_per_period);
 
-    void initialize() override final;
-    long operate() override final;
-    void begin_phase() override final;
-    void end_phase(unsigned cpu) override final;
-    void print_deadlock() override final;
+    void initialize() final;
+    long operate() final;
+    void begin_phase() final;
+    void end_phase(unsigned cpu) final;
+    void print_deadlock() final;
 
-    std::size_t size() const;
-
-    uint32_t dram_get_channel(uint64_t address);
-    uint32_t dram_get_rank(uint64_t address);
-    uint32_t dram_get_bank(uint64_t address);
-    uint32_t dram_get_row(uint64_t address);
-    uint32_t dram_get_column(uint64_t address);
+    [[nodiscard]] champsim::data::bytes size() const;
 };
 
-#endif // USER_CODES
+#endif /* RAMULATOR */
 
-    /* Variable */
+#else
+/* Original code of ChampSim */
 
-    /* Function */
+struct DRAM_ADDRESS_MAPPING
+{
+    constexpr static std::size_t SLICER_OFFSET_IDX    = 0;
+    constexpr static std::size_t SLICER_CHANNEL_IDX   = 1;
+    constexpr static std::size_t SLICER_BANKGROUP_IDX = 2;
+    constexpr static std::size_t SLICER_BANK_IDX      = 3;
+    constexpr static std::size_t SLICER_COLUMN_IDX    = 4;
+    constexpr static std::size_t SLICER_RANK_IDX      = 5;
+    constexpr static std::size_t SLICER_ROW_IDX       = 6;
+
+    using slicer_type                                 = champsim::extent_set<champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent, champsim::dynamic_extent>;
+    const slicer_type address_slicer;
+
+    const std::size_t prefetch_size;
+
+    DRAM_ADDRESS_MAPPING(champsim::data::bytes channel_width, std::size_t pref_size, std::size_t channels, std::size_t bankgroups, std::size_t banks, std::size_t columns, std::size_t ranks, std::size_t rows);
+    static slicer_type make_slicer(champsim::data::bytes channel_width, std::size_t pref_size, std::size_t channels, std::size_t bankgroups, std::size_t banks, std::size_t columns, std::size_t ranks, std::size_t rows);
+
+    unsigned long get_channel(champsim::address address) const;
+    unsigned long get_rank(champsim::address address) const;
+    unsigned long get_bankgroup(champsim::address address) const;
+    unsigned long get_bank(champsim::address address) const;
+    unsigned long get_row(champsim::address address) const;
+    unsigned long get_column(champsim::address address) const;
+
+    /**
+     * Perform the hashing operations for indexing our channels, banks, and bankgroups.
+     * This is done to increase parallelism when serving requests at the DRAM level.
+     *
+     * :param address: The physical address at which the hashing operation is occurring.
+     * :param segment_size: The number of row bits extracted during each iteration. (# of row bits / segment_size) == # of XOR operations
+     * :param segment_offset: The bit offset within the segment that the XOR operation will occur at. The bits taken from the segment will be [segment_offset +
+     * field_bits : segment_offset]
+     *
+     * :param field: The input index that is being permuted by the operation.
+     * :param field_bits: The length of the index in bits.
+     *
+     * Each iteration of the operation takes the selected bits of the segment and XORs them with the entirety of the field
+     * which should be equal or greater than length (in the case of the last iteration). This continues until no bits remain
+     * within the row that have not been XOR'd with the field.
+     */
+    unsigned long swizzle_bits(champsim::address address, unsigned long segment_size, champsim::data::bits segment_offset, unsigned long field, unsigned long field_bits) const;
+
+    bool is_collision(champsim::address a, champsim::address b) const;
+
+    std::size_t rows() const;
+    std::size_t columns() const;
+    std::size_t ranks() const;
+    std::size_t bankgroups() const;
+    std::size_t banks() const;
+    std::size_t channels() const;
+};
+
+struct DRAM_CHANNEL final : public champsim::operable
+{
+    using response_type = typename champsim::channel::response_type;
+
+    const DRAM_ADDRESS_MAPPING address_mapping;
+
+    struct request_type
+    {
+        bool scheduled                                 = false;
+        bool forward_checked                           = false;
+
+        uint8_t asid[2]                                = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
+
+        uint32_t pf_metadata                           = 0;
+
+        champsim::address address                      = 0;
+        champsim::address v_address                    = 0;
+        champsim::address data                         = 0;
+        champsim::chrono::clock::time_point ready_time = champsim::chrono::clock::time_point::max();
+
+        std::vector<uint64_t> instr_depend_on_me {};
+        std::vector<std::deque<response_type>*> to_return {};
+
+        explicit request_type(const typename champsim::channel::request_type& req);
+    };
+
+    using value_type = request_type;
+    using queue_type = std::vector<std::optional<value_type> >;
+    queue_type WQ;
+    queue_type RQ;
+
+    /*
+     * | row address | rank index | column address | bank index | channel | block
+     * offset |
+     */
+
+    struct BANK_REQUEST
+    {
+        bool valid = false, row_buffer_hit = false, need_refresh = false, under_refresh = false;
+
+        std::optional<std::size_t> open_row {};
+
+        champsim::chrono::clock::time_point ready_time {};
+
+        queue_type::iterator pkt;
+    };
+
+    const champsim::data::bytes channel_width;
+
+    using request_array_type = std::vector<BANK_REQUEST>;
+    request_array_type bank_request;
+    request_array_type::iterator active_request;
+
+    // track bankgroup accesses
+    std::vector<champsim::chrono::clock::time_point> bankgroup_readytime {address_mapping.ranks() * address_mapping.bankgroups(), champsim::chrono::clock::time_point {}};
+
+    std::size_t bank_request_index(champsim::address addr) const;
+    std::size_t bankgroup_request_index(champsim::address addr) const;
+
+    bool write_mode = false;
+    champsim::chrono::clock::time_point dbus_cycle_available {};
+
+    std::size_t refresh_row = 0;
+    champsim::chrono::clock::time_point last_refresh {};
+    std::size_t DRAM_ROWS_PER_REFRESH;
+
+    using stats_type = dram_stats;
+    stats_type roi_stats, sim_stats;
+
+    // Latencies
+    const champsim::chrono::clock::duration tRP, tRCD, tCAS, tRAS, tREF, tRFC, DRAM_DBUS_TURN_AROUND_TIME, DRAM_DBUS_RETURN_TIME, DRAM_DBUS_BANKGROUP_STALL;
+
+    // data bus period
+    champsim::chrono::picoseconds data_bus_period {};
+
+    DRAM_CHANNEL(champsim::chrono::picoseconds dbus_period, champsim::chrono::picoseconds mc_period, std::size_t t_rp, std::size_t t_rcd, std::size_t t_cas,
+        std::size_t t_ras, champsim::chrono::microseconds refresh_period, std::size_t refreshes_per_period, champsim::data::bytes width,
+        std::size_t rq_size, std::size_t wq_size, DRAM_ADDRESS_MAPPING addr_mapping);
+
+    void check_write_collision();
+    void check_read_collision();
+    long finish_dbus_request();
+    long schedule_refresh();
+    void swap_write_mode();
+    long populate_dbus();
+    DRAM_CHANNEL::queue_type::iterator schedule_packet();
+    long service_packet(DRAM_CHANNEL::queue_type::iterator pkt);
+
+    void initialize() final;
+    long operate() final;
+    void begin_phase() final;
+    void end_phase(unsigned cpu) final;
+    void print_deadlock() final;
+
+    std::size_t bank_request_capacity() const;
+    std::size_t bankgroup_request_capacity() const;
+    [[nodiscard]] champsim::data::bytes density() const;
+};
+
+class MEMORY_CONTROLLER : public champsim::operable
+{
+    using channel_type  = champsim::channel;
+    using request_type  = typename channel_type::request_type;
+    using response_type = typename channel_type::response_type;
+    std::vector<channel_type*> queues;
+    const champsim::data::bytes channel_width;
+
+    void initiate_requests();
+    bool add_rq(const request_type& packet, champsim::channel* ul);
+    bool add_wq(const request_type& packet);
+
+    const DRAM_ADDRESS_MAPPING address_mapping;
+
+    // data bus period
+    champsim::chrono::picoseconds data_bus_period {};
+
+public:
+    std::vector<DRAM_CHANNEL> channels;
+
+    MEMORY_CONTROLLER(champsim::chrono::picoseconds dbus_period, champsim::chrono::picoseconds mc_period, std::size_t t_rp, std::size_t t_rcd, std::size_t t_cas,
+        std::size_t t_ras, champsim::chrono::microseconds refresh_period, std::vector<channel_type*>&& ul, std::size_t rq_size, std::size_t wq_size,
+        std::size_t chans, champsim::data::bytes chan_width, std::size_t rows, std::size_t columns, std::size_t ranks, std::size_t bankgroups,
+        std::size_t banks, std::size_t refreshes_per_period);
+
+    void initialize() final;
+    long operate() final;
+    void begin_phase() final;
+    void end_phase(unsigned cpu) final;
+    void print_deadlock() final;
+
+    [[nodiscard]] champsim::data::bytes size() const;
+};
+
+#endif /* USER_CODES */
+
+/* Variable */
+
+/* Function */
 
 #endif

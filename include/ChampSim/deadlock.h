@@ -22,7 +22,7 @@
 #if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
 #include <fmt/ranges.h>
-#endif // USE_VCPKG
+#endif /* USE_VCPKG */
 
 #include <optional>
 #include <string>
@@ -87,7 +87,8 @@ void range_print_deadlock(const R& range, std::string kind_name, detail::fmtstr_
 }
 
 // LCOV_EXCL_STOP
-#endif // USE_VCPKG
+
+#endif /* USE_VCPKG */
 
 } // namespace champsim
 

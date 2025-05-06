@@ -18,14 +18,16 @@
 #error "Modules should include msl/lru_table.h"
 #endif
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef UTIL_LRU_TABLE_H
+#define UTIL_LRU_TABLE_H
 
 #include "ChampSim/msl/lru_table.h"
 
 namespace champsim
 {
+
 using msl::lru_table;
+
 } // namespace champsim
 
 #endif

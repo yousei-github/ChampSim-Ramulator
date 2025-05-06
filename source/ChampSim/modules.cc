@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef MODULE_IMPL_H
-#define MODULE_IMPL_H
+#include "ChampSim/modules.h"
 
-namespace champsim
+#include "ChampSim/cache.h"
+
+bool champsim::modules::prefetcher::prefetch_line(champsim::address pf_addr, bool fill_this_level, uint32_t prefetch_metadata) const
 {
+    return intern_->prefetch_line(pf_addr, fill_this_level, prefetch_metadata);
+}
 
-namespace detail
+// LCOV_EXCL_START Exclude deprecated function
+bool champsim::modules::prefetcher::prefetch_line(uint64_t pf_addr, bool fill_this_level, uint32_t prefetch_metadata) const
 {
-template<typename T>
-struct take_last
-{
-    T operator()(T, T last) const { return last; }
-};
-} // namespace detail
+    return prefetch_line(champsim::address {pf_addr}, fill_this_level, prefetch_metadata);
+}
 
-} // namespace champsim
-
-#endif
+// LCOV_EXCL_STOP
