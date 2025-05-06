@@ -16,7 +16,15 @@ This project is based on the master branch of [ChampSim](https://github.com/yous
 The CPU's parameters are defined in the `./inc/ChampSim/champsim_constants.h` file.
 
 ## ChampSim
-[ChampSim](https://github.com/ChampSim/ChampSim) is a trace-based simulator for a microarchitecture study. You can sign up to the public mailing list by sending an empty mail to champsim+subscribe@googlegroups.com. If you have questions about how to use ChampSim, you can often receive a quicker response on the mailing list. Please reserve GitHub Issues for bugs. Traces for the 3rd Data Prefetching Championship (DPC-3) can be found from here (https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/). A set of traces used for the 2nd Cache Replacement Championship (CRC-2) can be found from this link. (http://bit.ly/2t2nkUj)
+[ChampSim](https://github.com/ChampSim/ChampSim) is a trace-based simulator for a microarchitecture study. If you have questions about how to use ChampSim, we encourage you to search the threads in the [Discussions tab](https://github.com/ChampSim/ChampSim/discussions) or start your own thread. If you are aware of a bug or have a feature request, open a new [Issue](https://github.com/ChampSim/ChampSim/issues).
+
+Because ChampSim is the result of academic research, if you use this software in your work, please cite it using the following reference:
+
+    Gober, N., Chacon, G., Wang, L., Gratz, P. V., Jimenez, D. A., Teran, E., Pugsley, S., & Kim, J. (2022). The Championship Simulator: Architectural Simulation for Education and Competition. https://doi.org/10.48550/arXiv.2210.14324
+
+If you use ChampSim in your work, you may submit a pull request modifying [`PUBLICATIONS_USING_CHAMPSIM.bib`](https://github.com/ChampSim/ChampSim/blob/master/PUBLICATIONS_USING_CHAMPSIM.bib) to have it featured in [the documentation](https://champsim.github.io/ChampSim/master/Publications-using-champsim.html).
+
+Traces for the 3rd Data Prefetching Championship (DPC-3) can be found from here (https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/). A set of traces used for the 2nd Cache Replacement Championship (CRC-2) can be found from this link. (http://bit.ly/2t2nkUj)
 
 Storage for these traces is kindly provided by Daniel Jimenez (Texas A&M University) and Mike Ferdman (Stony Brook University). If you find yourself frequently using ChampSim, it is highly encouraged that you maintain your own repository of traces, in case the links ever break.
 
