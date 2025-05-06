@@ -59,7 +59,7 @@ struct repeatable
         return intern_();
     }
 
-    bool eof() const { return false; }
+    [[nodiscard]] bool eof() const { return false; }
 };
 } // namespace champsim
 
