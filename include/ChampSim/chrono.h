@@ -14,21 +14,37 @@
  * limitations under the License.
  */
 
-#ifndef MODULE_IMPL_H
-#define MODULE_IMPL_H
+#ifndef CHRONO_H
+#define CHRONO_H
+
+#include <chrono>
 
 namespace champsim
 {
+namespace chrono
+{
+using std::chrono::microseconds;
+using std::chrono::milliseconds;
+using std::chrono::nanoseconds;
+using std::chrono::seconds;
+using picoseconds = std::chrono::duration<std::intmax_t, std::pico>;
 
-namespace detail
+class clock
 {
-template<typename T>
-struct take_last
-{
-    T operator()(T, T last) const { return last; }
+public:
+  using duration = picoseconds;
+  using time_point = std::chrono::time_point<clock>;
+  using rep = typename duration::rep;
+  using period = typename duration::period;
+
+  constexpr static bool is_steady = false;
+  time_point now() const noexcept;
+  void tick(duration amount);
+
+private:
+  time_point m_now{};
 };
-} // namespace detail
-
+} // namespace chrono
 } // namespace champsim
 
 #endif

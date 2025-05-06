@@ -2,15 +2,16 @@
 #define __MAIN_H
 
 /* Header */
+
 // Includes for this project
 #include "ProjectConfiguration.h" // User file
 
-// Includes for ChampSim
+// Includes of ChampSim
 #if (USE_VCPKG == ENABLE)
 #include <fmt/core.h>
 
 #include <CLI/CLI.hpp>
-#endif // USE_VCPKG
+#endif /* USE_VCPKG */
 
 #include <algorithm>
 #include <fstream>
@@ -18,17 +19,23 @@
 #include <string>
 #include <vector>
 
+#include "ChampSim/cache.h" // for CACHE
 #include "ChampSim/champsim.h"
-#include "ChampSim/champsim_constants.h"
+
+#ifndef CHAMPSIM_TEST_BUILD
+#include "ChampSim/core_inst.inc"
+#endif
+
 #include "ChampSim/defaults.hpp"
 #include "ChampSim/dram_controller.h"
 #include "ChampSim/environment.h"
+#include "ChampSim/ooo_cpu.h" // for O3_CPU
 #include "ChampSim/phase_info.h"
 #include "ChampSim/stats_printer.h"
 #include "ChampSim/tracereader.h"
 #include "ChampSim/vmem.h"
 
-// Includes for Ramulator
+// Includes of Ramulator
 #include <stdlib.h>
 
 #include <cstdio>
@@ -45,7 +52,7 @@
 #include "Ramulator/SpeedyController.h"
 #include "Ramulator/Statistics.h"
 
-// Standards
+/// Standards of Ramulator
 #include "Ramulator/ALDRAM.h"
 #include "Ramulator/DDR3.h"
 #include "Ramulator/DDR4.h"
@@ -67,6 +74,7 @@
 /* Type */
 
 /* Prototype */
+
 #if (USER_CODES == ENABLE)
 
 #if (RAMULATOR == ENABLE)
@@ -697,12 +705,13 @@ struct generated_environment final : public champsim::environment
     }
 };
 } // namespace champsim::configured
-#endif // RAMULATOR
+
+#endif /* RAMULATOR */
 
 /* Variable */
 
 /* Function */
 
-#endif // USER_CODES
+#endif /* USER_CODES */
 
 #endif

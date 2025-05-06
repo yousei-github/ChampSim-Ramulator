@@ -17,6 +17,7 @@
 #ifndef OPERABLE_H
 #define OPERABLE_H
 
+#include "ChampSim/chrono.h"
 #include "ProjectConfiguration.h" // User file
 
 #if (USER_CODES == ENABLE)
@@ -28,37 +29,16 @@ namespace champsim
 class operable
 {
 public:
-    const double CLOCK_SCALE;
+    champsim::chrono::picoseconds clock_period {};
+    champsim::chrono::clock::time_point current_time {};
+    bool warmup = true;
 
-    double leap_operation  = 0;
-    uint64_t current_cycle = 0;
-    bool warmup            = true;
+    operable();
+    virtual ~operable() = default;
+    explicit operable(champsim::chrono::picoseconds clock_period);
 
-    explicit operable(double scale): CLOCK_SCALE(scale - 1) {}
-
-    long _operate()
-    {
-#if (RAMULATOR == ENABLE)
-#else
-        // skip periodically
-        if (leap_operation >= 1)
-        {
-            leap_operation -= 1;
-            return 0;
-        }
-#endif // RAMULATOR
-
-        auto result = operate();
-
-#if (RAMULATOR == ENABLE)
-#else
-        leap_operation += CLOCK_SCALE;
-#endif // RAMULATOR
-
-        ++current_cycle;
-
-        return result;
-    }
+    long _operate();
+    long operate_on(const champsim::chrono::clock& clock);
 
     virtual void initialize() {} // LCOV_EXCL_LINE
 
@@ -66,45 +46,58 @@ public:
 
     virtual void begin_phase() {} // LCOV_EXCL_LINE
 
-    virtual void end_phase(unsigned) {} // LCOV_EXCL_LINE
+    virtual void end_phase(unsigned /*cpu index*/) {} // LCOV_EXCL_LINE
 
     virtual void print_deadlock() {} // LCOV_EXCL_LINE
+
+    [[deprecated]] uint64_t current_cycle() const;
 };
 
 } // namespace champsim
+
+/** @todo check past code */
+
+//     long _operate()
+//     {
+// #if (RAMULATOR == ENABLE)
+// #else
+//         // skip periodically
+//         if (leap_operation >= 1)
+//         {
+//             leap_operation -= 1;
+//             return 0;
+//         }
+// #endif // RAMULATOR
+
+//         auto result = operate();
+
+// #if (RAMULATOR == ENABLE)
+// #else
+//         leap_operation += CLOCK_SCALE;
+// #endif // RAMULATOR
+
+//         ++current_cycle;
+
+//         return result;
+//     }
 
 #else
 
 namespace champsim
 {
-
 class operable
 {
 public:
-    const double CLOCK_SCALE;
+    champsim::chrono::picoseconds clock_period {};
+    champsim::chrono::clock::time_point current_time {};
+    bool warmup = true;
 
-    double leap_operation  = 0;
-    uint64_t current_cycle = 0;
-    bool warmup            = true;
+    operable();
+    virtual ~operable() = default;
+    explicit operable(champsim::chrono::picoseconds clock_period);
 
-    explicit operable(double scale): CLOCK_SCALE(scale - 1) {}
-
-    long _operate()
-    {
-        // skip periodically
-        if (leap_operation >= 1)
-        {
-            leap_operation -= 1;
-            return 0;
-        }
-
-        auto result = operate();
-
-        leap_operation += CLOCK_SCALE;
-        ++current_cycle;
-
-        return result;
-    }
+    long _operate();
+    long operate_on(const champsim::chrono::clock& clock);
 
     virtual void initialize() {} // LCOV_EXCL_LINE
 
@@ -112,9 +105,11 @@ public:
 
     virtual void begin_phase() {} // LCOV_EXCL_LINE
 
-    virtual void end_phase(unsigned) {} // LCOV_EXCL_LINE
+    virtual void end_phase(unsigned /*cpu index*/) {} // LCOV_EXCL_LINE
 
     virtual void print_deadlock() {} // LCOV_EXCL_LINE
+
+    [[deprecated]] uint64_t current_cycle() const;
 };
 
 } // namespace champsim

@@ -12,7 +12,7 @@
 /** Main functionalities selection */
 #define USE_OPENMP                           (ENABLE)  // Whether use OpenMP to speedup the simulation
 #define USE_VCPKG                            (ENABLE)  // Whether use Vcpkg (Not work currently)
-#define RAMULATOR                            (ENABLE)  // Whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
+#define RAMULATOR                            (DISABLE) // Whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
 #define MEMORY_USE_HYBRID                    (ENABLE)  // Whether use hybrid memory system instead of single memory systems
 #define PRINT_STATISTICS_INTO_FILE           (ENABLE)  // Whether print simulation statistics into files
 #define PRINT_MEMORY_TRACE                   (ENABLE)  // Whether print memory trace into files
