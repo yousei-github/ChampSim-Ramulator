@@ -22,7 +22,7 @@
 #include <fmt/chrono.h>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
-#endif // USE_VCPKG
+#endif /* USE_VCPKG */
 
 #include <algorithm>
 #include <chrono>
@@ -36,6 +36,8 @@
 #include "ChampSim/util/span.h"
 
 std::chrono::seconds elapsed_time();
+
+constexpr long long STAT_PRINTING_PERIOD = 10000000;
 
 long O3_CPU::operate()
 {
@@ -57,27 +59,34 @@ long O3_CPU::operate()
     initialize_instruction();
 
     // heartbeat
-    if (show_heartbeat && (num_retired >= next_print_instruction))
+    if (show_heartbeat && (num_retired >= (last_heartbeat_instr + STAT_PRINTING_PERIOD)))
     {
-#if (USE_VCPKG == ENABLE)
+        using double_duration = std::chrono::duration<double, typename champsim::chrono::picoseconds::period>;
+
+#if (USE_VCPKG == ENABLE) || (PRINT_STATISTICS_INTO_FILE == ENABLE)
         auto heartbeat_instr {std::ceil(num_retired - last_heartbeat_instr)};
-        auto heartbeat_cycle {std::ceil(current_cycle - last_heartbeat_cycle)};
+        auto heartbeat_cycle {double_duration {current_time - last_heartbeat_time} / clock_period};
 
         auto phase_instr {std::ceil(num_retired - begin_phase_instr)};
-        auto phase_cycle {std::ceil(current_cycle - begin_phase_cycle)};
+        auto phase_cycle {double_duration {current_time - begin_phase_time} / clock_period};
+#endif /* USE_VCPKG, PRINT_STATISTICS_INTO_FILE */
 
+#if (USE_VCPKG == ENABLE)
         fmt::print("Heartbeat CPU {} instructions: {} cycles: {} heartbeat IPC: {:.4g} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", cpu,
-            num_retired, current_cycle, heartbeat_instr / heartbeat_cycle, phase_instr / phase_cycle, elapsed_time());
+            num_retired, current_time.time_since_epoch() / clock_period, heartbeat_instr / heartbeat_cycle, phase_instr / phase_cycle, elapsed_time());
 
-#endif // USE_VCPKG
+#endif /* USE_VCPKG */
 
-        next_print_instruction += STAT_PRINTING_PERIOD;
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+        std::fprintf(output_statistics.file_handler, "Heartbeat CPU %d instructions: %lld cycles: %lld heartbeat IPC: %.4f cumulative IPC: %.4f (Simulation time: {:%H hr %M min %d sec})\n", cpu,
+            num_retired, current_time.time_since_epoch() / clock_period, heartbeat_instr / heartbeat_cycle, phase_instr / phase_cycle, elapsed_time());
+#endif /* PRINT_STATISTICS_INTO_FILE */
 
         last_heartbeat_instr = num_retired;
-        last_heartbeat_cycle = current_cycle;
+        last_heartbeat_time  = current_time;
     }
 
-    return progress;
+    return progress; /** @todo */
 }
 
 void O3_CPU::initialize()
