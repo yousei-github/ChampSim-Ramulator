@@ -18,16 +18,24 @@
 #define CHAMPSIM_H
 
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
-#include <vector>
+#include <limits>
 
-#include "ChampSim/environment.h"
-#include "ChampSim/phase_info.h"
-#include "ChampSim/tracereader.h"
+#include "ChampSim/extent.h"
+#include "ChampSim/util/bit_enum.h"
+#include "ChampSim/util/ratio.h"
 #include "ProjectConfiguration.h" // User file
+
+extern const std::size_t NUM_CPUS;
+extern const unsigned BLOCK_SIZE;
+extern const unsigned PAGE_SIZE;
+extern const unsigned LOG2_BLOCK_SIZE;
+extern const unsigned LOG2_PAGE_SIZE;
 
 namespace champsim
 {
+
 struct deadlock : public std::exception
 {
     const uint32_t which;
@@ -41,9 +49,48 @@ constexpr bool debug_print = true;
 constexpr bool debug_print = false;
 #endif
 
+template<typename Extent>
+class address_slice;
+
+namespace data
+{
+template<typename Rep, typename Unit>
+class size;
+
+/**
+ * Convenience definitions for common data types
+ */
+using bytes     = size<long long, std::ratio<1>>;
+using kibibytes = size<long long, kibi>;
+using mebibytes = size<long long, mebi>;
+using gibibytes = size<long long, gibi>;
+using tebibytes = size<long long, tebi>;
+// using blocks = size<long long, std::ratio<BLOCK_SIZE>>;
+// using pages = size<long long, std::ratio<PAGE_SIZE>>;
+} // namespace data
+
+/**
+ * Convenience definitions for commmon address slices
+ */
+using address      = address_slice<static_extent<champsim::data::bits {std::numeric_limits<uint64_t>::digits}, champsim::data::bits {}>>;
+using block_number = address_slice<block_number_extent>;
+using block_offset = address_slice<block_offset_extent>;
+using page_number  = address_slice<page_number_extent>;
+using page_offset  = address_slice<page_offset_extent>;
+
+/**
+ * Get the lowest possible address for which the space between it and zero is the given size.
+ */
+auto lowest_address_for_size(data::bytes sz) -> address;
+
+/**
+ * Get the lowest possible address for which the space between it and zero is the given bit width.
+ */
+auto lowest_address_for_width(data::bits width) -> address;
+
 #if (USER_CODES == ENABLE)
 std::vector<phase_stats> main(environment& env, std::vector<phase_info>& phases, std::vector<tracereader>& traces);
-#endif // USER_CODES
+#endif /* USER_CODES */
 
 } // namespace champsim
 
