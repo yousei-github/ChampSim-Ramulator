@@ -38,6 +38,13 @@ struct environment
     virtual std::vector<std::reference_wrapper<PageTableWalker>> ptw_view() = 0;
     virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
 };
+
+namespace configured
+{
+template<unsigned long long ID>
+struct generated_environment;
+} // namespace configured
+
 } // namespace champsim
 
 #else
@@ -52,9 +59,16 @@ struct environment
     virtual MEMORY_CONTROLLER& dram_view()                                  = 0;
     virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
 };
+
+namespace configured
+{
+template<unsigned long long ID>
+struct generated_environment;
+} // namespace configured
+
 } // namespace champsim
 
-#endif // RAMULATOR
+#endif /* RAMULATOR */
 
 #else
 /* Original code of ChampSim */
@@ -69,7 +83,15 @@ struct environment
     virtual MEMORY_CONTROLLER& dram_view()                                  = 0;
     virtual std::vector<std::reference_wrapper<operable>> operable_view()   = 0;
 };
+
+namespace configured
+{
+template<unsigned long long ID>
+struct generated_environment;
+} // namespace configured
+
 } // namespace champsim
-#endif // USER_CODES
+
+#endif /* USER_CODES */
 
 #endif
