@@ -136,7 +136,8 @@ bool CACHE::handle_fill(const mshr_type& fill_mshr)
             writeback_packet.response_requested = false;
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
             writeback_packet.type_origin = access_type::WRITE; // WRITEBACK
-#endif                                                         // TRACKING_LOAD_STORE_STATISTICS
+
+#endif // TRACKING_LOAD_STORE_STATISTICS
 
             if constexpr (champsim::debug_print)
             {
