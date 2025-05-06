@@ -128,7 +128,7 @@ public:
         MIGRATION_GRANULARITY_WIDTH granularity_stats                = 0;   // Store the best granularity for this page
         MIGRATION_GRANULARITY_WIDTH granularity_predict_stats        = 0;   // Store the predicted granularity for this page
 
-#endif // STATISTICS_INFORMATION
+#endif /* STATISTICS_INFORMATION */
 
         AccessDistribution()
         {
@@ -143,7 +143,7 @@ public:
                 access_stats[i]          = false;
                 temporal_access_stats[i] = false;
             }
-#endif // STATISTICS_INFORMATION
+#endif /* STATISTICS_INFORMATION */
         };
     };
 
@@ -196,7 +196,7 @@ private:
 #if (COLD_DATA_DETECTION_IN_GROUP == ENABLE)
     // Detect cold data block in group
     void cold_data_detection_in_group(uint64_t source_address);
-#endif // COLD_DATA_DETECTION_IN_GROUP
+#endif /* COLD_DATA_DETECTION_IN_GROUP */
 
     // Evict cold data block
     bool cold_data_eviction(uint64_t source_address, float queue_busy_degree);
@@ -214,7 +214,7 @@ private:
     START_ADDRESS_WIDTH round_down_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
 };
 
-#endif // IDEAL_VARIABLE_GRANULARITY
+#endif /* IDEAL_VARIABLE_GRANULARITY */
 
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
-#endif // VARIABLE_GRANULARITY_H
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
+#endif /* VARIABLE_GRANULARITY_H */

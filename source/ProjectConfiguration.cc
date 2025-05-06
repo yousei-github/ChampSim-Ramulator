@@ -204,7 +204,7 @@ SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
         fprintf(file_handler, "load_request_in_memory: %ld, load_request_in_memory2: %ld.\n", load_request_in_memory, load_request_in_memory2);
         fprintf(file_handler, "store_request_in_memory: %ld, store_request_in_memory2: %ld.\n", store_request_in_memory, store_request_in_memory2);
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
         fprintf(file_handler, "swapping_count: %ld, swapping_traffic_in_bytes: %ld.\n", swapping_count, swapping_traffic_in_bytes);
 
@@ -218,7 +218,7 @@ SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
         fprintf(file_handler, "data_eviction_success: %ld (%f).\n", data_eviction_success, data_eviction_success / float(total_access_request_in_memory));
         fprintf(file_handler, "data_eviction_failure: %ld (%f).\n", data_eviction_failure, data_eviction_failure / float(total_access_request_in_memory));
         fprintf(file_handler, "uncertain_counter: %ld (%f).\n", uncertain_counter, uncertain_counter / float(total_access_request_in_memory));
-#endif // IDEAL_VARIABLE_GRANULARITY
+#endif /* IDEAL_VARIABLE_GRANULARITY */
     }
 }
 
@@ -236,7 +236,7 @@ void SIMULATOR_STATISTICS::statistics_initialization()
     load_request_in_memory2  = 0;
     store_request_in_memory  = 0;
     store_request_in_memory2 = 0;
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     read_request_in_memory             = 0;
     read_request_in_memory2            = 0;
@@ -255,5 +255,5 @@ void SIMULATOR_STATISTICS::statistics_initialization()
     unexpandable_since_no_invalid_group = 0;
     data_eviction_success = data_eviction_failure = 0;
     uncertain_counter                             = 0;
-#endif // IDEAL_VARIABLE_GRANULARITY
+#endif /* IDEAL_VARIABLE_GRANULARITY */
 }

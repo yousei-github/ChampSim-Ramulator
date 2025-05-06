@@ -283,7 +283,7 @@ public:
 
 #if (USER_CODES == ENABLE)
         Stats::statlist.update_read_latency_sum(read_latency_sum.value());
-#endif // USER_CODES
+#endif /* USER_CODES */
     }
 
     /* Member Functions */
@@ -333,7 +333,7 @@ public:
         Queue& queue = get_queue(req.type);
         return queue.max;
     }
-#endif // USER_CODES
+#endif /* USER_CODES */
 
     void tick()
     {

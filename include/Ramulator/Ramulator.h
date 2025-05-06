@@ -99,4 +99,4 @@ protected:
 };
 */
 
-#endif // __RAMULATOR_H__
+#endif /* __RAMULATOR_H__ */

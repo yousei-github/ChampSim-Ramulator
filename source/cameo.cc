@@ -15,7 +15,7 @@ OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint6
   line_location_table(*(new std::vector<LOCATION_TABLE_ENTRY_WIDTH>(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS, LOCATION_TABLE_ENTRY_DEFAULT_VALUE)))
 #else
   line_location_table(*(new std::vector<LocationTableEntry>(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS)))
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 {
     hotness_threshold                            = HOTNESS_THRESHOLD;
     remapping_request_queue_congestion           = 0;
@@ -48,14 +48,14 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     {
         return true;
     }
-#endif // TRACKING_LOAD_ONLY
+#endif /* TRACKING_LOAD_ONLY */
 
 #if (TRACKING_READ_ONLY)
     if (type == ramulator::Request::Type::WRITE) // Memory Write is ignored
     {
         return true;
     }
-#endif // TRACKING_READ_ONLY
+#endif /* TRACKING_READ_ONLY */
 
     if (address >= total_capacity)
     {
@@ -80,7 +80,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     REMAPPING_LOCATION_WIDTH remapping_location = champsim::get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
 #else
     REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
     if (type == ramulator::Request::Type::READ) // For read request
     {
@@ -121,7 +121,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 #if (BITS_MANIPULATION == ENABLE)
         uint8_t fm_msb_in_location_table_entry;
         uint8_t fm_lsb_in_location_table_entry;
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
         REMAPPING_LOCATION_WIDTH fm_remapping_location;
 
@@ -135,7 +135,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
             fm_remapping_location          = champsim::get_bits(line_location_table.at(line_location_table_index), fm_msb_in_location_table_entry, fm_lsb_in_location_table_entry);
 #else
             fm_remapping_location = line_location_table.at(line_location_table_index).location[i];
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
             if (fm_remapping_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
             {
@@ -162,7 +162,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 #else
             std::printf("line_location_table.at(%ld)\n", line_location_table_index);
             std::printf("remapping_location: %d, fm_remapping_location: %d.\n", remapping_location, fm_remapping_location);
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
             abort();
         }
 
@@ -210,7 +210,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     REMAPPING_LOCATION_WIDTH remapping_location = champsim::get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
 #else
     REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
     if (type == ramulator::Request::Type::READ) // For read request
     {
@@ -251,7 +251,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 #if (BITS_MANIPULATION == ENABLE)
         uint8_t fm_msb_in_location_table_entry;
         uint8_t fm_lsb_in_location_table_entry;
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
         REMAPPING_LOCATION_WIDTH fm_remapping_location;
 
@@ -265,7 +265,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
             fm_remapping_location          = champsim::get_bits(line_location_table.at(line_location_table_index), fm_msb_in_location_table_entry, fm_lsb_in_location_table_entry);
 #else
             fm_remapping_location = line_location_table.at(line_location_table_index).location[i];
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
             if (fm_remapping_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
             {
@@ -292,7 +292,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 #else
             std::printf("line_location_table.at(%ld)\n", line_location_table_index);
             std::printf("remapping_location: %d, fm_remapping_location: %d.\n", remapping_location, fm_remapping_location);
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
             abort();
         }
 
@@ -313,11 +313,11 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 
     return true;
 };
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
 void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packet)
 {
-    uint64_t data_block_address        = packet.address >> DATA_MANAGEMENT_OFFSET_BITS;
+    uint64_t data_block_address        = packet.address.to<uint64_t>() >> DATA_MANAGEMENT_OFFSET_BITS;
     uint64_t line_location_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;
     REMAPPING_LOCATION_WIDTH location  = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity);
 
@@ -328,13 +328,13 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packe
     REMAPPING_LOCATION_WIDTH remapping_location = champsim::get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
 #else
     REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
-    packet.h_address = champsim::replace_bits(champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(remapping_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address, DATA_MANAGEMENT_OFFSET_BITS - 1);
+    packet.h_address = champsim::replace_bits(champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(remapping_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_MANAGEMENT_OFFSET_BITS - 1);
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     packet.h_address_fm = champsim::replace_bits(champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(RemappingLocation::Zero) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address, DATA_MANAGEMENT_OFFSET_BITS - 1);
-#endif // COLOCATED_LINE_LOCATION_TABLE
+#endif /* COLOCATED_LINE_LOCATION_TABLE */
 };
 
 void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
@@ -350,7 +350,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
     REMAPPING_LOCATION_WIDTH remapping_location = champsim::get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
 #else
     REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
     address = champsim::replace_bits(champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(remapping_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), address, DATA_MANAGEMENT_OFFSET_BITS - 1);
 };
@@ -394,7 +394,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
 
         line_location_table.at(line_location_table_index).location[remapping_request.sm_location] = fm_remapping_location;
         line_location_table.at(line_location_table_index).location[remapping_request.fm_location] = sm_remapping_location;
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
         // Sanity check
         if (fm_remapping_location == sm_remapping_location)
@@ -413,7 +413,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
             sum_of_remapping_location += champsim::get_bits(line_location_table.at(line_location_table_index), msb_in_location_table_entry, lsb_in_location_table_entry);
 #else
             sum_of_remapping_location += line_location_table.at(line_location_table_index).location[i];
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
         }
 
         REMAPPING_LOCATION_WIDTH correct_result = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
@@ -540,7 +540,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_fm_access_in_incomplete_write_request_que
 
     return false;
 }
-#endif // COLOCATED_LINE_LOCATION_TABLE
+#endif /* COLOCATED_LINE_LOCATION_TABLE */
 
-#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE */
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */

@@ -23,12 +23,13 @@
 #include <string_view>
 #include <vector>
 
-#include "ChampSim/cache.h"
-#include "ChampSim/dram_controller.h"
-#include "ChampSim/ooo_cpu.h"
 #include "ProjectConfiguration.h" // User file
 
 #if (USER_CODES == ENABLE)
+#include "ChampSim/cache.h"
+#include "ChampSim/dram_controller.h"
+#include "ChampSim/ooo_cpu.h"
+
 namespace champsim
 {
 
@@ -36,7 +37,7 @@ struct phase_info
 {
     std::string name; // Phase name
     bool is_warmup;   // Whether this phase is for warmup
-    uint64_t length;  // Instruction number to execute
+    long long length; // Instruction number to execute
     std::vector<std::size_t> trace_index;
     std::vector<std::string> trace_names;
 };
@@ -55,6 +56,10 @@ struct phase_stats
 #else
 /* Original code of ChampSim */
 
+#include "ChampSim/cache_stats.h"
+#include "ChampSim/core_stats.h"
+#include "ChampSim/dram_stats.h"
+
 namespace champsim
 {
 
@@ -62,7 +67,7 @@ struct phase_info
 {
     std::string name;
     bool is_warmup;
-    uint64_t length;
+    long long length;
     std::vector<std::size_t> trace_index;
     std::vector<std::string> trace_names;
 };
@@ -78,6 +83,6 @@ struct phase_stats
 
 } // namespace champsim
 
-#endif // USER_CODES
+#endif /* USER_CODES */
 
 #endif

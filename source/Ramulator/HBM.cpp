@@ -74,7 +74,7 @@ void HBM::init_speed()
     const static int XS_TABLE[int(Speed::MAX)][int(Org::MAX)] = {
         {60, 85, 135}
     };
-#endif // ADD_HBM_128MB
+#endif /* ADD_HBM_128MB */
 
     int speed = 0, density = 0;
     switch (speed_entry.rate)
@@ -118,7 +118,7 @@ void HBM::init_speed()
     default:
         assert(false);
     }
-#endif // ADD_HBM_128MB
+#endif /* ADD_HBM_128MB */
 
     speed_entry.nRFC    = RFC_TABLE[speed][density];
     speed_entry.nREFI1B = REFI1B_TABLE[speed][density];

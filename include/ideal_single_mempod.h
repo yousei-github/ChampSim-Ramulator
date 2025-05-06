@@ -108,7 +108,7 @@ public:
 #else
     // Address is physical address and at byte granularity
     bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree);
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     // Translate the physical address to hardware address
     void physical_to_hardware_address(request_type& packet);
@@ -133,7 +133,7 @@ private:
     bool enqueue_remapping_request(RemappingRequest& remapping_request, bool warmup);
 };
 
-#endif // IDEAL_SINGLE_MEMPOD
+#endif /* IDEAL_SINGLE_MEMPOD */
 
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
-#endif // OS_TRANSPARENT_MANAGEMENT_H
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
+#endif /* OS_TRANSPARENT_MANAGEMENT_H */

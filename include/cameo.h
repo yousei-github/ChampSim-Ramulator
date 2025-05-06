@@ -50,7 +50,7 @@
 #undef NUMBER_OF_BLOCK
 #define REMAPPING_LOCATION_WIDTH_BITS (champsim::lg2(64))
 #define NUMBER_OF_BLOCK               (35)
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
 class OS_TRANSPARENT_MANAGEMENT
 {
@@ -111,7 +111,7 @@ public:
     };
 
     std::vector<LocationTableEntry>& line_location_table; // Paper CAMEO: SRAM-Based LLT / Embed LLT in Stacked DRAM
-#endif // BITS_MANIPULATION
+#endif /* BITS_MANIPULATION */
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     /** @brief
@@ -138,7 +138,7 @@ public:
     };
 
     std::vector<WriteRequest> incomplete_write_request_queue;
-#endif // COLOCATED_LINE_LOCATION_TABLE
+#endif /* COLOCATED_LINE_LOCATION_TABLE */
 
     /* Member functions */
     OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address);
@@ -151,7 +151,7 @@ public:
 #else
     // Address is physical address and at byte granularity
     bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree);
-#endif // TRACKING_LOAD_STORE_STATISTICS
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     // Translate the physical address to hardware address
     void physical_to_hardware_address(request_type& packet);
@@ -166,7 +166,7 @@ public:
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     bool finish_fm_access_in_incomplete_read_request_queue(uint64_t h_address);
     bool finish_fm_access_in_incomplete_write_request_queue(uint64_t h_address);
-#endif // COLOCATED_LINE_LOCATION_TABLE
+#endif /* COLOCATED_LINE_LOCATION_TABLE */
 
 private:
     // Evict cold data block
@@ -176,7 +176,7 @@ private:
     bool enqueue_remapping_request(RemappingRequest& remapping_request);
 };
 
-#endif // IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE
+#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE */
 
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
-#endif // CAMEO_H
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
+#endif /* CAMEO_H */

@@ -44,7 +44,7 @@ public:
 #if (RAMULATOR == ENABLE)
     // ChampSim's memory controller's packet
     DRAM_CHANNEL::request_type packet;
-#endif // RAMULATOR
+#endif /* RAMULATOR */
 
     std::array<uint8_t, BLOCK_SIZE> data = {0}; // a cache line
     uint8_t memory_id                    = NUMBER_OF_MEMORIES;
@@ -72,7 +72,7 @@ public:
     : is_first_command(true), addr(addr), coreid(coreid), type(type), callback(callback), packet(packet), memory_id(memory_id)
     {
     }
-#endif // RAMULATOR
+#endif /* RAMULATOR */
 
     Request(vector<int>& addr_vec, Type type, function<void(Request&)> callback, int coreid = 0)
     : is_first_command(true), addr_vec(addr_vec), coreid(coreid), type(type), callback(callback)
@@ -141,6 +141,6 @@ public:
 };
 } /*namespace ramulator*/
 
-#endif // USER_CODES
+#endif /* USER_CODES */
 
 #endif /*__REQUEST_H*/

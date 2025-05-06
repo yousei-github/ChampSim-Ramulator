@@ -97,7 +97,7 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
     }
     fprintf(output_statistics.file_handler, "granularity_total_predict_counts %ld\n", granularity_total_predict_counts);
 
-#endif // STATISTICS_INFORMATION
+#endif /* STATISTICS_INFORMATION */
 
     delete &counter_table;
     delete &hotness_table;
@@ -127,11 +127,11 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     access_table.at(data_block_address).access_flag                              = true;
     access_table.at(data_block_address).access_stats[data_line_positon]          = true;
     access_table.at(data_block_address).temporal_access_stats[data_line_positon] = true;
-#endif // STATISTICS_INFORMATION
+#endif /* STATISTICS_INFORMATION */
 
 #if (COLD_DATA_DETECTION_IN_GROUP == ENABLE)
     cold_data_detection_in_group(address);
-#endif // COLD_DATA_DETECTION_IN_GROUP
+#endif /* COLD_DATA_DETECTION_IN_GROUP */
 
     if (type == ramulator::Request::Type::READ) // For read request
     {
@@ -283,7 +283,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
                     cold_data_eviction(address, queue_busy_degree);
                     output_statistics.unexpandable_since_no_invalid_group++;
                     return true;
-#endif // FLEXIBLE_DATA_PLACEMENT
+#endif /* FLEXIBLE_DATA_PLACEMENT */
                 }
                 else
                 {
@@ -302,7 +302,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
                         // This existing group can not be expanded because the new start_address is smaller than the existing group's start_address
                         output_statistics.unexpandable_since_start_address++;
                         return true;
-#endif // FLEXIBLE_DATA_PLACEMENT
+#endif /* FLEXIBLE_DATA_PLACEMENT */
                     }
                     else
                     {
@@ -367,7 +367,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
                                     cold_data_eviction(address, queue_busy_degree);
                                     output_statistics.no_free_space_for_migration++;
                                     return true;
-#endif // FLEXIBLE_GRANULARITY
+#endif /* FLEXIBLE_GRANULARITY */
                                 }
                             }
                             else
@@ -441,7 +441,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
                 cold_data_eviction(address, queue_busy_degree);
                 output_statistics.no_free_space_for_migration++;
                 return true;
-#endif // FLEXIBLE_GRANULARITY
+#endif /* FLEXIBLE_GRANULARITY */
             }
         }
 
@@ -832,7 +832,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                         printf("existing_group_start_address: %d, ", existing_group_start_address);
                         printf("start_address: %d.\n", start_address);
                         assert(false);
-#endif // FLEXIBLE_DATA_PLACEMENT
+#endif /* FLEXIBLE_DATA_PLACEMENT */
                     }
                 }
             }
@@ -846,7 +846,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                 {
                     access_table.at(data_block_address).granularity_predict_stats += remapping_request.size;
                 }
-#endif // STATISTICS_INFORMATION
+#endif /* STATISTICS_INFORMATION */
 
                 // Fill granularity in placement table entry
                 placement_table.at(placement_table_index).granularity[data_block_position] += remapping_request.size;
@@ -885,7 +885,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                     printf("tag is %d.\n", tag);
                     assert(false);
                 }
-#endif // FLEXIBLE_GRANULARITY
+#endif /* FLEXIBLE_GRANULARITY */
             }
             else
             {
@@ -895,7 +895,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                     // Record the biggest predicted granularity
                     access_table.at(data_block_address).granularity_predict_stats = remapping_request.size;
                 }
-#endif // STATISTICS_INFORMATION
+#endif /* STATISTICS_INFORMATION */
 
                 data_block_position                                                          = placement_table.at(placement_table_index).cursor;
 
@@ -1073,7 +1073,7 @@ void OS_TRANSPARENT_MANAGEMENT::cold_data_detection()
 #pragma omp parallel
         {
 #pragma omp for
-#endif // USE_OPENMP
+#endif /* USE_OPENMP */
             for (uint64_t i = 0; i < total_capacity_at_data_block_granularity; i++)
             {
                 counter_table[i] >>= 1; // Halve the counter value
@@ -1104,12 +1104,12 @@ void OS_TRANSPARENT_MANAGEMENT::cold_data_detection()
                     // Store the biggest estimated spatial locality
                     access_table.at(i).estimated_spatial_locality_stats = count_access;
                 }
-#endif // STATISTICS_INFORMATION
+#endif /* STATISTICS_INFORMATION */
             }
 #if (USE_OPENMP == ENABLE)
         }
-#endif // USE_OPENMP
-#endif // IMMEDIATE_EVICTION
+#endif /* USE_OPENMP */
+#endif /* IMMEDIATE_EVICTION */
     }
 
     cycle++;
@@ -1144,7 +1144,7 @@ void OS_TRANSPARENT_MANAGEMENT::cold_data_detection_in_group(uint64_t source_add
         }
     }
 }
-#endif // COLD_DATA_DETECTION_IN_GROUP
+#endif /* COLD_DATA_DETECTION_IN_GROUP */
 
 bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, float queue_busy_degree)
 {
@@ -1204,7 +1204,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
                 used_space -= placement_table.at(placement_table_index).granularity[occupied_group_number];
                 break;
             }
-#endif // IMMEDIATE_EVICTION
+#endif /* IMMEDIATE_EVICTION */
         }
     }
 
@@ -1257,7 +1257,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
         }
     }
 
-#endif // DATA_EVICTION
+#endif /* DATA_EVICTION */
     return true;
 }
 
@@ -1434,7 +1434,7 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(cons
                 std::cout << __func__ << ": migration granularity calculation error." << std::endl;
                 assert(false);
             }
-#endif // FLEXIBLE_GRANULARITY
+#endif /* FLEXIBLE_GRANULARITY */
         }
         else
         {
@@ -1488,7 +1488,7 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::round_down_migration_granularity(
                 std::cout << __func__ << ": migration granularity calculation error." << std::endl;
                 assert(false);
             }
-#endif // FLEXIBLE_GRANULARITY
+#endif /* FLEXIBLE_GRANULARITY */
         }
         else
         {
@@ -1501,5 +1501,5 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::round_down_migration_granularity(
     return updated_end_address;
 }
 
-#endif // IDEAL_VARIABLE_GRANULARITY
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* IDEAL_VARIABLE_GRANULARITY */
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */

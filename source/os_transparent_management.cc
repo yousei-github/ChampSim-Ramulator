@@ -83,5 +83,5 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
     return false;
 }
 
-#endif // NO_METHOD_FOR_RUN_HYBRID_MEMORY
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* NO_METHOD_FOR_RUN_HYBRID_MEMORY */
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */

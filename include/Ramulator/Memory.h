@@ -445,7 +445,7 @@ public:
 
         return ctrls[req.addr_vec[0]]->queue_maxsize(req);
     };
-#endif // USER_CODES
+#endif /* USER_CODES */
 
     void init_mapping_with_file(string filename)
     {

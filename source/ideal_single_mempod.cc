@@ -56,14 +56,14 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8
     {
         return true;
     }
-#endif // TRACKING_LOAD_ONLY
+#endif /* TRACKING_LOAD_ONLY */
 
 #if (TRACKING_READ_ONLY)
     if (type == 2) // Memory Write is ignored
     {
         return true;
     }
-#endif // TRACKING_READ_ONLY
+#endif /* TRACKING_READ_ONLY */
 
     if (address >= total_capacity)
     {
@@ -232,7 +232,7 @@ void OS_TRANSPARENT_MANAGEMENT::check_interval_swap(uint8_t swapping_states, boo
 
 #if (MEA_COUNTER_RESET_EVERY_EPOCH)
         reset_mea_counter();
-#endif // MEA_COUNTER_RESET_EVERY_EPOCH
+#endif /* MEA_COUNTER_RESET_EVERY_EPOCH */
     }
 };
 
@@ -327,7 +327,7 @@ void OS_TRANSPARENT_MANAGEMENT::determine_swap_pair(std::vector<REMAPPING_TABLE_
 {
 #if (PRINT_SWAPS_PER_EPOCH_MEMPOD == ENABLE)
     uint32_t swaps_per_epoch = 0;
-#endif // PRINT_SWAPS_PER_EPOCH_MEMPOD
+#endif /* PRINT_SWAPS_PER_EPOCH_MEMPOD */
 
     REMAPPING_TABLE_ENTRY_WIDTH hot_page_h_address;
     REMAPPING_TABLE_ENTRY_WIDTH hot_page_p_address;
@@ -376,7 +376,7 @@ void OS_TRANSPARENT_MANAGEMENT::determine_swap_pair(std::vector<REMAPPING_TABLE_
 
 #if (PRINT_SWAPS_PER_EPOCH_MEMPOD == ENABLE)
         swaps_per_epoch++;
-#endif // PRINT_SWAPS_PER_EPOCH_MEMPOD
+#endif /* PRINT_SWAPS_PER_EPOCH_MEMPOD */
 
         swap_fm_address_itr++;
 
@@ -389,7 +389,7 @@ void OS_TRANSPARENT_MANAGEMENT::determine_swap_pair(std::vector<REMAPPING_TABLE_
     {
         std::printf("[SWAPS_PER_EPOCH] interval: %u swaps: %u \n", intervals, swaps_per_epoch);
     }
-#endif // PRINT_SWAPS_PER_EPOCH_MEMPOD
+#endif /* PRINT_SWAPS_PER_EPOCH_MEMPOD */
 };
 
 // Complete
@@ -419,5 +419,5 @@ void OS_TRANSPARENT_MANAGEMENT::cancel_not_started_remapping_request(uint8_t swa
     }
 };
 
-#endif // IDEAL_SINGLE_MEMPOD
-#endif // MEMORY_USE_OS_TRANSPARENT_MANAGEMENT
+#endif /* IDEAL_SINGLE_MEMPOD */
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */

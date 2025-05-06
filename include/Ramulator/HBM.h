@@ -167,7 +167,7 @@ public:
     { // per channel density here. Each stack comes with 8 channels
 #if (ADD_HBM_128MB == ENABLE)
         HBM_128Mb,
-#endif // ADD_HBM_128MB
+#endif /* ADD_HBM_128MB */
         HBM_1Gb,
         HBM_2Gb,
         HBM_4Gb,
