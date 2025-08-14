@@ -1,13 +1,46 @@
 {
+	/**
+	 * The configuration's version number
+	 */
 	"version": "2.0.0",
+	/**
+	 * Override the defaults for cwd (current working directory), env (environment variables), or shell (default shell).
+	 * Options can be set per task but also globally or per platform.
+	 */
+	"options": {
+		"env": {
+			/* Header files */
+			"VCPKG_INCLUDE_PATH": "${workspaceFolder}/vcpkg_installed/x64-linux/include/",
+			"PROJECT_INCLUDE_PATH": "${workspaceFolder}/include/",
+			"VCPKG_LIBRARY_PATH": "${workspaceFolder}/vcpkg_installed/x64-linux/lib",
+			"VCPKG_MANUAL_LINK_LIBRARY_PATH": "${workspaceFolder}/vcpkg_installed/x64-linux/lib/manual-link",
+			/* ChampSim */
+			"CHAMPSIM_MAIN_SOURCE_PATH": "${workspaceFolder}/source/ChampSim/*.cc",
+			// Branch:
+			"CHAMPSIM_BRANCH_SOURCE_PATH": "${workspaceFolder}/source/ChampSim/branch/bimodal/*.cc ${workspaceFolder}/source/ChampSim/branch/gshare/*.cc ${workspaceFolder}/source/ChampSim/branch/hashed_perceptron/*.cc ${workspaceFolder}/source/ChampSim/branch/perceptron/*.cc",
+			// Pprefetcher:
+			"CHAMPSIM_PREFETCHER_SOURCE_PATH": "${workspaceFolder}/source/ChampSim/prefetcher/ip_stride/*.cc ${workspaceFolder}/source/ChampSim/prefetcher/next_line/*.cc ${workspaceFolder}/source/ChampSim/prefetcher/no/*.cc ${workspaceFolder}/source/ChampSim/prefetcher/spp_dev/*.cc ${workspaceFolder}/source/ChampSim/prefetcher/va_ampm_lite/*.cc",
+			// Replacement:
+			"CHAMPSIM_REPLACEMENT_SOURCE_PATH": "${workspaceFolder}/source/ChampSim/replacement/drrip/*.cc ${workspaceFolder}/source/ChampSim/replacement/lru/*.cc ${workspaceFolder}/source/ChampSim/replacement/random/*.cc ${workspaceFolder}/source/ChampSim/replacement/ship/*.cc ${workspaceFolder}/source/ChampSim/replacement/srrip/*.cc",
+			// Branch target buffer:
+			"CHAMPSIM_BRANCH_TARGET_BUFFER_SOURCE_PATH": "${workspaceFolder}/source/ChampSim/btb/basic_btb/*.cc",
+			/* Ramulator */
+			"RAMULATOR_SOURCE_PATH": "${workspaceFolder}/source/Ramulator/*.cpp",
+			/* User */
+			"PROJECT_SOURCE_PATH": "${workspaceFolder}/source/*.cc",
+		}
+	},
+	/**
+	 * Tasks in VS Code can be configured to run scripts and start processes so that many of these existing tools can be used from within VS Code without having to enter a command line or write new code. 
+	 */
 	"tasks": [
 		{
 			"type": "shell",
-			"label": "C/C++: g++ build all files in optimization level 3",
+			"label": "C/C++: Build all files",
 			"command": "/usr/bin/g++", // The path of compiler
 			"args": [
 				"-fdiagnostics-color=always",
-				"-O3", // O1/O2/O3
+				"${input:variable0}", // -O0/-O1/-O2/-O3
 				"-g", // Produce debugging information in the operationg system's native format
 				"-Wall", // Turns on all optional warnings which are desirable for normal code
 				// "-Werror", // Make all warnings into hard errors. Source code which triggers warnings will be rejected
@@ -15,43 +48,25 @@
 				"-std=c++17", // c++11/c++17
 				/**
 				 * Below are header files: (can be from multiples folders)
-				*/
+				 */
 				"-I", // e.g., -I dir. This means adding the directory [dir] to the list of directories to be searched for header files during preprocessing
-				"${workspaceFolder}/vcpkg_installed/x64-linux/include/",
+				"${VCPKG_INCLUDE_PATH}",
 				"-I",
-				"${workspaceFolder}/include/",
+				"${PROJECT_INCLUDE_PATH}",
 				"-L", // e.g., -L dir. Add directory [dir] to the list of directories to be searched for [-l].
-				"${workspaceFolder}/vcpkg_installed/x64-linux/lib",
+				"${VCPKG_LIBRARY_PATH}",
 				"-L",
-				"${workspaceFolder}/vcpkg_installed/x64-linux/lib/manual-link",
+				"${VCPKG_MANUAL_LINK_LIBRARY_PATH}",
 				/**
 				 * Below are source files: (can be from multiples folders)
-				*/
-				/* ChampSim */
-				"${workspaceFolder}/source/ChampSim/*.cc",
-				// branch:
-				"${workspaceFolder}/source/ChampSim/branch/bimodal/*.cc",
-				"${workspaceFolder}/source/ChampSim/branch/gshare/*.cc",
-				"${workspaceFolder}/source/ChampSim/branch/hashed_perceptron/*.cc",
-				"${workspaceFolder}/source/ChampSim/branch/perceptron/*.cc",
-				// prefetcher:
-				"${workspaceFolder}/source/ChampSim/prefetcher/no/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/next_line/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/ip_stride/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/no_instr/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/next_line_instr/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/spp_dev/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/va_ampm_lite/*.cc",
-				// replacement:
-				"${workspaceFolder}/source/ChampSim/replacement/lru/*.cc",
-				"${workspaceFolder}/source/ChampSim/replacement/ship/*.cc",
-				"${workspaceFolder}/source/ChampSim/replacement/srrip/*.cc",
-				"${workspaceFolder}/source/ChampSim/replacement/drrip/*.cc",
-				"${workspaceFolder}/source/ChampSim/btb/basic_btb/*.cc",
-				/* Ramulator */
-				"${workspaceFolder}/source/Ramulator/*.cpp",
-				/* User */
-				"${workspaceFolder}/source/*.cc",
+				 */
+				"${CHAMPSIM_MAIN_SOURCE_PATH}",
+				"${CHAMPSIM_BRANCH_SOURCE_PATH}",
+				"${CHAMPSIM_PREFETCHER_SOURCE_PATH}",
+				"${CHAMPSIM_REPLACEMENT_SOURCE_PATH}",
+				"${CHAMPSIM_BRANCH_TARGET_BUFFER_SOURCE_PATH}",
+				"${RAMULATOR_SOURCE_PATH}",
+				"${PROJECT_SOURCE_PATH}",
 				/**
                  * Below are library names:
 				 * e.g., -l library. Search the library named [library] when linking.
@@ -73,105 +88,44 @@
 				 * Below is the executable file's name
 				*/
 				"-o", // e.g., -o file1. This means placing the primary output in file [file1].
-				"${workspaceFolder}/bin/champsim_plus_ramulator_O3"
+				"${workspaceFolder}/bin/${input:variable1}"
 			],
-			"options": {
-				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
-			},
 			"problemMatcher": [
 				"$gcc"
 			],
+			/**
+			 * Any Windows specific properties
+			 * It will be used instead of the default properties when the command is executed on the Windows operating system
+			 */
+			"windows": {
+				"command": "cl.exe",
+				"args": [
+					"/Zi", // Generates complete debugging information.
+					"-openmp",
+					// "/I", // e.g., /I directory. Searches a directory for include files.
+					// "${workspaceFolder}\\Codes_C\\inc\\",
+					// Below are input files (can be from multiples folders)
+					"${fileDirname}\\${fileBasename}",
+					"/Fo:", // e.g., /Fo: pathname. Specifies an object (.obj) file name or directory to be used
+					"${workspaceFolder}\\bin\\",
+					"/Fe:", // e.g., /Fe: pathname. Renames the executable file.
+					"${workspaceFolder}\\bin\\${fileBasename}.exe"
+				],
+				"options": {
+					"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
+				},
+				"problemMatcher": [
+					"$msCompile"
+				]
+			},
+			// Defines to which group the task belongs
 			"group": {
 				"kind": "build",
-				"isDefault": true
+				"isDefault": false
 			},
-			"detail": "compiler: /usr/bin/g++"
-		},
-		{
-			"type": "shell",
-			"label": "C/C++: g++ build all files in default optimization",
-			"command": "/usr/bin/g++", // The path of compiler
-			"args": [
-				"-fdiagnostics-color=always",
-				//"-O3", // O1/O2/O3
-				"-g", // Produce debugging information in the operationg system's native format
-				"-Wall", // Turns on all optional warnings which are desirable for normal code
-				// "-Werror", // Make all warnings into hard errors. Source code which triggers warnings will be rejected
-				"-fopenmp", // Enables #pragma omp in source code
-				"-std=c++17", // c++11/c++17
-				/**
-				 * Below are header files: (can be from multiples folders)
-				*/
-				"-I", // e.g., -I dir. This means adding the directory [dir] to the list of directories to be searched for header files during preprocessing
-				"${workspaceFolder}/vcpkg_installed/x64-linux/include/",
-				"-I",
-				"${workspaceFolder}/include/",
-				"-L", // e.g., -L dir. Add directory [dir] to the list of directories to be searched for [-l].
-				"${workspaceFolder}/vcpkg_installed/x64-linux/lib",
-				"-L",
-				"${workspaceFolder}/vcpkg_installed/x64-linux/lib/manual-link",
-				/**
-				 * Below are source files: (can be from multiples folders)
-				*/
-				/* ChampSim */
-				"${workspaceFolder}/source/ChampSim/*.cc",
-				// branch:
-				"${workspaceFolder}/source/ChampSim/branch/bimodal/*.cc",
-				"${workspaceFolder}/source/ChampSim/branch/gshare/*.cc",
-				"${workspaceFolder}/source/ChampSim/branch/hashed_perceptron/*.cc",
-				"${workspaceFolder}/source/ChampSim/branch/perceptron/*.cc",
-				// prefetcher:
-				"${workspaceFolder}/source/ChampSim/prefetcher/ip_stride/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/next_line/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/no/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/spp_dev/*.cc",
-				"${workspaceFolder}/source/ChampSim/prefetcher/va_ampm_lite/*.cc",
-				// replacement:
-				"${workspaceFolder}/source/ChampSim/replacement/drrip/*.cc",
-				"${workspaceFolder}/source/ChampSim/replacement/lru/*.cc",
-				"${workspaceFolder}/source/ChampSim/replacement/random/*.cc",
-				"${workspaceFolder}/source/ChampSim/replacement/ship/*.cc",
-				"${workspaceFolder}/source/ChampSim/replacement/srrip/*.cc",
-				// branch target buffer:
-				"${workspaceFolder}/source/ChampSim/btb/basic_btb/*.cc",
-				/* Ramulator */
-				"${workspaceFolder}/source/Ramulator/*.cpp",
-				/* User */
-				"${workspaceFolder}/source/*.cc",
-				/**
-                 * Below are library names:
-				 * e.g., -l library. Search the library named [library] when linking.
-				 * 
-				 * The linker searches and processes libraries and object files in the order they are specified.
-				 * Thus, [foo.o -lz bar.o] searches library [z] after file [foo.o] but before [bar.o]. If bar.o refers to functions in [z], those functions may not be loaded.
-				 *
-				 * The linker searches a standard list of directories plus any that you specify with [-L] for the library, which is actually a file named [liblibrary.a]=[a file name library surrounded with lib and .a].
-				 */
-				"-l",
-				"lzma",
-				"-l",
-				"z",
-				"-l",
-				"bz2",
-				"-l",
-				"fmt",
-				/**
-				 * Below is the executable file's name
-				*/
-				"-o", // e.g., -o file1. This means placing the primary output in file [file1].
-				"${workspaceFolder}/bin/champsim_plus_ramulator"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
-			},
-			"problemMatcher": [
-				"$gcc"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"detail": "compiler: /usr/bin/g++"
+			// Hides the task from the Run Task Quick Pick, which can be useful for elements of a compound task that are not independently runnable.
+			"hide": true,
+			"detail": "compiler: /usr/bin/g++",
 		},
 		{
 			"type": "shell",
@@ -184,7 +138,160 @@
 			"options": {
 				"cwd": "${workspaceFolder}"
 			},
-			"problemMatcher": []
+			"problemMatcher": [],
+			"windows": {
+				"command": "rd",
+				"args": [
+					"-r", // Remove contents recursively
+					".\\bin\\*"
+				],
+				"options": {
+					"cwd": "${workspaceFolder}"
+				},
+				"problemMatcher": []
+			},
+			"group": "none",
+			"hide": false,
+			"dependsOn": [
+				"Show binary folder"
+			],
+			"dependsOrder": "sequence"
+		},
+		{
+			"type": "shell",
+			"label": "Show workspace",
+			"command": "ls",
+			"args": [
+				"-la",
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"windows": {
+				"command": "dir",
+				"args": [],
+				"options": {
+					"cwd": "${workspaceFolder}"
+				},
+				"problemMatcher": []
+			},
+			"group": "none",
+			"hide": false
+		},
+		{
+			"type": "shell",
+			"label": "Show binary folder",
+			"command": "ls",
+			"args": [
+				"-l",
+				"./bin/",
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"windows": {
+				"command": "dir",
+				"args": [
+					".\\bin\\"
+				],
+				"options": {
+					"cwd": "${workspaceFolder}"
+				},
+				"problemMatcher": []
+			},
+			"group": "none",
+			"hide": true
+		},
+		{
+			"type": "shell",
+			"label": "Build by specified optimization",
+			"command": "echo",
+			"args": [
+				"Finish build",
+			],
+			/**
+			 * Override the defaults for cwd (current working directory), env (environment variables), or shell (default shell).
+			 * Options can be set per task but also globally or per platform.
+			 */
+			"options": {
+				"cwd": "${workspaceFolder}", // define the cwd command, such as ${fileDirname}
+				// "env": {},
+				// "shell": {}
+			},
+			"problemMatcher": [],
+			// Defines to which group the task belongs
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			// Defines how the task output is handled in the user interface
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front.
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": true, // Show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
+			// Defines when and how a task is run
+			"runOptions": {
+				"reevaluateOnRerun": true, // Variables will be reevaluated when a task is rerun
+				"runOn": "default", // The task will only be run when executed through the Run Task command
+				"instanceLimit": 1, // The number of instances of the task that are allowed to run simultaneously
+			},
+			// Hides the task from the Run Task Quick Pick, which can be useful for elements of a compound task that are not independently runnable.
+			"hide": false,
+			"detail": "Use g++ in Linux and cl.exe in Windows (Windows settings are not supported yet)",
+			"dependsOn": [
+				"C/C++: Build all files",
+				"Show binary folder",
+			],
+			"dependsOrder": "sequence"
+		}
+	],
+	/**
+	 * Input variables is a mechanism to configure the command being run for a specific use case.
+     *
+	 * It has the syntax ${input:variableID}.
+	 * The variableID refers to entries in the inputs section of launch.json and tasks.json, where additional configuration attributes are specified.
+	 */
+	"inputs": [
+		{
+			/* Optimization level */
+			"type": "pickString", // Show a Quick Pick dropdown to let the user select from several options
+			"id": "variable0",
+			"description": "Which level of optimization do you want to use?",
+			// An array of options for the user to pick from
+			"options": [
+				{
+					"label": "Level 0 (Reduce compilation time)",
+					"value": "-O0"
+				},
+				{
+					"label": "Level 1 (Reduce code size and execution time)",
+					"value": "-O1"
+				},
+				{
+					"label": "Level 2 (Optimize more than level 1)",
+					"value": "-O2"
+				},
+				{
+					"label": "Level 3 (Optimize more than level 2)",
+					"value": "-O3"
+				}
+			],
+			"default": "Level 0 (Reduce compilation time)", // Default value that will be used if the user doesn't enter something else. It must be one of the option values
+		},
+		{
+			/* Name of executable file */
+			"type": "promptString", // Show an input box to get a string from the user
+			"id": "variable1",
+			"description": "Name your executable file",
+			"default": "champsim_plus_ramulator", // Default value that will be used if the user doesn't enter something else
 		}
 	]
 }
