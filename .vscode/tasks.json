@@ -123,6 +123,17 @@
 				"kind": "build",
 				"isDefault": false
 			},
+			// Defines how the task output is handled in the user interface
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front.
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": false, // Don't show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
 			// Hides the task from the Run Task Quick Pick, which can be useful for elements of a compound task that are not independently runnable.
 			"hide": true,
 			"detail": "compiler: /usr/bin/g++",
@@ -202,6 +213,10 @@
 				"problemMatcher": []
 			},
 			"group": "none",
+			// Defines how the task output is handled in the user interface
+			"presentation": {
+				"showReuseMessage": false, // Don't show the "Terminal will be reused by tasks, press any key to close it" message
+			},
 			"hide": true
 		},
 		{
@@ -251,7 +266,53 @@
 				"Show binary folder",
 			],
 			"dependsOrder": "sequence"
-		}
+		},
+		{
+			"type": "shell",
+			"label": "Test the ChampSim with single memory",
+			"command": "${workspaceFolder}/bin/${input:variable1}",
+			"args": [
+				"--warmup-instructions",
+				"${input:variable2}", // [N_WARM]
+				"--simulation-instructions",
+				"${input:variable3}", // [N_SIM]
+				"${input:variable4}/${input:variable5}", // [TRACE]
+				"${input:variable6}", // Execute in background mode
+			],
+			"problemMatcher": [],
+			/**
+			 * Any Windows specific properties
+			 * It will be used instead of the default properties when the command is executed on the Windows operating system
+			 */
+			"windows": {
+				// @Todo
+			},
+			// Defines to which group the task belongs
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			// Defines how the task output is handled in the user interface
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front.
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": true, // Show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
+			// Defines when and how a task is run
+			"runOptions": {
+				"reevaluateOnRerun": true, // Variables will be reevaluated when a task is rerun
+				"runOn": "default", // The task will only be run when executed through the Run Task command
+				"instanceLimit": 16, // The number of instances of the task that are allowed to run simultaneously
+			},
+			// Hides the task from the Run Task Quick Pick, which can be useful for elements of a compound task that are not independently runnable.
+			"hide": false,
+			"detail": "For champsim with single memory, e.g., '$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] [TRACE]'",
+		},
 	],
 	/**
 	 * Input variables is a mechanism to configure the command being run for a specific use case.
@@ -292,6 +353,133 @@
 			"id": "variable1",
 			"description": "Name your executable file",
 			"default": "champsim_plus_ramulator", // Default value that will be used if the user doesn't enter something else
-		}
+		},
+		{
+			/* Number of instructions for warmup */
+			"type": "promptString",
+			"id": "variable2",
+			"description": "Specify number of instructions for warmup",
+			"default": "1000000", // 1 million
+		},
+		{
+			/* Number of instructions for detailed simulation */
+			"type": "promptString",
+			"id": "variable3",
+			"description": "Specify number of instructions for detailed simulation",
+			"default": "10000000", // 10 million
+		},
+		{
+			/* Path of trace root directory */
+			"type": "promptString",
+			"id": "variable4",
+			"description": "Specify path of trace root directory",
+			"default": "../dpc3_traces",
+		},
+		{
+			/* Trace name */
+			"type": "pickString",
+			"id": "variable5",
+			"description": "Which trace do you want to use?",
+			"options": [
+				{
+					"label": "600.perlbench",
+					"value": "600.perlbench_s-210B.champsimtrace.xz"
+				},
+				{
+					"label": "602.gcc",
+					"value": "602.gcc_s-734B.champsimtrace.xz"
+				},
+				{
+					"label": "603.bwaves",
+					"value": "603.bwaves_s-3699B.champsimtrace.xz"
+				},
+				{
+					"label": "605.mcf",
+					"value": "605.mcf_s-665B.champsimtrace.xz"
+				},
+				{
+					"label": "607.cactuBSSN",
+					"value": "607.cactuBSSN_s-2421B.champsimtrace.xz"
+				},
+				{
+					"label": "619.lbm",
+					"value": "619.lbm_s-4268B.champsimtrace.xz"
+				},
+				{
+					"label": "620.omnetpp",
+					"value": "620.omnetpp_s-874B.champsimtrace.xz"
+				},
+				{
+					"label": "621.wrf",
+					"value": "621.wrf_s-575B.champsimtrace.xz"
+				},
+				{
+					"label": "623.xalancbmk",
+					"value": "623.xalancbmk_s-700B.champsimtrace.xz"
+				},
+				{
+					"label": "625.x264",
+					"value": "625.x264_s-18B.champsimtrace.xz"
+				},
+				{
+					"label": "627.cam4",
+					"value": "627.cam4_s-573B.champsimtrace.xz"
+				},
+				{
+					"label": "628.pop2",
+					"value": "628.pop2_s-17B.champsimtrace.xz"
+				},
+				{
+					"label": "631.deepsjeng",
+					"value": "631.deepsjeng_s-928B.champsimtrace.xz"
+				},
+				{
+					"label": "638.imagick",
+					"value": "638.imagick_s-10316B.champsimtrace.xz"
+				},
+				{
+					"label": "641.leela",
+					"value": "641.leela_s-800B.champsimtrace.xz"
+				},
+				{
+					"label": "644.nab",
+					"value": "644.nab_s-5853B.champsimtrace.xz"
+				},
+				{
+					"label": "648.exchange2",
+					"value": "648.exchange2_s-1699B.champsimtrace.xz"
+				},
+				{
+					"label": "649.fotonik3d",
+					"value": "649.fotonik3d_s-1176B.champsimtrace.xz"
+				},
+				{
+					"label": "654.roms",
+					"value": "654.roms_s-842B.champsimtrace.xz"
+				},
+				{
+					"label": "657.xz",
+					"value": "657.xz_s-3167B.champsimtrace.xz"
+				},
+			],
+			"default": "600.perlbench",
+		},
+		{
+			/* Execute in background mode */
+			"type": "pickString",
+			"id": "variable6",
+			"description": "Do you want to execute test in background mode?",
+			"options": [
+				{
+					"label": "true",
+					"value": "&"
+				},
+				{
+					"label": "false",
+					"value": ""
+				}
+			],
+			"default": "true",
+		},
 	]
 }
