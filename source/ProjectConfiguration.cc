@@ -196,6 +196,10 @@ SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
         fprintf(file_handler, "virtual_page_count: %ld, main memory footprint: %f MB.\n", virtual_page_count, virtual_page_count * 4.0 / KiB);
 
         uint64_t total_access_request_in_memory = read_request_in_memory + read_request_in_memory2 + write_request_in_memory + write_request_in_memory2;
+        if (total_access_request_in_memory == 0)
+        {
+            total_access_request_in_memory = 1; /** @todo Output "-" when total_access_request_in_memory is 0 */
+        }
 
         fprintf(file_handler, "\n\nInformation about memory controller\n\n");
         fprintf(file_handler, "read_request_in_memory: %ld, read_request_in_memory2: %ld.\n", read_request_in_memory, read_request_in_memory2);
