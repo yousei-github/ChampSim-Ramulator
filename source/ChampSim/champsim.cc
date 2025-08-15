@@ -397,6 +397,11 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
 #if (USE_VCPKG == ENABLE)
                 fmt::print("{} finished CPU {} instructions: {} cycles: {} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", phase_name, cpu.cpu, cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time());
 #endif /* USE_VCPKG */
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+                std::fprintf(output_statistics.file_handler, "%s finished CPU %d instructions: %lld cycles: %lld cumulative IPC: %.4f (Simulation time: {: %ld sec})\n",
+                    phase_name.c_str(), cpu.cpu, cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time().count());
+#endif /* PRINT_STATISTICS_INTO_FILE */
             }
         }
 
@@ -409,6 +414,14 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
         fmt::print("{} complete CPU {} instructions: {} cycles: {} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", phase_name, cpu.cpu, cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time());
     }
 #endif /* USE_VCPKG */
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    for (O3_CPU& cpu : env.cpu_view())
+    {
+        std::fprintf(output_statistics.file_handler, "%s complete CPU %d instructions: %lld cycles: %lld cumulative IPC: %.4f (Simulation time: {: %ld sec})\n",
+            phase_name.c_str(), cpu.cpu, cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time().count());
+    }
+#endif /* PRINT_STATISTICS_INTO_FILE */
 
     phase_stats stats;
     stats.name = phase.name;

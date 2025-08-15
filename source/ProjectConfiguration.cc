@@ -201,7 +201,7 @@ SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
             total_access_request_in_memory = 1; /** @todo Output "-" when total_access_request_in_memory is 0 */
         }
 
-        fprintf(file_handler, "\n\nInformation about memory controller\n\n");
+        fprintf(file_handler, "\n\nInformation about memory controller (For Ramulator)\n\n");
         fprintf(file_handler, "read_request_in_memory: %ld, read_request_in_memory2: %ld.\n", read_request_in_memory, read_request_in_memory2);
         fprintf(file_handler, "write_request_in_memory: %ld, write_request_in_memory2: %ld.\n", write_request_in_memory, write_request_in_memory2);
         fprintf(file_handler, "hit rate: %f.\n", (read_request_in_memory + write_request_in_memory) / float(total_access_request_in_memory));

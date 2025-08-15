@@ -8,7 +8,7 @@
 // FIXME Find better way to decide where does it come from
 #if ! defined(RAMULATOR)
 #define INTEGRATED_WITH_GEM5
-#endif
+#endif /* RAMULATOR */
 
 #ifdef INTEGRATED_WITH_GEM5
 #include "base/statistics.hh"
