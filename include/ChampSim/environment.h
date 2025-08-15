@@ -56,8 +56,22 @@ struct environment
 
 namespace configured
 {
+
+#if (RAMULATOR == ENABLE)
+#if (MEMORY_USE_HYBRID == ENABLE)
+template<unsigned long long ID, typename MEMORY_TYPE, typename MEMORY_TYPE2>
+struct generated_environment;
+
+#else
+template<unsigned long long ID, typename MEMORY_TYPE>
+struct generated_environment;
+
+#endif /* MEMORY_USE_HYBRID */
+#else
 template<unsigned long long ID>
 struct generated_environment;
+
+#endif /* RAMULATOR */
 
 template<typename R, typename... PTWs>
 auto build(PTWs... builders)

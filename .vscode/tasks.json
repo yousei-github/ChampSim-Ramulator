@@ -269,7 +269,7 @@
 		},
 		{
 			"type": "shell",
-			"label": "Test the ChampSim with single memory",
+			"label": "Test ChampSim with single memory",
 			"command": "${workspaceFolder}/bin/${input:variable1}",
 			"args": [
 				"--warmup-instructions",
@@ -277,7 +277,6 @@
 				"--simulation-instructions",
 				"${input:variable3}", // [N_SIM]
 				"${input:variable4}/${input:variable5}", // [TRACE]
-				"${input:variable6}", // Execute in background mode
 			],
 			"problemMatcher": [],
 			/**
@@ -299,7 +298,7 @@
 				"focus": false,
 				"echo": true,
 				"showReuseMessage": true, // Show the "Terminal will be reused by tasks, press any key to close it" message
-				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"panel": "new", // The terminal is shared and the output of other task runs are added to the same terminal
 				"clear": false,
 				"close": false
 			},
@@ -463,23 +462,6 @@
 				},
 			],
 			"default": "600.perlbench",
-		},
-		{
-			/* Execute in background mode */
-			"type": "pickString",
-			"id": "variable6",
-			"description": "Do you want to execute test in background mode?",
-			"options": [
-				{
-					"label": "true",
-					"value": "&"
-				},
-				{
-					"label": "false",
-					"value": ""
-				}
-			],
-			"default": "true",
-		},
+		}
 	]
 }

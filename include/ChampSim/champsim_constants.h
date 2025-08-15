@@ -59,7 +59,10 @@ constexpr unsigned LOG2_PAGE_SIZE        = champsim::lg2(PAGE_SIZE);
  * The unit of DRAM_IO_FREQ is MHz. Here if DRAM_IO_FREQ is 3200ul, the DRAM is DDR4 (800-1600 MHz). DDR5's I/O clock rate ranges
  * between 2400-3600 MHz, so its data rate can be 4800-7200 MT/s.
 */
-constexpr uint64_t DRAM_IO_FREQ          = 3200; // MT/s
+constexpr uint64_t DRAM_IO_FREQ          = 3200;                                   // MT/s
+constexpr uint32_t DRAM_IO_CLOCK_PERIOD  = (uint32_t) (1000'000ul / DRAM_IO_FREQ); // Picosecond
+constexpr uint32_t DRAM_MC_FREQ          = DRAM_IO_FREQ / 2;                       // Memory controller (MC)
+constexpr uint32_t DRAM_MC_CLOCK_PERIOD  = (uint32_t) (1000'000ul / DRAM_MC_FREQ); // Picosecond
 constexpr std::size_t DRAM_CHANNELS      = 1;
 constexpr std::size_t DRAM_RANKS         = 1;
 constexpr std::size_t DRAM_BANKS         = 8;
@@ -112,7 +115,7 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #if (USER_CODES == ENABLE)
 /* Virtual memory */
 #define PAGE_TABLE_LEVELS              (5ul)
-#define MINOR_FAULT_PENALTY            (200ul)
+#define MINOR_FAULT_PENALTY            (CPU_CLOCK_PERIOD * 200ul)
 
 /**
  * Cache setting for replacement policy (drrip, lru, ship, srrip)
@@ -180,10 +183,12 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 
 #endif /* CPU_USE_MULTIPLE_CORES */
 
-#define CPU_FREQUENCY            (4000.0) // MHz
-#define CPU_DIB_SET              (32)     // DIB (Decoded Instruction Buffer) sets
-#define CPU_DIB_WAY              (8)      // DIB ways
-#define CPU_DIB_WINDOW           (16)     // DIB window size
+#define CPU_FREQUENCY            (4000.0)                                // MHz
+#define CPU_CLOCK_PERIOD         (1000'000ul / (uint32_t) CPU_FREQUENCY) // Picosecond
+
+#define CPU_DIB_SET              (32) // DIB (Decoded Instruction Buffer) sets
+#define CPU_DIB_WAY              (8)  // DIB ways
+#define CPU_DIB_WINDOW           (16) // DIB window size
 #define CPU_IFETCH_BUFFER_SIZE   (64)
 #define CPU_DECODE_BUFFER_SIZE   (32)
 #define CPU_DISPATCH_BUFFER_SIZE (32)

@@ -46,6 +46,7 @@ struct simulator_input_parameter
 
 /* Prototype */
 
+#if (USER_CODES == ENABLE)
 #if (RAMULATOR == ENABLE)
 
 #if (MEMORY_USE_HYBRID == ENABLE)
@@ -77,6 +78,14 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 void run_simulation(simulator_input_parameter& input_parameter);
 
 #endif /* RAMULATOR */
+
+#else
+namespace champsim
+{
+std::vector<phase_stats> main(environment& env, std::vector<phase_info>& phases, std::vector<tracereader>& traces);
+} // namespace champsim
+
+#endif /* USER_CODES */
 
 /* Variable */
 
@@ -899,7 +908,8 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %ld\nSimulation Instructions: %ld\nNumber of CPUs: %ld\nPage size: %d\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
+    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %ld\nSimulation Instructions: %ld\nNumber of CPUs: %ld\nPage size: %d\n\n",
+        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
 #endif /* PRINT_STATISTICS_INTO_FILE */
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
@@ -993,22 +1003,6 @@ void run_simulation(simulator_input_parameter& input_parameter)
 
 #else
 /* Original code of ChampSim */
-
-namespace champsim
-{
-std::vector<phase_stats> main(environment& env, std::vector<phase_info>& phases, std::vector<tracereader>& traces);
-} // namespace champsim
-
-#ifndef CHAMPSIM_TEST_BUILD
-using configured_environment = champsim::configured::generated_environment<CHAMPSIM_BUILD>;
-
-const std::size_t NUM_CPUS   = configured_environment::num_cpus;
-
-const unsigned BLOCK_SIZE    = configured_environment::block_size;
-const unsigned PAGE_SIZE     = configured_environment::page_size;
-#endif
-const unsigned LOG2_BLOCK_SIZE = champsim::lg2(BLOCK_SIZE);
-const unsigned LOG2_PAGE_SIZE  = champsim::lg2(PAGE_SIZE);
 
 #ifndef CHAMPSIM_TEST_BUILD
 int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
