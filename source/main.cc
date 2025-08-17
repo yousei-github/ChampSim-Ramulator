@@ -90,7 +90,12 @@ std::vector<phase_stats> main(environment& env, std::vector<phase_info>& phases,
 /* Variable */
 
 #if (USER_CODES == ENABLE)
+#if (RAMULATOR == ENABLE)
+/** Memory type is determined later in main() */
+#else
 using configured_environment = champsim::configured::generated_environment<CHAMPSIM_BUILD>;
+
+#endif /* RAMULATOR */
 
 #else
 /* Original code of ChampSim */
@@ -641,6 +646,7 @@ void start_run_simulation(const ramulator::Config& configs, T* spec, const ramul
 
     if ((configs["trace_type"] == "DRAM") && (configs2["trace_type"] == "DRAM"))
     {
+        // Send ChampSim's memory trace to Ramulator
         run_simulation(configs, memory, configs2, memory2, input_parameter);
     }
     else
@@ -653,7 +659,7 @@ template<typename T, typename T2>
 void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramulator::Controller>& memory, const ramulator::Config& configs2, ramulator::Memory<T2, ramulator::Controller>& memory2, simulator_input_parameter& input_parameter)
 {
     /** Prepare the hardware modules */
-    champsim::configured::generated_environment<T, T2> gen_environment(memory, memory2);
+    champsim::configured::generated_environment<CHAMPSIM_BUILD, T, T2> gen_environment(memory, memory2);
 
     if (input_parameter.hide_heartbeat)
     {
@@ -668,7 +674,8 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %ld\nSimulation Instructions: %ld\nNumber of CPUs: %ld\nPage size: %d\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
+    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
+        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
 #endif /* PRINT_STATISTICS_INTO_FILE */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
@@ -881,6 +888,7 @@ void start_run_simulation(const ramulator::Config& configs, T* spec, simulator_i
 
     if (configs["trace_type"] == "DRAM")
     {
+        // Send ChampSim's memory trace to Ramulator
         run_simulation(configs, memory, input_parameter);
     }
     else
@@ -893,7 +901,7 @@ template<typename T>
 void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramulator::Controller>& memory, simulator_input_parameter& input_parameter)
 {
     /** Prepare the hardware modules */
-    champsim::configured::generated_environment<T> gen_environment(memory);
+    champsim::configured::generated_environment<CHAMPSIM_BUILD, T> gen_environment(memory);
 
     if (input_parameter.hide_heartbeat)
     {
@@ -908,7 +916,7 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %ld\nSimulation Instructions: %ld\nNumber of CPUs: %ld\nPage size: %d\n\n",
+    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
         input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
 #endif /* PRINT_STATISTICS_INTO_FILE */
 

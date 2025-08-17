@@ -333,7 +333,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packe
     packet.h_address = champsim::replace_bits(champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(remapping_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_MANAGEMENT_OFFSET_BITS - 1);
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
-    packet.h_address_fm = champsim::replace_bits(champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(RemappingLocation::Zero) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address, DATA_MANAGEMENT_OFFSET_BITS - 1);
+    packet.h_address_fm = champsim::replace_bits(champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(RemappingLocation::Zero) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_MANAGEMENT_OFFSET_BITS - 1);
 #endif /* COLOCATED_LINE_LOCATION_TABLE */
 };
 

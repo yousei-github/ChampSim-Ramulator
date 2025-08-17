@@ -53,6 +53,7 @@
 // Define the MEMORY_CONTROLLER class
 #if (RAMULATOR == ENABLE)
 // Use Ramulator to simulate the memory
+#include "ChampSim/util/units.h"
 #include "Ramulator/Memory.h"
 #include "Ramulator/Request.h"
 
@@ -68,12 +69,12 @@
 template<typename T, typename T2>
 class MEMORY_CONTROLLER : public champsim::operable
 {
-    double clock_scale  = MEMORY_CONTROLLER_CLOCK_SCALE;
-    double clock_scale2 = MEMORY_CONTROLLER_CLOCK_SCALE;
+    double io_freq_scale  = {};
+    double io_freq_scale2 = {};
 
-    using channel_type  = champsim::channel;
-    using request_type  = typename channel_type::request_type;
-    using response_type = typename channel_type::response_type;
+    using channel_type    = champsim::channel;
+    using request_type    = typename channel_type::request_type;
+    using response_type   = typename channel_type::response_type;
     std::vector<channel_type*> queues;
 
     void initiate_requests();
@@ -135,7 +136,7 @@ public:
     uint64_t write_request_in_memory, write_request_in_memory2;
 
     /* Member functions */
-    MEMORY_CONTROLLER(double freq_scale, double clock_scale, double clock_scale2, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory, ramulator::Memory<T2, ramulator::Controller>& memory2);
+    MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period, double io_freq, double io_freq2, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory, ramulator::Memory<T2, ramulator::Controller>& memory2);
     ~MEMORY_CONTROLLER();
 
     void initialize() final;
@@ -162,7 +163,7 @@ public:
      * Get the capacity of the related write/read queue.
      * The address is physical address.
      */
-    uint32_t get_size(ramulator::Request::Type queue_type, uint64_t address);
+    uint32_t get_queue_size(ramulator::Request::Type queue_type, uint64_t address);
 
     void return_data(ramulator::Request& request);
 
@@ -191,17 +192,17 @@ private:
 };
 
 template<typename T, typename T2>
-MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(double freq_scale, double clock_scale, double clock_scale2, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory, ramulator::Memory<T2, ramulator::Controller>& memory2)
+MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period, double io_freq, double io_freq2, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory, ramulator::Memory<T2, ramulator::Controller>& memory2)
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-: champsim::operable(freq_scale), clock_scale(clock_scale), clock_scale2(clock_scale2),
+: champsim::operable(mc_period), io_freq_scale((ONE_SECOND_IN_MICROSECOND / io_freq) / mc_period.count()), io_freq_scale2((ONE_SECOND_IN_MICROSECOND / io_freq2) / mc_period.count()),
   queues(std::move(ul)), memory(memory), memory2(memory2),
   os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(memory.max_address + memory2.max_address, memory.max_address)))
 #else
-: champsim::operable(freq_scale), clock_scale(clock_scale), clock_scale2(clock_scale2),
+: champsim::operable(mc_period), io_freq_scale((ONE_SECOND_IN_MICROSECOND / io_freq) / mc_period.count()), io_freq_scale2((ONE_SECOND_IN_MICROSECOND / io_freq2) / mc_period.count()),
   queues(std::move(ul)), memory(memory), memory2(memory2)
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 {
-    std::printf("clock_scale: %f, clock_scale2: %f.\n", clock_scale, clock_scale2);
+    std::printf("Memory IO frequency: %f MH/z, memory IO frequency 2: %f MH/z.\n", io_freq, io_freq2);
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     swapping_count = swapping_traffic_in_bytes = 0;
@@ -256,33 +257,50 @@ MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
 template<typename T, typename T2>
 void MEMORY_CONTROLLER<T, T2>::initialize()
 {
-    long long int dram_size = (memory.max_address + memory2.max_address) / MiB; // in MiB
+    using namespace champsim::data::data_literals;
+    using namespace std::literals::chrono_literals;
+    auto sz = this->size();
 
 #if (USE_VCPKG == ENABLE)
-    fmt::print("Memory Subsystem Size: ");
-    if (dram_size > 1024)
+    if (champsim::data::gibibytes gb_sz {sz}; gb_sz > 1_GiB)
     {
-        fmt::print("{} GiB", dram_size / 1024);
+        fmt::print("Off-chip DRAM Size: {}", gb_sz);
+    }
+    else if (champsim::data::mebibytes mb_sz {sz}; mb_sz > 1_MiB)
+    {
+        fmt::print("Off-chip DRAM Size: {}", mb_sz);
+    }
+    else if (champsim::data::kibibytes kb_sz {sz}; kb_sz > 1_kiB)
+    {
+        fmt::print("Off-chip DRAM Size: {}", kb_sz);
     }
     else
     {
-        fmt::print("{} MiB", dram_size);
+        fmt::print("Off-chip DRAM Size: {}", sz);
     }
-    fmt::print("\n");
+    fmt::print(" Channels: {} Width: {}-bit Data Rate: {} MT/s\n", memory.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory.spec->speed_entry.rate);
 
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "Memory Subsystem Size: ");
-    if (dram_size > 1024)
+    if (champsim::data::gibibytes gb_sz {sz}; gb_sz > 1_GiB)
     {
-        std::fprintf(output_statistics.file_handler, "%lld GiB", dram_size / 1024);
+        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", gb_sz.count());
+    }
+    else if (champsim::data::mebibytes mb_sz {sz}; mb_sz > 1_MiB)
+    {
+        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", mb_sz.count());
+    }
+    else if (champsim::data::kibibytes kb_sz {sz}; kb_sz > 1_kiB)
+    {
+        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", kb_sz.count());
     }
     else
     {
-        std::fprintf(output_statistics.file_handler, "%lld MiB", dram_size);
+        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", sz.count());
     }
-    std::fprintf(output_statistics.file_handler, "\n");
+    std::fprintf(output_statistics.file_handler, " Channels: %d Width: %d-bit Data Rate: %d MT/s\n",
+        memory.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory.spec->speed_entry.rate);
 
 #endif /* PRINT_STATISTICS_INTO_FILE */
 }
@@ -489,7 +507,9 @@ long MEMORY_CONTROLLER<T, T2>::operate()
     else
     {
         memory.tick();
-        leap_operation += clock_scale;
+        leap_operation += io_freq_scale;
+
+        ++progress;
     }
 
     if (leap_operation2 >= 1)
@@ -499,12 +519,14 @@ long MEMORY_CONTROLLER<T, T2>::operate()
     else
     {
         memory2.tick();
-        leap_operation2 += clock_scale2;
+        leap_operation2 += io_freq_scale2;
+
+        ++progress;
     }
 
     Stats::curTick++; // Processor clock, global, for Statistics
 
-    return ++progress;
+    return progress;
 }
 
 template<typename T, typename T2>
@@ -512,7 +534,8 @@ void MEMORY_CONTROLLER<T, T2>::begin_phase()
 {
     for (auto ul : queues)
     {
-        channel_type::stats_type ul_new_roi_stats, ul_new_sim_stats;
+        channel_type::stats_type ul_new_roi_stats;
+        channel_type::stats_type ul_new_sim_stats;
         ul->roi_stats = ul_new_roi_stats;
         ul->sim_stats = ul_new_sim_stats;
     }
@@ -528,7 +551,13 @@ void MEMORY_CONTROLLER<T, T2>::end_phase(unsigned)
 template<typename T, typename T2>
 void MEMORY_CONTROLLER<T, T2>::print_deadlock()
 {
-    std::printf("MEMORY_CONTROLLER %s.\n", __func__);
+#if (USE_VCPKG == ENABLE)
+    fmt::print("Memory controller {}\n", __func__);
+#endif /* USE_VCPKG */
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    std::fprintf(output_statistics.file_handler, "Memory controller %s\n", __func__);
+#endif /* PRINT_STATISTICS_INTO_FILE */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     std::printf("base_address[0]: %ld, base_address[1]: %ld.\n", base_address[0], base_address[1]);
@@ -540,7 +569,7 @@ void MEMORY_CONTROLLER<T, T2>::print_deadlock()
 template<typename T, typename T2>
 champsim::data::bytes MEMORY_CONTROLLER<T, T2>::size() const
 {
-    return champsim::data::bytes {(memory.max_address + memory2.max_address)};
+    return champsim::data::bytes {static_cast<long long>(memory.max_address + memory2.max_address)};
 }
 
 template<typename T, typename T2>
@@ -580,9 +609,9 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management.physical_to_hardware_address(packet);
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-    os_transparent_management.memory_activity_tracking(packet.address, type, packet.type_origin, float(get_occupancy(type, packet.address)) / get_size(type, packet.address));
+    os_transparent_management.memory_activity_tracking(packet.address.to<uint64_t>(), type, packet.type_origin, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
 #else
-    os_transparent_management.memory_activity_tracking(packet.address, type, float(get_occupancy(type, packet.address)) / get_size(type, packet.address));
+    os_transparent_management.memory_activity_tracking(packet.address.to<uint64_t>(), type, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
 #endif /* TRACKING_LOAD_STORE_STATISTICS */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -617,7 +646,9 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 
     DRAM_CHANNEL::request_type rq_it = DRAM_CHANNEL::request_type {packet};
     rq_it.forward_checked            = false;
-    rq_it.event_cycle                = current_cycle;
+    rq_it.scheduled                  = false;
+    rq_it.ready_time                 = current_time;
+
     if (packet.response_requested)
         rq_it.to_return = {&ul->returned}; // Store the response queue to communicate with the LLC
 
@@ -649,7 +680,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 #endif /* COLOCATED_LINE_LOCATION_TABLE */
 
 #else
-    address = packet.address;
+    address = packet.address.to<uint64_t>();
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
@@ -746,9 +777,9 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management.physical_to_hardware_address(packet);
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-    os_transparent_management.memory_activity_tracking(packet.address, type, packet.type_origin, float(get_occupancy(type, packet.address)) / get_size(type, packet.address));
+    os_transparent_management.memory_activity_tracking(packet.address.to<uint64_t>(), type, packet.type_origin, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
 #else
-    os_transparent_management.memory_activity_tracking(packet.address, type, float(get_occupancy(type, packet.address)) / get_size(type, packet.address));
+    os_transparent_management.memory_activity_tracking(packet.address.to<uint64_t>(), type, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
 #endif /* TRACKING_LOAD_STORE_STATISTICS */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -776,7 +807,8 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
 
     DRAM_CHANNEL::request_type wq_it = DRAM_CHANNEL::request_type {packet};
     wq_it.forward_checked            = false;
-    wq_it.event_cycle                = current_cycle;
+    wq_it.scheduled                  = false;
+    wq_it.ready_time                 = current_time;
 
     /* Send memory request below */
     bool stall                       = true;
@@ -813,7 +845,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
 #endif /* COLOCATED_LINE_LOCATION_TABLE */
 
 #else
-    address = packet.address;
+    address = packet.address.to<uint64_t>();
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
@@ -886,7 +918,7 @@ uint32_t MEMORY_CONTROLLER<T, T2>::get_occupancy(ramulator::Request::Type queue_
 };
 
 template<class T, class T2>
-uint32_t MEMORY_CONTROLLER<T, T2>::get_size(ramulator::Request::Type queue_type, uint64_t address)
+uint32_t MEMORY_CONTROLLER<T, T2>::get_queue_size(ramulator::Request::Type queue_type, uint64_t address)
 {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management.physical_to_hardware_address(address);
@@ -1311,7 +1343,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::check_request(request_type& packet, ramulator:
         if ((buffer[entry_index].finish == true) || (buffer[entry_index].read[segment_index] == true) || (buffer[entry_index].write[segment_index] == true) || (buffer[entry_index].dirty[segment_index] == true))
         {
             uint64_t& read_data = *((uint64_t*) (&buffer[entry_index].data[segment_index])); // Note the PACKET only has 64 bit data.
-            packet.data         = read_data;
+            packet.data         = champsim::address {read_data};
 
             return 2; // Though this address is under swapping, we can service its request because the data is in the swapping buffer.
         }
@@ -1321,7 +1353,7 @@ uint8_t MEMORY_CONTROLLER<T, T2>::check_request(request_type& packet, ramulator:
         if ((buffer[entry_index].read[0] == true) && (buffer[entry_index].read[1] == true))
         {
             uint64_t& write_data                     = *((uint64_t*) (&buffer[entry_index].data[segment_index])); // Note the PACKET only has 64 bit data.
-            write_data                               = packet.data;
+            write_data                               = packet.data.to<uint64_t>();
             buffer[entry_index].dirty[segment_index] = true;
 
             if (buffer[entry_index].finish == true)
@@ -1400,16 +1432,16 @@ uint8_t MEMORY_CONTROLLER<T, T2>::check_address(uint64_t address, uint8_t type)
 template<typename T>
 class MEMORY_CONTROLLER : public champsim::operable
 {
-    double clock_scale  = MEMORY_CONTROLLER_CLOCK_SCALE;
+    double io_freq_scale = {};
 
-    using channel_type  = champsim::channel;
-    using request_type  = typename channel_type::request_type;
-    using response_type = typename channel_type::response_type;
+    using channel_type   = champsim::channel;
+    using request_type   = typename channel_type::request_type;
+    using response_type  = typename channel_type::response_type;
     std::vector<channel_type*> queues;
 
     void initiate_requests();
-    bool add_rq(const request_type& pkt, champsim::channel* ul);
-    bool add_wq(const request_type& pkt);
+    bool add_rq(const request_type& packet, champsim::channel* ul);
+    bool add_wq(const request_type& packet);
 
 public:
     // Note here they are the references to escape memory deallocation here.
@@ -1421,14 +1453,14 @@ public:
     uint64_t write_request_in_memory;
 
     /* Member functions */
-    MEMORY_CONTROLLER(double freq_scale, double clock_scale, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory);
+    MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period, double io_freq, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory);
     ~MEMORY_CONTROLLER();
 
-    void initialize() override final;
-    long operate() override final;
-    void begin_phase() override final;
-    void end_phase(unsigned cpu) override final;
-    void print_deadlock() override final;
+    void initialize() final;
+    long operate() final;
+    void begin_phase() final;
+    void end_phase(unsigned cpu) final;
+    void print_deadlock() final;
 
     /**
      * @brief
@@ -1448,17 +1480,17 @@ public:
      * Get the capacity of the related write/read queue.
      * The address is physical address.
      */
-    uint32_t get_size(ramulator::Request::Type queue_type, uint64_t address);
+    uint32_t get_queue_size(ramulator::Request::Type queue_type, uint64_t address);
 
     void return_data(ramulator::Request& request);
 };
 
 template<typename T>
-MEMORY_CONTROLLER<T>::MEMORY_CONTROLLER(double freq_scale, double clock_scale, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory)
-: champsim::operable(freq_scale), clock_scale(clock_scale),
+MEMORY_CONTROLLER<T>::MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period, double io_freq, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory)
+: champsim::operable(mc_period), io_freq_scale((ONE_SECOND_IN_MICROSECOND / io_freq) / mc_period.count()),
   queues(std::move(ul)), memory(memory)
 {
-    std::printf("clock_scale: %f.\n", clock_scale);
+    std::printf("Memory IO frequency: %f MH/z.\n", io_freq);
 
     read_request_in_memory  = 0;
     write_request_in_memory = 0;
@@ -1475,33 +1507,50 @@ MEMORY_CONTROLLER<T>::~MEMORY_CONTROLLER()
 template<typename T>
 void MEMORY_CONTROLLER<T>::initialize()
 {
-    long long int dram_size = memory.max_address / MiB; // in MiB
+    using namespace champsim::data::data_literals;
+    using namespace std::literals::chrono_literals;
+    auto sz = this->size();
 
 #if (USE_VCPKG == ENABLE)
-    fmt::print("Memory Subsystem Size: ");
-    if (dram_size > 1024)
+    if (champsim::data::gibibytes gb_sz {sz}; gb_sz > 1_GiB)
     {
-        fmt::print("{} GiB", dram_size / 1024);
+        fmt::print("Off-chip DRAM Size: {}", gb_sz);
+    }
+    else if (champsim::data::mebibytes mb_sz {sz}; mb_sz > 1_MiB)
+    {
+        fmt::print("Off-chip DRAM Size: {}", mb_sz);
+    }
+    else if (champsim::data::kibibytes kb_sz {sz}; kb_sz > 1_kiB)
+    {
+        fmt::print("Off-chip DRAM Size: {}", kb_sz);
     }
     else
     {
-        fmt::print("{} MiB", dram_size);
+        fmt::print("Off-chip DRAM Size: {}", sz);
     }
-    fmt::print("\n");
+    fmt::print(" Channels: {} Width: {}-bit Data Rate: {} MT/s\n", memory.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory.spec->speed_entry.rate);
 
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "Memory Subsystem Size: ");
-    if (dram_size > 1024)
+    if (champsim::data::gibibytes gb_sz {sz}; gb_sz > 1_GiB)
     {
-        std::fprintf(output_statistics.file_handler, "%lld GiB", dram_size / 1024);
+        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", gb_sz.count());
+    }
+    else if (champsim::data::mebibytes mb_sz {sz}; mb_sz > 1_MiB)
+    {
+        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", mb_sz.count());
+    }
+    else if (champsim::data::kibibytes kb_sz {sz}; kb_sz > 1_kiB)
+    {
+        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", kb_sz.count());
     }
     else
     {
-        std::fprintf(output_statistics.file_handler, "%lld MiB", dram_size);
+        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", sz.count());
     }
-    std::fprintf(output_statistics.file_handler, "\n");
+    std::fprintf(output_statistics.file_handler, " Channels: %d Width: %d-bit Data Rate: %d MT/s\n",
+        memory.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory.spec->speed_entry.rate);
 
 #endif /* PRINT_STATISTICS_INTO_FILE */
 }
@@ -1523,12 +1572,14 @@ long MEMORY_CONTROLLER<T>::operate()
     else
     {
         memory.tick();
-        leap_operation += clock_scale;
+        leap_operation += io_freq_scale;
+
+        ++progress;
     }
 
     Stats::curTick++; // Processor clock, global, for Statistics
 
-    return ++progress;
+    return progress;
 }
 
 template<typename T>
@@ -1536,7 +1587,8 @@ void MEMORY_CONTROLLER<T>::begin_phase()
 {
     for (auto ul : queues)
     {
-        channel_type::stats_type ul_new_roi_stats, ul_new_sim_stats;
+        channel_type::stats_type ul_new_roi_stats;
+        channel_type::stats_type ul_new_sim_stats;
         ul->roi_stats = ul_new_roi_stats;
         ul->sim_stats = ul_new_sim_stats;
     }
@@ -1552,7 +1604,13 @@ void MEMORY_CONTROLLER<T>::end_phase(unsigned)
 template<typename T>
 void MEMORY_CONTROLLER<T>::print_deadlock()
 {
-    std::printf("MEMORY_CONTROLLER %s.\n", __func__);
+#if (USE_VCPKG == ENABLE)
+    fmt::print("Memory controller {}\n", __func__);
+#endif /* USE_VCPKG */
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    std::fprintf(output_statistics.file_handler, "Memory controller %s\n", __func__);
+#endif /* PRINT_STATISTICS_INTO_FILE */
 }
 
 // LCOV_EXCL_STOP
@@ -1560,7 +1618,7 @@ void MEMORY_CONTROLLER<T>::print_deadlock()
 template<typename T>
 champsim::data::bytes MEMORY_CONTROLLER<T>::size() const
 {
-    return champsim::data::bytes {memory.max_address};
+    return champsim::data::bytes {static_cast<long long>(memory.max_address)};
 }
 
 template<typename T>
@@ -1572,13 +1630,17 @@ void MEMORY_CONTROLLER<T>::initiate_requests()
         for (auto q : {std::ref(ul->RQ), std::ref(ul->PQ)})
         {
             auto [begin, end] = champsim::get_span_p(std::cbegin(q.get()), std::cend(q.get()), [ul, this](const auto& pkt)
-                { return this->add_rq(pkt, ul); }); // Add read requests
+                { 
+                    request_type packet = pkt;
+                    return this->add_rq(packet, ul); }); // Add read requests
             q.get().erase(begin, end);
         }
 
         // Initiate write requests
         auto [wq_begin, wq_end] = champsim::get_span_p(std::cbegin(ul->WQ), std::cend(ul->WQ), [this](const auto& pkt)
-            { return this->add_wq(pkt); }); // Add write requests
+            { 
+                request_type packet = pkt;
+                return this->add_wq(packet); }); // Add write requests
         ul->WQ.erase(wq_begin, wq_end);
     }
 }
@@ -1590,14 +1652,16 @@ bool MEMORY_CONTROLLER<T>::add_rq(const request_type& packet, champsim::channel*
 
     DRAM_CHANNEL::request_type rq_it           = DRAM_CHANNEL::request_type {packet};
     rq_it.forward_checked                      = false;
-    rq_it.event_cycle                          = current_cycle;
+    rq_it.scheduled                            = false;
+    rq_it.ready_time                           = current_time;
+
     if (packet.response_requested)
         rq_it.to_return = {&ul->returned}; // Store the response queue to communicate with the LLC
 
     /* Send memory request below */
     bool stall       = true;
 
-    uint64_t address = packet.address;
+    uint64_t address = packet.address.to<uint64_t>();
 
     // Assign the request to the right memory.
     if (address < memory.max_address)
@@ -1637,12 +1701,13 @@ bool MEMORY_CONTROLLER<T>::add_wq(const request_type& packet)
 
     DRAM_CHANNEL::request_type wq_it           = DRAM_CHANNEL::request_type {packet};
     wq_it.forward_checked                      = false;
-    wq_it.event_cycle                          = current_cycle;
+    wq_it.scheduled                            = false;
+    wq_it.ready_time                           = current_time;
 
     /* Send memory request below */
     bool stall                                 = true;
 
-    uint64_t address                           = packet.address;
+    uint64_t address                           = packet.address.to<uint64_t>();
 
     // Assign the request to the right memory.
     if (address < memory.max_address)
@@ -1693,7 +1758,7 @@ uint32_t MEMORY_CONTROLLER<T>::get_occupancy(ramulator::Request::Type queue_type
 };
 
 template<class T>
-uint32_t MEMORY_CONTROLLER<T>::get_size(ramulator::Request::Type queue_type, uint64_t address)
+uint32_t MEMORY_CONTROLLER<T>::get_queue_size(ramulator::Request::Type queue_type, uint64_t address)
 {
     // Assign the request to the right memory.
     if (address < memory.max_address)
@@ -1848,9 +1913,9 @@ struct DRAM_CHANNEL final : public champsim::operable
 
     /**
      * @note
-     * DRAM_IO_FREQ defined in champsim_constants.h
+     * DRAM_DATA_TRANSFER_RATE defined in champsim_constants.h
      *
-     * The unit of tRP/tRCD/tCAS/DRAM_DBUS_TURN_AROUND_TIME is cycle (1 cycle = 1 / DRAM_IO_FREQ microsecond)
+     * The unit of tRP/tRCD/tCAS/DRAM_DBUS_TURN_AROUND_TIME is cycle (1 cycle = 1 / DRAM_DATA_TRANSFER_RATE microsecond)
      * tRP is the time of precharging phase.
      *
      * tRCD is row-to-column delay, which is the time when the subarray copies the row into the sense-amplifier

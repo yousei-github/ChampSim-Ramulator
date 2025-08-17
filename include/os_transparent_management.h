@@ -66,7 +66,7 @@ public:
     ~OS_TRANSPARENT_MANAGEMENT();
 
     // Adress is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, uint8_t type, float queue_busy_degree);
+    bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree);
 
     // Translate the physical address to hardware address
     void physical_to_hardware_address(request_type& packet);

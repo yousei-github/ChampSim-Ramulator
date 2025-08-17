@@ -79,7 +79,8 @@
         "format": "cpp",
         "forward_list": "cpp",
         "charconv": "cpp",
-        "*.def": "cpp"
+        "*.def": "cpp",
+        "typeindex": "cpp"
     },
     "editor.tabSize": 4,
     "editor.indentSize": "tabSize",

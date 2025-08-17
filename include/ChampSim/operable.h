@@ -55,33 +55,8 @@ public:
 
 } // namespace champsim
 
-/** @todo check past code */
-
-//     long _operate()
-//     {
-// #if (RAMULATOR == ENABLE)
-// #else
-//         // skip periodically
-//         if (leap_operation >= 1)
-//         {
-//             leap_operation -= 1;
-//             return 0;
-//         }
-// #endif /* RAMULATOR */
-
-//         auto result = operate();
-
-// #if (RAMULATOR == ENABLE)
-// #else
-//         leap_operation += CLOCK_SCALE;
-// #endif /* RAMULATOR */
-
-//         ++current_cycle;
-
-//         return result;
-//     }
-
 #else
+/* Original code of ChampSim */
 
 namespace champsim
 {

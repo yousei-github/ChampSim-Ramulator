@@ -10,7 +10,6 @@
 
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/channel.h"
-#include "ChampSim/util.h"
 #include "ProjectConfiguration.h" // User file
 #include "Ramulator/Request.h"
 
@@ -104,7 +103,7 @@ public:
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     // Address is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, ramulator::Request::Type type_origin, float queue_busy_degree);
+    bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, access_type type_origin, float queue_busy_degree);
 #else
     // Address is physical address and at byte granularity
     bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree);

@@ -3,7 +3,7 @@
 </p>
 
 # About This Project
-This project is based on the master branch of [ChampSim](https://github.com/yousei-github/ChampSim) and [Ramulator](https://github.com/yousei-github/ramulator), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `./inc/ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
+This project is based on the master branch of [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: 24cc41b) and [Ramulator](https://github.com/yousei-github/ramulator) (Commit: 743b940), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `./inc/ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
 - Set the preprocessor `RAMULATOR` to `ENABLE` for enabling Ramulator or to `DISABLE` for just using ChampSim.
 - Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` for enabling hybrid memory systems or to `DISABLE` for enabling single memory systems.
 - Set the preprocessor `PRINT_STATISTICS_INTO_FILE` to `ENABLE` for printing statistics into `.statistics` file.

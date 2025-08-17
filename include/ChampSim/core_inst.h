@@ -13,247 +13,6 @@
 #include <cstdint>
 
 #if (RAMULATOR == ENABLE)
-
-#if (MEMORY_USE_HYBRID == ENABLE)
-
-/** @todo Mark */
-
-#else
-
-template<unsigned long long ID, typename MEMORY_TYPE>
-struct champsim::configured::generated_environment final : public champsim::environment
-{
-private:
-    using index_type = uint32_t;
-
-    /* Hardwares' channels' index */
-    enum class ChannelIndex : index_type
-    {
-        /* CPU 0's channels */
-        CPU0_PTW_to_CPU0_L1D_Queues = 0, // CPU 0 PTW to CPU 0 L1D queues
-        CPU0_DTLB_to_CPU0_STLB_Queues,   // CPU 0 DTLB to CPU 0 STLB queues
-        CPU0_ITLB_to_CPU0_STLB_Queues,   // CPU 0 ITLB to CPU 0 STLB queues
-        CPU0_L1D_to_CPU0_L2C_Queues,     // CPU 0 L1D to CPU 0 L2C queues
-        CPU0_L1I_to_CPU0_L2C_Queues,     // CPU 0 L1I to CPU 0 L2C queues
-        CPU0_L2C_to_LLC_Queues,          // CPU 0 L2C to LLC queues
-        CPU0_STLB_to_CPU0_PTW_Queues,    // CPU 0 STLB to CPU 0 PTW queues
-        CPU0_L1D_to_CPU0_DTLB_Queues,    // CPU 0 L1D to CPU 0 DTLB queues
-        CPU0_L1I_to_CPU0_ITLB_Queues,    // CPU 0 L1I to CPU 0 ITLB queues
-        CPU0_L2C_to_CPU0_STLB_Queues,    // CPU 0 L2C to CPU 0 STLB queues
-        CPU0_to_CPU0_L1I_Queues,         // CPU 0 to CPU 0 L1I queues
-        CPU0_to_CPU0_L1D_Queues,         // CPU 0 to CPU 0 L1D queues
-
-#if (CPU_USE_MULTIPLE_CORES == ENABLE)
-        /* CPU 1's channels */
-        CPU1_PTW_to_CPU1_L1D_Queues,   // CPU 1 PTW to CPU 1 L1D queues
-        CPU1_DTLB_to_CPU1_STLB_Queues, // CPU 1 DTLB to CPU 1 STLB queues
-        CPU1_ITLB_to_CPU1_STLB_Queues, // CPU 1 ITLB to CPU 1 STLB queues
-        CPU1_L1D_to_CPU1_L2C_Queues,   // CPU 1 L1D to CPU 1 L2C queues
-        CPU1_L1I_to_CPU1_L2C_Queues,   // CPU 1 L1I to CPU 1 L2C queues
-        CPU1_L2C_to_LLC_Queues,        // CPU 1 L2C to LLC queues
-        CPU1_STLB_to_CPU1_PTW_Queues,  // CPU 1 STLB to CPU 1 PTW queues
-        CPU1_L1D_to_CPU1_DTLB_Queues,  // CPU 1 L1D to CPU 1 DTLB queues
-        CPU1_L1I_to_CPU1_ITLB_Queues,  // CPU 1 L1I to CPU 1 ITLB queues
-        CPU1_L2C_to_CPU1_STLB_Queues,  // CPU 1 L2C to CPU 1 STLB queues
-        CPU1_to_CPU1_L1I_Queues,       // CPU 1 to CPU 1 L1I queues
-        CPU1_to_CPU1_L1D_Queues,       // CPU 1 to CPU 1 L1D queues
-
-#endif /* CPU_USE_MULTIPLE_CORES */
-
-        /* LLC to DRAM queues */
-        LLC_to_MAIN_MEMORY_Queues,
-        Max
-    };
-    /* Hardwares' channels */
-    std::vector<champsim::channel> channels;
-
-    /** @todo make it a forward_list structure */
-    /* Memory controller and its memories */
-    MEMORY_CONTROLLER<MEMORY_TYPE> memory_controller;
-    // /* Memory */
-    // MEMORY_CONTROLLER DRAM;
-
-    /* Virtual memory */
-    VirtualMemory vmem;
-    /* Page table walker */
-    std::forward_list<PageTableWalker> ptws;
-    /* Caches */
-    std::forward_list<CACHE> caches;
-    /* CPUs */
-    std::forward_list<O3_CPU> cores;
-
-public:
-    constexpr static std::size_t num_cpus   = NUM_CPUS;
-    constexpr static std::size_t block_size = BLOCK_SIZE;
-    constexpr static std::size_t page_size  = PAGE_SIZE;
-
-    generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory);
-    // generated_environment();
-
-    std::vector<std::reference_wrapper<O3_CPU> > cpu_view() final;
-    std::vector<std::reference_wrapper<CACHE> > cache_view() final;
-    std::vector<std::reference_wrapper<PageTableWalker> > ptw_view() final;
-    // MEMORY_CONTROLLER& dram_view() final;
-    std::vector<std::reference_wrapper<operable> > operable_view() final;
-};
-
-/** @todo Mark */
-
-// template<unsigned long long ID, typename MEMORY_TYPE>
-// struct champsim::configured::generated_environment final : public champsim::environment
-// {
-// private:
-//     /* Hardwares' channels */
-//     std::vector<champsim::channel> channels;
-//     /** @todo make it a forward_list structure */
-//     /* Memory controller and its memories */
-//     MEMORY_CONTROLLER<MEMORY_TYPE> memory_controller;
-//     /* Virtual memory */
-//     VirtualMemory vmem;
-//     /* Page table walker */
-//     std::forward_list<PageTableWalker> ptws;
-//     /* Caches */
-//     std::forward_list<CACHE> caches;
-//     /* CPUs */
-//     std::forward_list<O3_CPU> cores;
-
-// public:
-//     constexpr static std::size_t num_cpus   = NUM_CPUS;
-//     constexpr static std::size_t block_size = BLOCK_SIZE;
-//     constexpr static std::size_t page_size  = PAGE_SIZE;
-
-//     generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory);
-
-//     std::vector<std::reference_wrapper<O3_CPU> > cpu_view() final;
-//     std::vector<std::reference_wrapper<CACHE> > cache_view() final;
-//     std::vector<std::reference_wrapper<PageTableWalker> > ptw_view() final;
-//     std::vector<std::reference_wrapper<operable> > operable_view() final;
-// };
-
-template<unsigned long long ID, typename MEMORY_TYPE>
-champsim::configured::generated_environment<ID, MEMORY_TYPE>::generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory)
-: /* Hardwares' channels' initialization */
-  channels {
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
-      champsim::channel {std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max(), champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,         champsim::data::bits {champsim::lg2(64)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,         champsim::data::bits {champsim::lg2(64)}, 0},
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 0},
-      champsim::channel {                                     32,                                       0,                                       0,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 1},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 1},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
-
-#if (CPU_USE_MULTIPLE_CORES == ENABLE)
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
-      champsim::channel {std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max(), champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,         champsim::data::bits {champsim::lg2(64)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,         champsim::data::bits {champsim::lg2(64)}, 0},
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 0},
-      champsim::channel {                                     32,                                       0,                                       0,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 1},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 1},
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
-#endif /* CPU_USE_MULTIPLE_CORES */
-},
-  /* Memory controller's initialization */
-  memory_controller(MEMORY_CONTROLLER_CLOCK_SCALE, CPU_FREQUENCY / memory.spec->speed_entry.freq, {&LLC_to_MEMORY_CONTROLLER_queues}, memory)
-  // DRAM {champsim::chrono::picoseconds {312}, champsim::chrono::picoseconds {625}, std::size_t {24}, std::size_t {24}, std::size_t {24}, std::size_t {52}, champsim::chrono::microseconds {32000}, {&channels.at(1)}, 64, 64, 1, champsim::data::bytes {8}, 65536, 1024, 1, 8, 4, 8192},
-
-  /* Virtual memory's initialization */
-  vmem(PAGE_SIZE, PAGE_TABLE_LEVELS, MINOR_FAULT_PENALTY, memory.max_address)
-  // vmem {champsim::data::bytes {4096}, 5, champsim::chrono::picoseconds {250 * 200}, DRAM, 1},
-
-  /* Page table walker's initialization */
-  ptws {build<PageTableWalker>(champsim::ptw_builder {champsim::defaults::default_ptw}.name("cpu0_PTW").upper_levels({&channels.at(7)}).virtual_memory(&vmem).name("cpu0_PTW").cpu(0).lower_level(&channels.at(0)).clock_period(champsim::chrono::picoseconds {250}))},
-  /* Caches' initialization */
-  caches {build<CACHE>(
-      /* CPU 0's caches */
-      // Last level cache (LLC)
-      champsim::cache_builder {champsim::defaults::default_llc}.name("LLC").upper_levels({&channels.at(6)}).offset_bits(champsim::data::bits {champsim::lg2(64)}).replacement<class lru>().prefetcher<class no>().lower_level(&channels.at(1)).clock_period(champsim::chrono::picoseconds {250}),
-      // Data translation lookaside buffer (DTLB)
-      champsim::cache_builder {champsim::defaults::default_dtlb}.name("cpu0_DTLB").upper_levels({&channels.at(8)}).offset_bits(champsim::data::bits {champsim::lg2(4096)}).replacement<class lru>().prefetcher<class no>().lower_level(&channels.at(2)).clock_period(champsim::chrono::picoseconds {250}),
-      // Instruction translation lookaside buffer (ITLB)
-      champsim::cache_builder {champsim::defaults::default_itlb}.name("cpu0_ITLB").upper_levels({&channels.at(9)}).offset_bits(champsim::data::bits {champsim::lg2(4096)}).replacement<class lru>().prefetcher<class no>().lower_level(&channels.at(3)).clock_period(champsim::chrono::picoseconds {250}),
-      // Level 1 data cache
-      champsim::cache_builder {champsim::defaults::default_l1d}.name("cpu0_L1D").upper_levels({{&channels.at(0), &channels.at(12)}}).offset_bits(champsim::data::bits {champsim::lg2(64)}).replacement<class lru>().prefetcher<class no>().lower_translate(&channels.at(8)).lower_level(&channels.at(4)).clock_period(champsim::chrono::picoseconds {250}),
-      // Level 1 instruction cache
-      champsim::cache_builder {champsim::defaults::default_l1i}.name("cpu0_L1I").upper_levels({&channels.at(11)}).offset_bits(champsim::data::bits {champsim::lg2(64)}).replacement<class lru>().prefetcher<class no>().lower_translate(&channels.at(9)).lower_level(&channels.at(5)).clock_period(champsim::chrono::picoseconds {250}),
-      // Level 2 cache
-      champsim::cache_builder {champsim::defaults::default_l2c}.name("cpu0_L2C").upper_levels({{&channels.at(4), &channels.at(5)}}).offset_bits(champsim::data::bits {champsim::lg2(64)}).replacement<class lru>().prefetcher<class no>().lower_translate(&channels.at(10)).lower_level(&channels.at(6)).clock_period(champsim::chrono::picoseconds {250}),
-      // Second Level TLB
-      champsim::cache_builder {champsim::defaults::default_stlb}.name("cpu0_STLB").upper_levels({{&channels.at(2), &channels.at(3), &channels.at(10)}}).offset_bits(champsim::data::bits {champsim::lg2(4096)}).replacement<class lru>().prefetcher<class no>().lower_level(&channels.at(7)).clock_period(champsim::chrono::picoseconds {250}))},
-  /* CPUs' initialization */
-  cores {build<O3_CPU>(
-      /* CPU 0 */
-      champsim::core_builder {champsim::defaults::default_core}.l1i(&(*std::next(std::begin(caches), 4))).l1i_bandwidth((*std::next(std::begin(caches), 4)).MAX_TAG).fetch_queues(&channels.at(11)).l1d_bandwidth((*std::next(std::begin(caches), 3)).MAX_TAG).data_queues(&channels.at(12)).branch_predictor<class hashed_perceptron>().btb<class basic_btb>().index(0).clock_period(champsim::chrono::picoseconds {250}))}
-{
-}
-
-template<unsigned long long ID, typename MEMORY_TYPE>
-auto champsim::configured::generated_environment<ID, MEMORY_TYPE>::cpu_view() -> std::vector<std::reference_wrapper<O3_CPU> >
-{
-    std::vector<std::reference_wrapper<O3_CPU> > retval {};
-    auto make_ref = [](auto& x)
-    { return std::ref(x); };
-
-    std::transform(std::begin(cores), std::end(cores), std::back_inserter(retval), make_ref);
-
-    return retval;
-}
-
-template<unsigned long long ID, typename MEMORY_TYPE>
-auto champsim::configured::generated_environment<ID, MEMORY_TYPE>::cache_view() -> std::vector<std::reference_wrapper<CACHE> >
-{
-    std::vector<std::reference_wrapper<CACHE> > retval {};
-    auto make_ref = [](auto& x)
-    { return std::ref(x); };
-
-    std::transform(std::begin(caches), std::end(caches), std::back_inserter(retval), make_ref);
-
-    return retval;
-}
-
-template<unsigned long long ID, typename MEMORY_TYPE>
-auto champsim::configured::generated_environment<ID, MEMORY_TYPE>::ptw_view() -> std::vector<std::reference_wrapper<PageTableWalker> >
-{
-    std::vector<std::reference_wrapper<PageTableWalker> > retval {};
-    auto make_ref = [](auto& x)
-    { return std::ref(x); };
-
-    std::transform(std::begin(ptws), std::end(ptws), std::back_inserter(retval), make_ref);
-
-    return retval;
-}
-
-template<unsigned long long ID, typename MEMORY_TYPE>
-auto champsim::configured::generated_environment<ID, MEMORY_TYPE>::operable_view() -> std::vector<std::reference_wrapper<champsim::operable> >
-{
-    std::vector<std::reference_wrapper<champsim::operable> > retval {};
-    auto make_ref = [](auto& x)
-    { return std::ref<champsim::operable>(x); };
-
-    std::transform(std::begin(cores), std::end(cores), std::back_inserter(retval), make_ref);
-    std::transform(std::begin(caches), std::end(caches), std::back_inserter(retval), make_ref);
-    std::transform(std::begin(ptws), std::end(ptws), std::back_inserter(retval), make_ref);
-    retval.push_back(std::ref<champsim::operable>(memory_controller));
-
-    return retval;
-}
-
-#endif /* MEMORY_USE_HYBRID */
-
-#else
-
-#if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
 template<unsigned long long ID, typename MEMORY_TYPE, typename MEMORY_TYPE2>
 #else
@@ -308,12 +67,11 @@ private:
     /* Hardwares' channels */
     std::vector<champsim::channel> channels;
 
-    /* Memory controller and its memories */
+    /* Memory controller */
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
-
+    MEMORY_CONTROLLER<MEMORY_TYPE, MEMORY_TYPE2> memory_controller;
 #else
-    /** @todo make it a forward_list structure */
     MEMORY_CONTROLLER<MEMORY_TYPE> memory_controller;
 #endif /* MEMORY_USE_HYBRID */
 #else
@@ -322,10 +80,63 @@ private:
 
     /* Virtual memory */
     VirtualMemory vmem;
+
+    /* Page table walkers' index */
+    enum class PtwIndex : index_type
+    {
+        /* CPU 0's page table walker */
+        CPU0_PTW = 0,
+
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        /* CPU 1's page table walker */
+        CPU1_PTW,
+
+#endif /* CPU_USE_MULTIPLE_CORES */
+        Max
+    };
     /* Page table walker */
     std::forward_list<PageTableWalker> ptws;
+
+    /* Caches' index */
+    enum class CacheIndex : index_type
+    {
+        /* CPU 0's caches */
+        CPU0_DTLB = 0, // Data translation lookaside buffer (DTLB)
+        CPU0_ITLB,     // Instruction translation lookaside buffer (ITLB)
+        CPU0_L1D,      // Level 1 data cache
+        CPU0_L1I,      // Level 1 instruction cache
+        CPU0_L2C,      // Level 2 cache
+        CPU0_STLB,     // Second level TLB
+
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        /* CPU 1's caches */
+        CPU1_DTLB, // Data translation lookaside buffer (DTLB)
+        CPU1_ITLB, // Instruction translation lookaside buffer (ITLB)
+        CPU1_L1D,  // Level 1 data cache
+        CPU1_L1I,  // Level 1 instruction cache
+        CPU1_L2C,  // Level 2 cache
+        CPU1_STLB, // Second level TLB
+
+#endif /* CPU_USE_MULTIPLE_CORES */
+        LLC,
+        Max
+    };
     /* Caches */
     std::forward_list<CACHE> caches;
+
+    /* CPUs' index */
+    enum class CpuIndex : index_type
+    {
+        /* CPU 0 */
+        CPU0 = 0,
+
+#if (CPU_USE_MULTIPLE_CORES == ENABLE)
+        /* CPU 1 */
+        CPU1,
+
+#endif /* CPU_USE_MULTIPLE_CORES */
+        Max
+    };
     /* CPUs */
     std::forward_list<O3_CPU> cores;
 
@@ -336,7 +147,7 @@ public:
 
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
-
+    generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory, ramulator::Memory<MEMORY_TYPE2, ramulator::Controller>& memory2);
 #else
     generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory);
 #endif /* MEMORY_USE_HYBRID */
@@ -358,7 +169,8 @@ public:
 
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
-
+template<unsigned long long ID, typename MEMORY_TYPE, typename MEMORY_TYPE2>
+champsim::configured::generated_environment<ID, MEMORY_TYPE, MEMORY_TYPE2>::generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory, ramulator::Memory<MEMORY_TYPE2, ramulator::Controller>& memory2)
 #else
 template<unsigned long long ID, typename MEMORY_TYPE>
 champsim::configured::generated_environment<ID, MEMORY_TYPE>::generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory)
@@ -367,8 +179,7 @@ champsim::configured::generated_environment<ID, MEMORY_TYPE>::generated_environm
 template<unsigned long long ID>
 champsim::configured::generated_environment<ID>::generated_environment()
 #endif /* RAMULATOR */
-:
-  /* Hardwares' channels' initialization */
+:      /* Hardwares' channels' initialization */
   channels {
       /* CPU 0's channels */
       // CPU0_PTW_to_CPU0_L1D_Queues
@@ -423,7 +234,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       // CPU1_to_CPU1_L1D_Queues
       champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
 
-#endif /* CPU_USE_MULTIPLE_CORES */
+#endif  /* CPU_USE_MULTIPLE_CORES */
 
       /* LLC_to_MAIN_MEMORY_Queues */
       champsim::channel {std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max(), champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0}
@@ -431,21 +242,20 @@ champsim::configured::generated_environment<ID>::generated_environment()
 
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
+  /* Memory's initialization */
+  memory_controller {champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}, memory.spec->speed_entry.freq, memory2.spec->speed_entry.freq, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, memory, memory2},
 #else
   /* Memory's initialization */
-  memory_controller {MEMORY_CONTROLLER_CLOCK_SCALE, CPU_FREQUENCY / memory.spec->speed_entry.freq, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, memory},
+  memory_controller {champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}, memory.spec->speed_entry.freq, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, memory},
 #endif /* MEMORY_USE_HYBRID */
 #else
   /* Memory's initialization */
-  DRAM {champsim::chrono::picoseconds {DRAM_IO_CLOCK_PERIOD}, champsim::chrono::picoseconds {DRAM_MC_CLOCK_PERIOD}, std::size_t {24}, std::size_t {24}, std::size_t {24}, std::size_t {52}, champsim::chrono::microseconds {32000}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, 64, 64, 1, champsim::data::bytes {8}, 65536, 1024, 1, 8, 4, 8192},
+  DRAM {champsim::chrono::picoseconds {DRAM_DATA_TRANSFER_PERIOD}, champsim::chrono::picoseconds {DRAM_IO_CLOCK_PERIOD}, std::size_t {24}, std::size_t {24}, std::size_t {24}, std::size_t {52}, champsim::chrono::microseconds {32000}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, DRAM_RQ_SIZE, DRAM_WQ_SIZE, DRAM_CHANNELS, champsim::data::bytes {DRAM_CHANNEL_WIDTH}, DRAM_ROWS, DRAM_COLUMNS, DRAM_RANKS, DRAM_BANK_GROUPS, DRAM_BANKS, 8192},
 #endif /* RAMULATOR */
 
 #if (RAMULATOR == ENABLE)
-#if (MEMORY_USE_HYBRID == ENABLE)
-#else
   /* Virtual memory's initialization */
-  vmem {champsim::data::bytes {PAGE_SIZE}, PAGE_TABLE_LEVELS, champsim::chrono::picoseconds {MINOR_FAULT_PENALTY}, memory.max_address, 1},
-#endif /* MEMORY_USE_HYBRID */
+  vmem {champsim::data::bytes {PAGE_SIZE}, PAGE_TABLE_LEVELS, champsim::chrono::picoseconds {MINOR_FAULT_PENALTY}, memory_controller.size(), 1},
 #else
   /* Virtual memory's initialization */
   vmem {champsim::data::bytes {PAGE_SIZE}, PAGE_TABLE_LEVELS, champsim::chrono::picoseconds {MINOR_FAULT_PENALTY}, DRAM.size(), 1},
@@ -454,6 +264,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
   /* Page table walker's initialization */
   ptws {build<PageTableWalker>(
       /** CPU 0's page table walker */
+      // CPU0_PTW
       champsim::ptw_builder {champsim::defaults::default_ptw}
           .name("cpu0_PTW")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_STLB_to_CPU0_PTW_Queues))})
@@ -464,6 +275,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)
           ,
       /** CPU 1's page table walker */
+      // CPU1_PTW
       champsim::ptw_builder {champsim::defaults::default_ptw}
           .name("cpu1_PTW")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU1_STLB_to_CPU1_PTW_Queues))})
@@ -477,7 +289,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
   /* Caches' initialization */
   caches {build<CACHE>(
       /** CPU 0's caches */
-      // Data translation lookaside buffer (DTLB)
+      // CPU0_DTLB
       champsim::cache_builder {champsim::defaults::default_dtlb}
           .name("cpu0_DTLB")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_L1D_to_CPU0_DTLB_Queues))})
@@ -486,7 +298,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .prefetcher<class CPU_DTLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU0_DTLB_to_CPU0_STLB_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Instruction translation lookaside buffer (ITLB)
+      // CPU0_ITLB
       champsim::cache_builder {champsim::defaults::default_itlb}
           .name("cpu0_ITLB")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_L1I_to_CPU0_ITLB_Queues))})
@@ -495,7 +307,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .prefetcher<class CPU_ITLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU0_ITLB_to_CPU0_STLB_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Level 1 data cache
+      // CPU0_L1D
       champsim::cache_builder {champsim::defaults::default_l1d}
           .name("cpu0_L1D")
           .upper_levels(
@@ -507,7 +319,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU0_L1D_to_CPU0_DTLB_Queues)))
           .lower_level(&channels.at(index_type(ChannelIndex::CPU0_L1D_to_CPU0_L2C_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Level 1 instruction cache
+      // CPU0_L1I
       champsim::cache_builder {champsim::defaults::default_l1i}
           .name("cpu0_L1I")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_to_CPU0_L1I_Queues))})
@@ -517,7 +329,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU0_L1I_to_CPU0_ITLB_Queues)))
           .lower_level(&channels.at(index_type(ChannelIndex::CPU0_L1I_to_CPU0_L2C_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Level 2 cache
+      // CPU0_L2C
       champsim::cache_builder {champsim::defaults::default_l2c}
           .name("cpu0_L2C")
           .upper_levels(
@@ -529,7 +341,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU0_L2C_to_CPU0_STLB_Queues)))
           .lower_level(&channels.at(index_type(ChannelIndex::CPU0_L2C_to_LLC_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Second Level TLB
+      // CPU0_STLB
       champsim::cache_builder {champsim::defaults::default_stlb}
           .name("cpu0_STLB")
           .upper_levels(
@@ -544,7 +356,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
 
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)
       /** CPU 1's caches */
-      // Data translation lookaside buffer (DTLB)
+      // CPU1_DTLB
       champsim::cache_builder {champsim::defaults::default_dtlb}
           .name("cpu1_DTLB")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU1_L1D_to_CPU1_DTLB_Queues))})
@@ -553,7 +365,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .prefetcher<class CPU_DTLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU1_DTLB_to_CPU1_STLB_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Instruction translation lookaside buffer (ITLB)
+      // CPU1_ITLB
       champsim::cache_builder {champsim::defaults::default_itlb}
           .name("cpu1_ITLB")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU1_L1I_to_CPU1_ITLB_Queues))})
@@ -562,7 +374,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .prefetcher<class CPU_ITLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU1_ITLB_to_CPU1_STLB_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Level 1 data cache
+      // CPU1_L1D
       champsim::cache_builder {champsim::defaults::default_l1d}
           .name("cpu1_L1D")
           .upper_levels(
@@ -574,7 +386,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU1_L1D_to_CPU1_DTLB_Queues)))
           .lower_level(&channels.at(index_type(ChannelIndex::CPU1_L1D_to_CPU1_L2C_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Level 1 instruction cache
+      // CPU1_L1I
       champsim::cache_builder {champsim::defaults::default_l1i}
           .name("cpu1_L1I")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU1_to_CPU1_L1I_Queues))})
@@ -584,7 +396,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU1_L1I_to_CPU1_ITLB_Queues)))
           .lower_level(&channels.at(index_type(ChannelIndex::CPU1_L1I_to_CPU1_L2C_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Level 2 cache
+      // CPU1_L2C
       champsim::cache_builder {champsim::defaults::default_l2c}
           .name("cpu1_L2C")
           .upper_levels(
@@ -596,7 +408,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU1_L2C_to_CPU1_STLB_Queues)))
           .lower_level(&channels.at(index_type(ChannelIndex::CPU1_L2C_to_LLC_Queues)))
           .clock_period(champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}),
-      // Second Level TLB
+      // CPU1_STLB
       champsim::cache_builder {champsim::defaults::default_stlb}
           .name("cpu1_STLB")
           .upper_levels(
@@ -636,10 +448,10 @@ champsim::configured::generated_environment<ID>::generated_environment()
   cores {build<O3_CPU>(
       /* CPU 0 */
       champsim::core_builder {champsim::defaults::default_core}
-          .l1i(&(*std::next(std::begin(caches), 4)))
-          .l1i_bandwidth((*std::next(std::begin(caches), 4)).MAX_TAG)
+          .l1i(&(*std::next(std::begin(caches), index_type(CacheIndex::CPU0_L1I))))
+          .l1i_bandwidth((*std::next(std::begin(caches), index_type(CacheIndex::CPU0_L1I))).MAX_TAG)
           .fetch_queues(&channels.at(index_type(ChannelIndex::CPU0_to_CPU0_L1I_Queues)))
-          .l1d_bandwidth((*std::next(std::begin(caches), 3)).MAX_TAG)
+          .l1d_bandwidth((*std::next(std::begin(caches), index_type(CacheIndex::CPU0_L1D))).MAX_TAG)
           .data_queues(&channels.at(index_type(ChannelIndex::CPU0_to_CPU0_L1D_Queues)))
           .branch_predictor<class CPU_BRANCH_PREDICTOR>()
           .btb<class CPU_BRANCH_TARGET_BUFFER>()
@@ -650,10 +462,10 @@ champsim::configured::generated_environment<ID>::generated_environment()
           ,
       /* CPU 1 */
       champsim::core_builder {champsim::defaults::default_core}
-          .l1i(&(*std::next(std::begin(caches), 4)))
-          .l1i_bandwidth((*std::next(std::begin(caches), 4)).MAX_TAG)
+          .l1i(&(*std::next(std::begin(caches), index_type(CacheIndex::CPU1_L1I))))
+          .l1i_bandwidth((*std::next(std::begin(caches), index_type(CacheIndex::CPU1_L1I))).MAX_TAG)
           .fetch_queues(&channels.at(index_type(ChannelIndex::CPU1_to_CPU1_L1I_Queues)))
-          .l1d_bandwidth((*std::next(std::begin(caches), 3)).MAX_TAG)
+          .l1d_bandwidth((*std::next(std::begin(caches), index_type(CacheIndex::CPU1_L1D))).MAX_TAG)
           .data_queues(&channels.at(index_type(ChannelIndex::CPU1_to_CPU1_L1D_Queues)))
           .branch_predictor<class CPU_BRANCH_PREDICTOR>()
           .btb<class CPU_BRANCH_TARGET_BUFFER>()
@@ -666,7 +478,8 @@ champsim::configured::generated_environment<ID>::generated_environment()
 
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
-
+template<unsigned long long ID, typename MEMORY_TYPE, typename MEMORY_TYPE2>
+auto champsim::configured::generated_environment<ID, MEMORY_TYPE, MEMORY_TYPE2>::cpu_view() -> std::vector<std::reference_wrapper<O3_CPU> >
 #else
 template<unsigned long long ID, typename MEMORY_TYPE>
 auto champsim::configured::generated_environment<ID, MEMORY_TYPE>::cpu_view() -> std::vector<std::reference_wrapper<O3_CPU> >
@@ -685,7 +498,8 @@ auto champsim::configured::generated_environment<ID>::cpu_view() -> std::vector<
 
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
-
+template<unsigned long long ID, typename MEMORY_TYPE, typename MEMORY_TYPE2>
+auto champsim::configured::generated_environment<ID, MEMORY_TYPE, MEMORY_TYPE2>::cache_view() -> std::vector<std::reference_wrapper<CACHE> >
 #else
 template<unsigned long long ID, typename MEMORY_TYPE>
 auto champsim::configured::generated_environment<ID, MEMORY_TYPE>::cache_view() -> std::vector<std::reference_wrapper<CACHE> >
@@ -704,7 +518,8 @@ auto champsim::configured::generated_environment<ID>::cache_view() -> std::vecto
 
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
-
+template<unsigned long long ID, typename MEMORY_TYPE, typename MEMORY_TYPE2>
+auto champsim::configured::generated_environment<ID, MEMORY_TYPE, MEMORY_TYPE2>::ptw_view() -> std::vector<std::reference_wrapper<PageTableWalker> >
 #else
 template<unsigned long long ID, typename MEMORY_TYPE>
 auto champsim::configured::generated_environment<ID, MEMORY_TYPE>::ptw_view() -> std::vector<std::reference_wrapper<PageTableWalker> >
@@ -723,7 +538,8 @@ auto champsim::configured::generated_environment<ID>::ptw_view() -> std::vector<
 
 #if (RAMULATOR == ENABLE)
 #if (MEMORY_USE_HYBRID == ENABLE)
-
+template<unsigned long long ID, typename MEMORY_TYPE, typename MEMORY_TYPE2>
+auto champsim::configured::generated_environment<ID, MEMORY_TYPE, MEMORY_TYPE2>::operable_view() -> std::vector<std::reference_wrapper<champsim::operable> >
 #else
 template<unsigned long long ID, typename MEMORY_TYPE>
 auto champsim::configured::generated_environment<ID, MEMORY_TYPE>::operable_view() -> std::vector<std::reference_wrapper<champsim::operable> >
@@ -736,10 +552,17 @@ auto champsim::configured::generated_environment<ID>::operable_view() -> std::ve
     std::vector<std::reference_wrapper<champsim::operable> > retval {};
     auto make_ref = [](auto& x)
     { return std::ref<champsim::operable>(x); };
+
     std::transform(std::begin(cores), std::end(cores), std::back_inserter(retval), make_ref);
     std::transform(std::begin(caches), std::end(caches), std::back_inserter(retval), make_ref);
     std::transform(std::begin(ptws), std::end(ptws), std::back_inserter(retval), make_ref);
+
+#if (RAMULATOR == ENABLE)
+    retval.push_back(std::ref<champsim::operable>(memory_controller));
+#else
     retval.push_back(std::ref<champsim::operable>(DRAM));
+#endif /* RAMULATOR */
+
     return retval;
 }
 
@@ -750,8 +573,6 @@ auto champsim::configured::generated_environment<ID>::dram_view() -> MEMORY_CONT
 {
     return DRAM;
 }
-#endif /* RAMULATOR */
-
 #endif /* RAMULATOR */
 
 #else

@@ -49,17 +49,17 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
 // Complete
-bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, uint8_t type, uint8_t type_origin, float queue_busy_degree)
+bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramulator::Request::Type type, access_type type_origin, float queue_busy_degree)
 {
 #if (TRACKING_LOAD_ONLY)
-    if (type_origin == RFO || type_origin == WRITEBACK) // CPU Store Instruction and LLC Writeback is ignored
+    if (type_origin == access_type::RFO || type_origin == access_type::WRITE) // CPU Store Instruction and LLC Writeback is ignored
     {
         return true;
     }
 #endif /* TRACKING_LOAD_ONLY */
 
 #if (TRACKING_READ_ONLY)
-    if (type == 2) // Memory Write is ignored
+    if (type == ramulator::Request::Type::WRITE) // Memory Write is ignored
     {
         return true;
     }
@@ -135,8 +135,8 @@ void OS_TRANSPARENT_MANAGEMENT::update_mea_counter(uint64_t segment_address)
 // Complete
 void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packet)
 {
-    uint64_t data_segment_address = packet.address >> DATA_MANAGEMENT_OFFSET_BITS;
-    uint64_t data_segment_offset  = packet.address - (data_segment_address << DATA_MANAGEMENT_OFFSET_BITS);
+    uint64_t data_segment_address = packet.address.to<uint64_t>() >> DATA_MANAGEMENT_OFFSET_BITS;
+    uint64_t data_segment_offset  = packet.address.to<uint64_t>() - (data_segment_address << DATA_MANAGEMENT_OFFSET_BITS);
 #if (DEBUG_PRINTF == ENABLE)
     std::printf("physical_to_hardware_address(PACKET), p_segment %lu, h_segment %lu \n", data_segment_address, address_remapping_table[data_segment_address]);
 #endif

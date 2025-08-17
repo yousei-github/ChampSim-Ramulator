@@ -201,46 +201,6 @@ public:
     void print_deadlock() final;
 
 #if (USER_CODES == ENABLE)
-    /** @todo Need to understand how it works */
-
-    // /* Definition and declaration for branch predictors */
-    // // Branch predictor type selection, i.e., bimodal, gshare, hashed_perceptron, perceptron.
-    // constexpr static unsigned long long bbranchDbimodal           = 1ull << 0;
-    // constexpr static unsigned long long bbranchDgshare            = 1ull << 1;
-    // constexpr static unsigned long long bbranchDhashed_perceptron = 1ull << 2;
-    // constexpr static unsigned long long bbranchDperceptron        = 1ull << 3;
-
-    // /* Definition and declaration for branch target buffers */
-    // // Basic Branch Target Buffer (BTB) type selection, i.e., basic_btb.
-    // constexpr static unsigned long long tbtbDbasic_btb            = 1ull << 0;
-
-    // // Initialization for branch predictors
-    // [[]] void bpred_branchDbimodal_initialize_branch_predictor();
-    // [[]] void bpred_branchDgshare_initialize_branch_predictor();
-    // [[]] void bpred_branchDhashed_perceptron_initialize_branch_predictor();
-    // [[]] void bpred_branchDperceptron_initialize_branch_predictor();
-
-    // // Last result for branch predictors
-    // [[]] void bpred_branchDbimodal_last_branch_result(uint64_t, uint64_t, uint8_t, uint8_t);
-    // [[]] void bpred_branchDgshare_last_branch_result(uint64_t, uint64_t, uint8_t, uint8_t);
-    // [[]] void bpred_branchDhashed_perceptron_last_branch_result(uint64_t, uint64_t, uint8_t, uint8_t);
-    // [[]] void bpred_branchDperceptron_last_branch_result(uint64_t, uint64_t, uint8_t, uint8_t);
-
-    // // Predict for branch predictors
-    // [[nodiscard]] uint8_t bpred_branchDbimodal_predict_branch(uint64_t);
-    // [[nodiscard]] uint8_t bpred_branchDgshare_predict_branch(uint64_t);
-    // [[nodiscard]] uint8_t bpred_branchDhashed_perceptron_predict_branch(uint64_t);
-    // [[nodiscard]] uint8_t bpred_branchDperceptron_predict_branch(uint64_t);
-
-    // // Initialization for branch target buffers
-    // [[]] void btb_btbDbasic_btb_initialize_btb();
-
-    // // Update for branch target buffers
-    // [[]] void btb_btbDbasic_btb_update_btb(uint64_t, uint64_t, uint8_t, uint8_t);
-
-    // // Predict for branch target buffers
-    // [[nodiscard]] std::pair<uint64_t, uint8_t> btb_btbDbasic_btb_btb_prediction(uint64_t);
-
 #else
 #include "module_decl.inc" // ooo_cpu_module_decl.inc
 
@@ -450,59 +410,6 @@ std::pair<champsim::address, bool> O3_CPU::btb_module_model<Ts...>::impl_btb_pre
 }
 
 #if (USER_CODES == ENABLE)
-
-/** @todo Need to understand how it works */
-
-// void O3_CPU::impl_initialize_branch_predictor() const
-// {
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDbimodal) != 0) intern_->bpred_branchDbimodal_initialize_branch_predictor();
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDgshare) != 0) intern_->bpred_branchDgshare_initialize_branch_predictor();
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDhashed_perceptron) != 0) intern_->bpred_branchDhashed_perceptron_initialize_branch_predictor();
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDperceptron) != 0) intern_->bpred_branchDperceptron_initialize_branch_predictor();
-// }
-
-// template<unsigned long long B_FLAG, unsigned long long T_FLAG>
-// void O3_CPU::module_model<B_FLAG, T_FLAG>::impl_last_branch_result(uint64_t ip, uint64_t target, uint8_t taken, uint8_t branch_type)
-// {
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDbimodal) != 0) intern_->bpred_branchDbimodal_last_branch_result(ip, target, taken, branch_type);
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDgshare) != 0) intern_->bpred_branchDgshare_last_branch_result(ip, target, taken, branch_type);
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDhashed_perceptron) != 0) intern_->bpred_branchDhashed_perceptron_last_branch_result(ip, target, taken, branch_type);
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDperceptron) != 0) intern_->bpred_branchDperceptron_last_branch_result(ip, target, taken, branch_type);
-// }
-
-// template<unsigned long long B_FLAG, unsigned long long T_FLAG>
-// uint8_t O3_CPU::module_model<B_FLAG, T_FLAG>::impl_predict_branch(uint64_t ip)
-// {
-//     uint8_t result {};
-//     std::bit_or<decltype(result)> joiner {};
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDbimodal) != 0) result = joiner(result, intern_->bpred_branchDbimodal_predict_branch(ip));
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDgshare) != 0) result = joiner(result, intern_->bpred_branchDgshare_predict_branch(ip));
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDhashed_perceptron) != 0) result = joiner(result, intern_->bpred_branchDhashed_perceptron_predict_branch(ip));
-//     if constexpr ((B_FLAG & O3_CPU::bbranchDperceptron) != 0) result = joiner(result, intern_->bpred_branchDperceptron_predict_branch(ip));
-//     return result;
-// }
-
-// template<unsigned long long B_FLAG, unsigned long long T_FLAG>
-// void O3_CPU::module_model<B_FLAG, T_FLAG>::impl_initialize_btb()
-// {
-//     if constexpr ((T_FLAG & O3_CPU::tbtbDbasic_btb) != 0) intern_->btb_btbDbasic_btb_initialize_btb();
-// }
-
-// template<unsigned long long B_FLAG, unsigned long long T_FLAG>
-// void O3_CPU::module_model<B_FLAG, T_FLAG>::impl_update_btb(uint64_t ip, uint64_t predicted_target, uint8_t taken, uint8_t branch_type)
-// {
-//     if constexpr ((T_FLAG & O3_CPU::tbtbDbasic_btb) != 0) intern_->btb_btbDbasic_btb_update_btb(ip, predicted_target, taken, branch_type);
-// }
-
-// template<unsigned long long B_FLAG, unsigned long long T_FLAG>
-// std::pair<uint64_t, uint8_t> O3_CPU::module_model<B_FLAG, T_FLAG>::impl_btb_prediction(uint64_t ip)
-// {
-//     std::pair<uint64_t, uint8_t> result {};
-//     champsim::detail::take_last<decltype(result)> joiner {};
-//     if constexpr ((T_FLAG & O3_CPU::tbtbDbasic_btb) != 0) result = joiner(result, intern_->btb_btbDbasic_btb_btb_prediction(ip));
-//     return result;
-// }
-
 #else
 #include "ooo_cpu_module_def.inc"
 #endif /* USER_CODES */

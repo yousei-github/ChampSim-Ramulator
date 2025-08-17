@@ -44,9 +44,6 @@ struct environment
     virtual std::vector<std::reference_wrapper<PageTableWalker> > ptw_view() = 0;
 
 #if (RAMULATOR == ENABLE)
-#if (MEMORY_USE_HYBRID == ENABLE)
-#else
-#endif /* MEMORY_USE_HYBRID */
 #else
     virtual MEMORY_CONTROLLER& dram_view() = 0;
 #endif /* RAMULATOR */

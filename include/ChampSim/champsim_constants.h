@@ -31,13 +31,13 @@ constexpr std::size_t NUM_CPUS = 1;
 #endif /* CPU_USE_MULTIPLE_CORES */
 
 // Cache block (or cache line) size
-constexpr unsigned BLOCK_SIZE            = 64; // The unit of BLOCK_SIZE is byte
+constexpr unsigned BLOCK_SIZE                = 64; // The unit of BLOCK_SIZE is byte
 // Page size
-constexpr unsigned PAGE_SIZE             = 4096;
-constexpr long long STAT_PRINTING_PERIOD = 10000000;
+constexpr unsigned PAGE_SIZE                 = 4096;
+constexpr long long STAT_PRINTING_PERIOD     = 10000000;
 
-constexpr unsigned LOG2_BLOCK_SIZE       = champsim::lg2(BLOCK_SIZE);
-constexpr unsigned LOG2_PAGE_SIZE        = champsim::lg2(PAGE_SIZE);
+constexpr unsigned LOG2_BLOCK_SIZE           = champsim::lg2(BLOCK_SIZE);
+constexpr unsigned LOG2_PAGE_SIZE            = champsim::lg2(PAGE_SIZE);
 
 /**
  * @note
@@ -51,24 +51,32 @@ constexpr unsigned LOG2_PAGE_SIZE        = champsim::lg2(PAGE_SIZE);
  * electrical charge stored in the cell. And the set of all sense-amplifiers in a subarray is called a row-buffer.
  * [reference](https://doi.org/10.1109/HPCA.2013.6522354)
  *
- * In DDR, we have multiple DRAM chips (devices) on the same PCB. Because a 64-byte cache line is striped across banks
+ * DDR memory transfers data twice per clock cycle (hence "double data rate"), once on the rising edge and once on the falling edge of the clock signal,
+ * effectively doubling the data transfer rate compared to single data rate (SDR) memory.
+ *
+ * DDR IO rate (or I/O clock) refers to the rate at which data is transferred on the input/output (IO) pins of a memory module.
+ * It's essentially the speed at which data moves between the memory and the processor. This rate is determined by both the memory clock frequency and the technology generation (DDR, DDR2, DDR3, etc.).
+ * Note memory clock is the base clock frequency of the memory chip itself. 
+ * 
+ * For example, a DDR3-1600 module has a memory clock of 200 MHz and an I/O clock of 800 MHz, resulting in a data transfer rate of 1600 MT/s (Mega transfers per second).
+ * 
+ * In DDR (Double Data Rate), we have multiple DRAM chips (devices) on the same PCB. Because a 64-byte cache line is striped across banks
  * in different DRAM chips to maximize parallelism -> The width of DRAM chip's data bus (Bidirectional) varies according
  * to the DDR configuration. This means all chips in the same rank will operate together when transferring data, so no need
  * to set chip address field in physical address.
- *
- * The unit of DRAM_IO_FREQ is MHz. Here if DRAM_IO_FREQ is 3200ul, the DRAM is DDR4 (800-1600 MHz). DDR5's I/O clock rate ranges
- * between 2400-3600 MHz, so its data rate can be 4800-7200 MT/s.
 */
-constexpr uint64_t DRAM_IO_FREQ          = 3200;                                   // MT/s
-constexpr uint32_t DRAM_IO_CLOCK_PERIOD  = (uint32_t) (1000'000ul / DRAM_IO_FREQ); // Picosecond
-constexpr uint32_t DRAM_MC_FREQ          = DRAM_IO_FREQ / 2;                       // Memory controller (MC)
-constexpr uint32_t DRAM_MC_CLOCK_PERIOD  = (uint32_t) (1000'000ul / DRAM_MC_FREQ); // Picosecond
-constexpr std::size_t DRAM_CHANNELS      = 1;
-constexpr std::size_t DRAM_RANKS         = 1;
-constexpr std::size_t DRAM_BANKS         = 8;
-constexpr std::size_t DRAM_ROWS          = 65536;
-constexpr std::size_t DRAM_COLUMNS       = 128;
-constexpr std::size_t DRAM_CAPACITY      = 4 * GiB; // 1*GiB / 768*MiB
+constexpr uint32_t DRAM_DATA_TRANSFER_RATE   = 3200;                                                // MT/s (Data transfer rate)
+constexpr uint32_t ONE_SECOND_IN_MICROSECOND = 1000'000ul;                                          // Microsecond
+constexpr uint32_t DRAM_DATA_TRANSFER_PERIOD = ONE_SECOND_IN_MICROSECOND / DRAM_DATA_TRANSFER_RATE; // Picosecond
+constexpr uint32_t DRAM_IO_FREQ              = DRAM_DATA_TRANSFER_RATE / 2;                         // MH/z
+constexpr uint32_t DRAM_IO_CLOCK_PERIOD      = ONE_SECOND_IN_MICROSECOND / DRAM_IO_FREQ;            // Picosecond
+constexpr std::size_t DRAM_CHANNELS          = 1;
+constexpr std::size_t DRAM_RANKS             = 1;
+constexpr std::size_t DRAM_BANK_GROUPS       = 8;
+constexpr std::size_t DRAM_BANKS             = 4;
+constexpr std::size_t DRAM_ROWS              = 65536;
+constexpr std::size_t DRAM_COLUMNS           = 1024;
+constexpr std::size_t DRAM_CAPACITY          = 4 * GiB; // 1*GiB / 768*MiB
 
 /**
  * @note
@@ -90,9 +98,9 @@ constexpr std::size_t DRAM_CAPACITY      = 4 * GiB; // 1*GiB / 768*MiB
  * e.g., DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 32768, DDR_COLUMNS = 64 (9 - 3) for (512, 1024] MiB DDR capacity.
  */
 
-constexpr std::size_t DRAM_CHANNEL_WIDTH = 8; // The unit of DRAM_CHANNEL_WIDTH is byte
-constexpr std::size_t DRAM_WQ_SIZE       = 64;
-constexpr std::size_t DRAM_RQ_SIZE       = 64;
+constexpr std::size_t DRAM_CHANNEL_WIDTH     = 8; // The unit of DRAM_CHANNEL_WIDTH is byte
+constexpr std::size_t DRAM_RQ_SIZE           = 64;
+constexpr std::size_t DRAM_WQ_SIZE           = 64;
 
 #else
 constexpr unsigned BLOCK_SIZE            = 64;
@@ -183,8 +191,8 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 
 #endif /* CPU_USE_MULTIPLE_CORES */
 
-#define CPU_FREQUENCY            (4000.0)                                // MHz
-#define CPU_CLOCK_PERIOD         (1000'000ul / (uint32_t) CPU_FREQUENCY) // Picosecond
+#define CPU_FREQUENCY            (4000.0)                                                 // MHz
+#define CPU_CLOCK_PERIOD         ((uint32_t) (ONE_SECOND_IN_MICROSECOND / CPU_FREQUENCY)) // Picosecond
 
 #define CPU_DIB_SET              (32) // DIB (Decoded Instruction Buffer) sets
 #define CPU_DIB_WAY              (8)  // DIB ways
@@ -215,7 +223,7 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #define CPU_L1I_BANDWIDTH        (1)
 #define CPU_L1D_BANDWIDTH        (1)
 
-/** @todo Delete unused macro*/
+/** @todo Delete unused macro and add champsim_config.json setting to here */
 
 /* L1I */
 #define L1I_CAPACITY             (32 * KiB) // Default: 32 KiB
@@ -301,8 +309,8 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #if (RAMULATOR == ENABLE)
 #define MEMORY_CONTROLLER_CLOCK_SCALE (1.0)
 #else
-#define MEMORY_CONTROLLER_CLOCK_SCALE (CPU_FREQUENCY / DRAM_IO_FREQ) // 4000 MHz / 3200 MHz = 1.25
-#endif                                                               /* RAMULATOR */
+#define MEMORY_CONTROLLER_CLOCK_SCALE (CPU_FREQUENCY / DRAM_DATA_TRANSFER_RATE) // 4000 MHz / 3200 MHz = 1.25
+#endif                                                                          /* RAMULATOR */
 
 #define CACHE_CLOCK_SCALE           (1.0)
 #define O3_CPU_CLOCK_SCALE          (1.0)

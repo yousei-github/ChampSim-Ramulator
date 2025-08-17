@@ -572,12 +572,12 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 
 void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packet)
 {
-    uint64_t data_block_address           = packet.address >> DATA_MANAGEMENT_OFFSET_BITS;
+    uint64_t data_block_address           = packet.address.to<uint64_t>() >> DATA_MANAGEMENT_OFFSET_BITS;
     uint64_t placement_table_index        = data_block_address % fast_memory_capacity_at_data_block_granularity;
     uint64_t base_remapping_address       = placement_table_index << DATA_MANAGEMENT_OFFSET_BITS;
     REMAPPING_LOCATION_WIDTH tag          = static_cast<REMAPPING_LOCATION_WIDTH>(data_block_address / fast_memory_capacity_at_data_block_granularity);
     uint64_t first_address                = data_block_address << DATA_MANAGEMENT_OFFSET_BITS;
-    START_ADDRESS_WIDTH data_line_positon = START_ADDRESS_WIDTH((packet.address >> DATA_LINE_OFFSET_BITS) - (first_address >> DATA_LINE_OFFSET_BITS));
+    START_ADDRESS_WIDTH data_line_positon = START_ADDRESS_WIDTH((packet.address.to<uint64_t>() >> DATA_LINE_OFFSET_BITS) - (first_address >> DATA_LINE_OFFSET_BITS));
 
     if (tag != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
     {
@@ -616,12 +616,12 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packe
             // Calculate the start address
             START_ADDRESS_WIDTH start_address    = used_space + data_line_positon - placement_table.at(placement_table_index).start_address[data_block_position];
             REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
-            packet.h_address                     = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), packet.address, DATA_LINE_OFFSET_BITS - 1);
+            packet.h_address                     = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_LINE_OFFSET_BITS - 1);
         }
         else
         {
             // The data of this physical address is in slow memory, no need for translation
-            packet.h_address = packet.address;
+            packet.h_address = packet.address.to<uint64_t>();
         }
     }
     else
@@ -661,7 +661,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packe
         if (in_fm)
         {
             // The data of this physical address is in fast memory, no need for translaton
-            packet.h_address = packet.address;
+            packet.h_address = packet.address.to<uint64_t>();
         }
         else
         {
@@ -669,7 +669,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packe
             REMAPPING_LOCATION_WIDTH sm_location = placement_table.at(placement_table_index).tag[occupied_group_number];
             start_address                        = placement_table.at(placement_table_index).start_address[occupied_group_number] + start_address - used_space;
 
-            packet.h_address                     = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), packet.address, DATA_LINE_OFFSET_BITS - 1);
+            packet.h_address                     = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_LINE_OFFSET_BITS - 1);
         }
     }
 };

@@ -247,7 +247,7 @@ std::size_t champsim::channel::pq_size() const { return PQ_SIZE; }
 #if (USER_CODES == ENABLE)
 
 #if (RAMULATOR == ENABLE)
-DRAM_CHANNEL::request_type::request_type(typename champsim::channel::request_type req)
+DRAM_CHANNEL::request_type::request_type(const typename champsim::channel::request_type& req)
 : pf_metadata(req.pf_metadata), address(req.address), v_address(req.address), data(req.data), instr_depend_on_me(req.instr_depend_on_me)
 {
     asid[0] = req.asid[0];

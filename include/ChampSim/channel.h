@@ -30,7 +30,12 @@
 
 #if (USER_CODES == ENABLE)
 
-/** @brief For CPU */
+#if (RAMULATOR == ENABLE)
+#include "ChampSim/chrono.h"
+#include "ChampSim/dram_stats.h"
+#include "ChampSim/operable.h"
+
+#endif /* RAMULATOR */
 
 namespace champsim
 {
@@ -146,31 +151,24 @@ public:
 } // namespace champsim
 
 #if (RAMULATOR == ENABLE)
-struct dram_stats
-{
-    std::string name {};
-    uint64_t dbus_cycle_congested = 0, dbus_count_congested = 0;
 
-    unsigned WQ_ROW_BUFFER_HIT = 0, WQ_ROW_BUFFER_MISS = 0, RQ_ROW_BUFFER_HIT = 0, RQ_ROW_BUFFER_MISS = 0, WQ_FULL = 0;
-};
-
-struct DRAM_CHANNEL
+struct DRAM_CHANNEL final : public champsim::operable
 {
+    using response_type = typename champsim::channel::response_type;
+
     struct request_type
     {
-        using response_type         = typename champsim::channel::response_type;
+        bool scheduled                                 = false;
+        bool forward_checked                           = false;
 
-        bool scheduled              = false;
-        bool forward_checked        = false;
+        uint8_t asid[2]                                = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
 
-        uint8_t asid[2]             = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
+        uint32_t pf_metadata                           = 0;
 
-        uint32_t pf_metadata        = 0;
-
-        champsim::address address   = {};
-        champsim::address v_address = {};
-        champsim::address data      = {};
-        uint64_t event_cycle        = std::numeric_limits<uint64_t>::max();
+        champsim::address address                      = {};
+        champsim::address v_address                    = {};
+        champsim::address data                         = {};
+        champsim::chrono::clock::time_point ready_time = champsim::chrono::clock::time_point::max();
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
         /* h_address (hardware address), which is the address used by memory chips */
@@ -186,7 +184,7 @@ struct DRAM_CHANNEL
         std::vector<uint64_t> instr_depend_on_me {};
         std::vector<std::deque<response_type>*> to_return {}; // Store the response queue
 
-        explicit request_type(typename champsim::channel::request_type);
+        explicit request_type(const typename champsim::channel::request_type& req);
         request_type() {};
     };
 

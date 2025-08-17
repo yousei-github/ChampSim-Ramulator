@@ -23,7 +23,7 @@
 
 #if (USER_CODES == ENABLE)
 #include "ChampSim/champsim_constants.h"
-#endif
+#endif /* USER_CODES */
 
 using namespace std;
 
@@ -81,13 +81,14 @@ protected:
 
 #if (USER_CODES == DISABLE)
     long max_address;
-#endif
+#endif /* USER_CODES */
+
     MapScheme mapping_scheme;
 
 public:
 #if (USER_CODES == ENABLE)
     uint64_t max_address;
-#endif
+#endif /* USER_CODES */
 
     enum class Type
     {
@@ -641,7 +642,7 @@ public:
             Stats::statlist.update_read_requests(num_read_requests[coreid].value());
             Stats::statlist.update_write_requests(num_write_requests[coreid].value());
         }
-#endif
+#endif /* USER_CODES */
     }
 
     long page_allocator(long addr, int coreid)
