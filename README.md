@@ -3,14 +3,14 @@
 </p>
 
 # About This Project
-This project is based on the master branch of [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: 24cc41b) and [Ramulator](https://github.com/yousei-github/ramulator) (Commit: 743b940), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `./inc/ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
+This project is based on the [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: [24cc41b](https://github.com/ChampSim/ChampSim/commit/24cc41bb94bac4da7ffa18774524529bb0e57c44)) and [Ramulator](https://github.com/yousei-github/ramulator) (Commit: [743b940](https://github.com/CMU-SAFARI/ramulator/commit/743b940b70a8e18bcffb14eec22d2ed731059540)), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `./inc/ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
 - Set the preprocessor `RAMULATOR` to `ENABLE` for enabling Ramulator or to `DISABLE` for just using ChampSim.
 - Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` for enabling hybrid memory systems or to `DISABLE` for enabling single memory systems.
+- Set the preprocessor `CPU_USE_MULTIPLE_CORES` to `ENABLE` for enabling multiple cores to run simulation. Note you also need to add multiple trace paths to execute this simulator.
 - Set the preprocessor `PRINT_STATISTICS_INTO_FILE` to `ENABLE` for printing statistics into `.statistics` file.
 - Set the preprocessor `PRINT_MEMORY_TRACE` to `ENABLE` for printing memory trace into `.trace` file. Each line in the trace file represents a memory request, with the hexadecimal address followed by 'R' or 'W' for read or write.
 - Set the preprocessor `MEMORY_USE_SWAPPING_UNIT` to `ENABLE` for enabling data swapping function in memory controller. (Currently only support hybrid memory systems).
 - Set the preprocessor `MEMORY_USE_OS_TRANSPARENT_MANAGEMENT` to `ENABLE` for enabling os transparent data management of hybrid memory systems, (Currently part of paper [CAMEO](https://doi.org/10.1109/MICRO.2014.63), [MemPod](https://doi.org/10.1109/HPCA.2017.39), variable granularity, TROM (Tracking Read Only Method), and TLTOM (Tracking Load and Translation Only Method) are implemented).
-- Set the preprocessor `CPU_USE_MULTIPLE_CORES` to `ENABLE` for enabling multiple cores to run simulation. Note you also need to add multiple trace paths to execute this simulator.
 - Set the preprocessor `BRANCH_PREDICTOR` to `BRANCH_USE_BIMODAL` for using bimodal branch predictor. Similarly, there have gshare, hashed_perceptron, perceptron branch predictors. Following this logic, you can also modify other preprocessors, such as `INSTRUCTION_PREFETCHER`, `LLC_REPLACEMENT_POLICY`, `LLC_PREFETCHER`, and so on.
 
 The CPU's parameters are defined in the `./inc/ChampSim/champsim_constants.h` file.

@@ -183,56 +183,56 @@ champsim::configured::generated_environment<ID>::generated_environment()
   channels {
       /* CPU 0's channels */
       // CPU0_PTW_to_CPU0_L1D_Queues
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
+      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU0_DTLB_to_CPU0_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_ITLB_to_CPU0_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_L1D_to_CPU0_L2C_Queues
-      champsim::channel {                                     16,                                      16,                                      16,         champsim::data::bits {champsim::lg2(64)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_L1I_to_CPU0_L2C_Queues
-      champsim::channel {                                     16,                                      16,                                      16,         champsim::data::bits {champsim::lg2(64)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_L2C_to_LLC_Queues
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 0},
+      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_STLB_to_CPU0_PTW_Queues
       champsim::channel {                                     32,                                       0,                                       0,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_L1D_to_CPU0_DTLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 1},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU0_L1I_to_CPU0_ITLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 1},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU0_L2C_to_CPU0_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_to_CPU0_L1I_Queues
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
+      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU0_to_CPU0_L1D_Queues
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
+      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
 
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)
       /* CPU 1's channels */
       // CPU1_PTW_to_CPU1_L1D_Queues
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
+      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU1_DTLB_to_CPU1_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_ITLB_to_CPU1_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_L1D_to_CPU1_L2C_Queues
-      champsim::channel {                                     16,                                      16,                                      16,         champsim::data::bits {champsim::lg2(64)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_L1I_to_CPU1_L2C_Queues
-      champsim::channel {                                     16,                                      16,                                      16,         champsim::data::bits {champsim::lg2(64)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_L2C_to_LLC_Queues
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 0},
+      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_STLB_to_CPU1_PTW_Queues
       champsim::channel {                                     32,                                       0,                                       0,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_L1D_to_CPU1_DTLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 1},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU1_L1I_to_CPU1_ITLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 1},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU1_L2C_to_CPU1_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,       champsim::data::bits {champsim::lg2(4096)}, 0},
+      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_to_CPU1_L1I_Queues
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
+      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU1_to_CPU1_L1D_Queues
-      champsim::channel {                                     32,                                      32,                                      32,         champsim::data::bits {champsim::lg2(64)}, 1},
+      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
 
 #endif  /* CPU_USE_MULTIPLE_CORES */
 
@@ -293,7 +293,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       champsim::cache_builder {champsim::defaults::default_dtlb}
           .name("cpu0_DTLB")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_L1D_to_CPU0_DTLB_Queues))})
-          .offset_bits(champsim::data::bits {champsim::lg2(4096)})
+          .offset_bits(champsim::data::bits {champsim::lg2(PAGE_SIZE)})
           .replacement<class CPU_DTLB_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_DTLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU0_DTLB_to_CPU0_STLB_Queues)))
@@ -302,7 +302,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       champsim::cache_builder {champsim::defaults::default_itlb}
           .name("cpu0_ITLB")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_L1I_to_CPU0_ITLB_Queues))})
-          .offset_bits(champsim::data::bits {champsim::lg2(4096)})
+          .offset_bits(champsim::data::bits {champsim::lg2(PAGE_SIZE)})
           .replacement<class CPU_ITLB_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_ITLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU0_ITLB_to_CPU0_STLB_Queues)))
@@ -313,7 +313,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .upper_levels(
               {{&channels.at(index_type(ChannelIndex::CPU0_PTW_to_CPU0_L1D_Queues)),
                   &channels.at(index_type(ChannelIndex::CPU0_to_CPU0_L1D_Queues))}})
-          .offset_bits(champsim::data::bits {champsim::lg2(64)})
+          .offset_bits(champsim::data::bits {champsim::lg2(BLOCK_SIZE)})
           .replacement<class CPU_L1D_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_L1D_PREFETCHER>()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU0_L1D_to_CPU0_DTLB_Queues)))
@@ -323,7 +323,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       champsim::cache_builder {champsim::defaults::default_l1i}
           .name("cpu0_L1I")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_to_CPU0_L1I_Queues))})
-          .offset_bits(champsim::data::bits {champsim::lg2(64)})
+          .offset_bits(champsim::data::bits {champsim::lg2(BLOCK_SIZE)})
           .replacement<class CPU_L1I_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_L1I_PREFETCHER>()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU0_L1I_to_CPU0_ITLB_Queues)))
@@ -335,7 +335,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .upper_levels(
               {{&channels.at(index_type(ChannelIndex::CPU0_L1D_to_CPU0_L2C_Queues)),
                   &channels.at(index_type(ChannelIndex::CPU0_L1I_to_CPU0_L2C_Queues))}})
-          .offset_bits(champsim::data::bits {champsim::lg2(64)})
+          .offset_bits(champsim::data::bits {champsim::lg2(BLOCK_SIZE)})
           .replacement<class CPU_L2C_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_L2C_PREFETCHER>()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU0_L2C_to_CPU0_STLB_Queues)))
@@ -348,7 +348,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
               {{&channels.at(index_type(ChannelIndex::CPU0_DTLB_to_CPU0_STLB_Queues)),
                   &channels.at(index_type(ChannelIndex::CPU0_ITLB_to_CPU0_STLB_Queues)),
                   &channels.at(index_type(ChannelIndex::CPU0_L2C_to_CPU0_STLB_Queues))}})
-          .offset_bits(champsim::data::bits {champsim::lg2(4096)})
+          .offset_bits(champsim::data::bits {champsim::lg2(PAGE_SIZE)})
           .replacement<class CPU_STLB_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_STLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU0_STLB_to_CPU0_PTW_Queues)))
@@ -360,7 +360,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       champsim::cache_builder {champsim::defaults::default_dtlb}
           .name("cpu1_DTLB")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU1_L1D_to_CPU1_DTLB_Queues))})
-          .offset_bits(champsim::data::bits {champsim::lg2(4096)})
+          .offset_bits(champsim::data::bits {champsim::lg2(PAGE_SIZE)})
           .replacement<class CPU_DTLB_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_DTLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU1_DTLB_to_CPU1_STLB_Queues)))
@@ -369,7 +369,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       champsim::cache_builder {champsim::defaults::default_itlb}
           .name("cpu1_ITLB")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU1_L1I_to_CPU1_ITLB_Queues))})
-          .offset_bits(champsim::data::bits {champsim::lg2(4096)})
+          .offset_bits(champsim::data::bits {champsim::lg2(PAGE_SIZE)})
           .replacement<class CPU_ITLB_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_ITLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU1_ITLB_to_CPU1_STLB_Queues)))
@@ -380,7 +380,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .upper_levels(
               {{&channels.at(index_type(ChannelIndex::CPU1_PTW_to_CPU1_L1D_Queues)),
                   &channels.at(index_type(ChannelIndex::CPU1_to_CPU1_L1D_Queues))}})
-          .offset_bits(champsim::data::bits {champsim::lg2(64)})
+          .offset_bits(champsim::data::bits {champsim::lg2(BLOCK_SIZE)})
           .replacement<class CPU_L1D_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_L1D_PREFETCHER>()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU1_L1D_to_CPU1_DTLB_Queues)))
@@ -390,7 +390,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       champsim::cache_builder {champsim::defaults::default_l1i}
           .name("cpu1_L1I")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU1_to_CPU1_L1I_Queues))})
-          .offset_bits(champsim::data::bits {champsim::lg2(64)})
+          .offset_bits(champsim::data::bits {champsim::lg2(BLOCK_SIZE)})
           .replacement<class CPU_L1I_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_L1I_PREFETCHER>()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU1_L1I_to_CPU1_ITLB_Queues)))
@@ -402,7 +402,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
           .upper_levels(
               {{&channels.at(index_type(ChannelIndex::CPU1_L1D_to_CPU1_L2C_Queues)),
                   &channels.at(index_type(ChannelIndex::CPU1_L1I_to_CPU1_L2C_Queues))}})
-          .offset_bits(champsim::data::bits {champsim::lg2(64)})
+          .offset_bits(champsim::data::bits {champsim::lg2(BLOCK_SIZE)})
           .replacement<class CPU_L2C_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_L2C_PREFETCHER>()
           .lower_translate(&channels.at(index_type(ChannelIndex::CPU1_L2C_to_CPU1_STLB_Queues)))
@@ -415,7 +415,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
               {{&channels.at(index_type(ChannelIndex::CPU1_DTLB_to_CPU1_STLB_Queues)),
                   &channels.at(index_type(ChannelIndex::CPU1_ITLB_to_CPU1_STLB_Queues)),
                   &channels.at(index_type(ChannelIndex::CPU1_L2C_to_CPU1_STLB_Queues))}})
-          .offset_bits(champsim::data::bits {champsim::lg2(4096)})
+          .offset_bits(champsim::data::bits {champsim::lg2(PAGE_SIZE)})
           .replacement<class CPU_STLB_REPLACEMENT_POLICY>()
           .prefetcher<class CPU_STLB_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::CPU1_STLB_to_CPU1_PTW_Queues)))
@@ -427,7 +427,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       champsim::cache_builder {champsim::defaults::default_llc}
           .name("LLC")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_L2C_to_LLC_Queues))})
-          .offset_bits(champsim::data::bits {champsim::lg2(64)})
+          .offset_bits(champsim::data::bits {champsim::lg2(BLOCK_SIZE)})
           .replacement<class LLC_REPLACEMENT_POLICY>()
           .prefetcher<class LLC_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues)))
@@ -436,7 +436,7 @@ champsim::configured::generated_environment<ID>::generated_environment()
       champsim::cache_builder {champsim::defaults::default_llc}
           .name("LLC")
           .upper_levels({&channels.at(index_type(ChannelIndex::CPU0_L2C_to_LLC_Queues)), &channels.at(index_type(ChannelIndex::CPU1_L2C_to_LLC_Queues))})
-          .offset_bits(champsim::data::bits {champsim::lg2(64)})
+          .offset_bits(champsim::data::bits {champsim::lg2(BLOCK_SIZE)})
           .replacement<class LLC_REPLACEMENT_POLICY>()
           .prefetcher<class LLC_PREFETCHER>()
           .lower_level(&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues)))

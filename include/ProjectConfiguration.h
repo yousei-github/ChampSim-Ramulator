@@ -8,17 +8,24 @@
 #define USER_CODES   (ENABLE)
 
 /* Functionality options */
+
 #if (USER_CODES == ENABLE)
+
 /** Main functionalities selection */
-#define USE_OPENMP                           (ENABLE)  // Whether use OpenMP to speedup the simulation
-#define USE_VCPKG                            (ENABLE)  // Whether use Vcpkg (Not work currently)
-#define RAMULATOR                            (ENABLE)  // Whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
-#define MEMORY_USE_HYBRID                    (DISABLE) // Whether use hybrid memory system instead of single memory systems
-#define PRINT_STATISTICS_INTO_FILE           (ENABLE)  // Whether print simulation statistics into files
-#define PRINT_MEMORY_TRACE                   (ENABLE)  // Whether print memory trace into files
-#define MEMORY_USE_SWAPPING_UNIT             (DISABLE) // Whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
-#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT (DISABLE) // Whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methods
-#define CPU_USE_MULTIPLE_CORES               (DISABLE) // Whether CPU uses multiple cores to run simulation (go to include/ChampSim/champsim_constants.h to check related parameters)
+#define USE_OPENMP                 (ENABLE)  // Whether use OpenMP to speedup the simulation
+#define USE_VCPKG                  (ENABLE)  // Whether use Vcpkg (Not work currently)
+#define RAMULATOR                  (ENABLE)  // Whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
+#define MEMORY_USE_HYBRID          (DISABLE) // Whether use hybrid memory system instead of single memory systems
+#define CPU_USE_MULTIPLE_CORES     (DISABLE) // Whether CPU uses multiple cores to run simulation (go to include/ChampSim/champsim_constants.h to check related parameters)
+#define PRINT_STATISTICS_INTO_FILE (ENABLE)  // Whether print simulation statistics into files
+#define PRINT_MEMORY_TRACE         (ENABLE)  // Whether print memory trace into files
+
+// Functionalities related to hybrid memory system
+#if (MEMORY_USE_HYBRID == ENABLE)
+#define MEMORY_USE_SWAPPING_UNIT             (ENABLE) // Whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
+#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT (ENABLE) // Whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methodss
+
+#endif /* MEMORY_USE_HYBRID */
 
 /** Configuration for hybrid memory systems */
 #if (MEMORY_USE_HYBRID == ENABLE)
@@ -42,22 +49,14 @@
 
 /* Research proposal selection */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-#define IDEAL_LINE_LOCATION_TABLE      (ENABLE)
-#define COLOCATED_LINE_LOCATION_TABLE  (DISABLE)
-#define IDEAL_VARIABLE_GRANULARITY     (DISABLE)
-#define IDEAL_SINGLE_MEMPOD            (DISABLE)
-
-#define TRACKING_LOAD_STORE_STATISTICS (DISABLE)
+#define IDEAL_LINE_LOCATION_TABLE     (ENABLE)
+#define COLOCATED_LINE_LOCATION_TABLE (DISABLE)
+#define IDEAL_VARIABLE_GRANULARITY    (DISABLE)
+#define IDEAL_SINGLE_MEMPOD           (DISABLE)
 
 #if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE) && (IDEAL_SINGLE_MEMPOD == DISABLE)
 #define NO_METHOD_FOR_RUN_HYBRID_MEMORY (ENABLE)
 #endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD */
-
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE) // Note: it might be better become part of configurations of TRACKING_LOAD_STORE_STATISTICS like IDEAL_SINGLE_MEMPOD in line 71
-/* Option for research */
-#define TRACKING_LOAD_ONLY (ENABLE)
-#define TRACKING_READ_ONLY (ENABLE)
-#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
 /** Configuration for each research proposal */
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
@@ -81,6 +80,15 @@
 #if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
 #error OS-transparent management designs need to be enabled.
 #endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE */
+
+// Statistics of OS-transparent management designs
+#define TRACKING_LOAD_STORE_STATISTICS (DISABLE)
+
+#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+/* Option for research */
+#define TRACKING_LOAD_ONLY (ENABLE)
+#define TRACKING_READ_ONLY (ENABLE)
+#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 

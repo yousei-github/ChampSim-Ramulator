@@ -23,21 +23,22 @@ constexpr bool debug_print = false;
 // ChampSim build hash ID, based on commit ID 24cc41bb94bac4da7ffa18774524529bb0e57c44 (2024-12)
 constexpr unsigned long long CHAMPSIM_BUILD = 0x11a7870cb042c20b;
 
-// Number of CPUs
+// Number of CPUs (num_cores)
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)
 constexpr std::size_t NUM_CPUS = 2;
 #else
 constexpr std::size_t NUM_CPUS = 1;
 #endif /* CPU_USE_MULTIPLE_CORES */
 
-// Cache block (or cache line) size
-constexpr unsigned BLOCK_SIZE                = 64; // The unit of BLOCK_SIZE is byte
-// Page size
+// Cache block (or cache line) size (block_size)
+constexpr unsigned BLOCK_SIZE                = 64; // The unit is byte
+// Page size (page_size)
 constexpr unsigned PAGE_SIZE                 = 4096;
-constexpr long long STAT_PRINTING_PERIOD     = 10000000;
 
 constexpr unsigned LOG2_BLOCK_SIZE           = champsim::lg2(BLOCK_SIZE);
 constexpr unsigned LOG2_PAGE_SIZE            = champsim::lg2(PAGE_SIZE);
+
+constexpr long long STAT_PRINTING_PERIOD     = 10000000; // heartbeat_frequency
 
 /**
  * @note
@@ -172,7 +173,7 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #define BRANCH_USE_GSHARE              gshare
 #define BRANCH_USE_HASHED_PERCEPTRON   hashed_perceptron
 #define BRANCH_USE_PERCEPTRON          perceptron
-#define CPU_BRANCH_PREDICTOR           BRANCH_USE_HASHED_PERCEPTRON
+#define CPU_BRANCH_PREDICTOR           BRANCH_USE_BIMODAL
 
 /**
  * CPU setting for branch target buffer (basic_btb)
@@ -191,44 +192,44 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 
 #endif /* CPU_USE_MULTIPLE_CORES */
 
-#define CPU_FREQUENCY            (4000.0)                                                 // MHz
+#define CPU_FREQUENCY            (4000.0)                                                 // MHz (ooo_cpu's frequency)
 #define CPU_CLOCK_PERIOD         ((uint32_t) (ONE_SECOND_IN_MICROSECOND / CPU_FREQUENCY)) // Picosecond
 
-#define CPU_DIB_SET              (32) // DIB (Decoded Instruction Buffer) sets
-#define CPU_DIB_WAY              (8)  // DIB ways
-#define CPU_DIB_WINDOW           (16) // DIB window size
-#define CPU_IFETCH_BUFFER_SIZE   (64)
-#define CPU_DECODE_BUFFER_SIZE   (32)
-#define CPU_DISPATCH_BUFFER_SIZE (32)
-#define CPU_DIB_HIT_BUFFER_SIZE  (32) // DIB hit buffer size
-#define CPU_REGISTER_FILE_SIZE   (128)
-#define CPU_ROB_SIZE             (352)
-#define CPU_LQ_SIZE              (128)
-#define CPU_SQ_SIZE              (72)
-#define CPU_FETCH_WIDTH          (6)
-#define CPU_DECODE_WIDTH         (6)
-#define CPU_DISPATCH_WIDTH       (6)
-#define CPU_EXECUTE_WIDTH        (4)
-#define CPU_LQ_WIDTH             (2)
-#define CPU_SQ_WIDTH             (2)
-#define CPU_RETIRE_WIDTH         (5)
-#define CPU_DIB_INORDER_WIDTH    (5) // DIB inorder width
-#define CPU_MISPREDICT_PENALTY   (1)
-#define CPU_SCHEDULER_SIZE       (128)
-#define CPU_DECODE_LATENCY       (1)
-#define CPU_DIB_HIT_LATENCY      (1) // DIB hit latency
-#define CPU_DISPATCH_LATENCY     (1)
-#define CPU_SCHEDULE_LATENCY     (0)
-#define CPU_EXECUTE_LATENCY      (0)
+#define CPU_DIB_SET              (32)  // DIB (Decoded Instruction Buffer) sets (sets)
+#define CPU_DIB_WAY              (8)   // DIB ways (ways)
+#define CPU_DIB_WINDOW           (16)  // DIB window size (window_size)
+#define CPU_IFETCH_BUFFER_SIZE   (64)  // (ifetch_buffer_size)
+#define CPU_DECODE_BUFFER_SIZE   (32)  // (decode_buffer_size)
+#define CPU_DISPATCH_BUFFER_SIZE (32)  // (dispatch_buffer_size)
+#define CPU_DIB_HIT_BUFFER_SIZE  (32)  // DIB hit buffer size
+#define CPU_REGISTER_FILE_SIZE   (128) // (register_file_size)
+#define CPU_ROB_SIZE             (352) // (rob_size)
+#define CPU_LQ_SIZE              (128) // (lq_size)
+#define CPU_SQ_SIZE              (72)  // (sq_size)
+#define CPU_FETCH_WIDTH          (6)   // (fetch_width)
+#define CPU_DECODE_WIDTH         (6)   // (decode_width)
+#define CPU_DISPATCH_WIDTH       (6)   // (dispatch_width)
+#define CPU_EXECUTE_WIDTH        (4)   // (execute_width)
+#define CPU_LQ_WIDTH             (2)   // (lq_width)
+#define CPU_SQ_WIDTH             (2)   // (sq_width)
+#define CPU_RETIRE_WIDTH         (5)   // (retire_width)
+#define CPU_DIB_INORDER_WIDTH    (5)   // DIB inorder width
+#define CPU_MISPREDICT_PENALTY   (1)   // (mispredict_penalty)
+#define CPU_SCHEDULER_SIZE       (128) // (scheduler_size)
+#define CPU_DECODE_LATENCY       (1)   // (decode_latency)
+#define CPU_DIB_HIT_LATENCY      (1)   // DIB hit latency
+#define CPU_DISPATCH_LATENCY     (1)   // (dispatch_latency)
+#define CPU_SCHEDULE_LATENCY     (0)   // (schedule_latency)
+#define CPU_EXECUTE_LATENCY      (0)   // (execute_latency)
 #define CPU_L1I_BANDWIDTH        (1)
 #define CPU_L1D_BANDWIDTH        (1)
 
 /** @todo Delete unused macro and add champsim_config.json setting to here */
 
 /* L1I */
-#define L1I_CAPACITY             (32 * KiB) // Default: 32 KiB
-#define L1I_WAYS                 (8)
-#define L1I_SETS                 (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS)
+#define L1I_CAPACITY             (32 * KiB)                             // Default: 32 KiB
+#define L1I_WAYS                 (8)                                    // (ways)
+#define L1I_SETS                 (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS) // (sets)
 #define L1I_PQ_SIZE              (32)
 // #define L1I_MSHR_SIZE            (32)
 // #define L1I_HIT_LATENCY          (3)
@@ -248,7 +249,7 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 // #define L1D_FILL_BANDWIDTH       (1)
 
 /* L2C */
-#define L2C_CAPACITY             (256 * KiB) // Default: 512 KiB
+#define L2C_CAPACITY             (512 * KiB) // Default: 512 KiB
 #define L2C_WAYS                 (8)
 #define L2C_SETS                 (L2C_CAPACITY / BLOCK_SIZE / L2C_WAYS)
 #define L2C_PQ_SIZE              (16)
@@ -281,7 +282,7 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 // #define DTLB_FILL_BANDWIDTH      (1)
 
 /* STLB */
-#define STLB_CAPACITY            (3 * MiB)
+#define STLB_CAPACITY            (6 * MiB)
 #define STLB_WAYS                (12)
 #define STLB_SETS                (STLB_CAPACITY / PAGE_SIZE / STLB_WAYS)
 #define STLB_PQ_SIZE             (0)
@@ -305,12 +306,14 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 /* PTW */
 #define PTW_MSHR_SIZE            (5)
 
+/** @todo [deprecated] */
 // Clock scale
 #if (RAMULATOR == ENABLE)
 #define MEMORY_CONTROLLER_CLOCK_SCALE (1.0)
 #else
 #define MEMORY_CONTROLLER_CLOCK_SCALE (CPU_FREQUENCY / DRAM_DATA_TRANSFER_RATE) // 4000 MHz / 3200 MHz = 1.25
-#endif                                                                          /* RAMULATOR */
+
+#endif /* RAMULATOR */
 
 #define CACHE_CLOCK_SCALE           (1.0)
 #define O3_CPU_CLOCK_SCALE          (1.0)
