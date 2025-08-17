@@ -278,7 +278,8 @@ void MEMORY_CONTROLLER<T, T2>::initialize()
     {
         fmt::print("Off-chip DRAM Size: {}", sz);
     }
-    fmt::print(" Channels: {} Width: {}-bit Data Rate: {} MT/s\n", memory.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory.spec->speed_entry.rate);
+    fmt::print(". Channels: {}, {}. Width: {}-bit, {}-bit. Data Rate: {} MT/s, {} MT/s.\n",
+        memory.spec->org_entry.count[int(T::Level::Channel)], memory2.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory2.spec->channel_width, memory.spec->speed_entry.rate, memory2.spec->speed_entry.rate);
 
 #endif /* USE_VCPKG */
 
@@ -299,8 +300,8 @@ void MEMORY_CONTROLLER<T, T2>::initialize()
     {
         std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", sz.count());
     }
-    std::fprintf(output_statistics.file_handler, " Channels: %d Width: %d-bit Data Rate: %d MT/s\n",
-        memory.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory.spec->speed_entry.rate);
+    std::fprintf(output_statistics.file_handler, " Channels: %d, %d. Width: %d-bit, %d-bit. Data Rate: %d MT/s, %d MT/s.\n",
+        memory.spec->org_entry.count[int(T::Level::Channel)], memory2.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory2.spec->channel_width, memory.spec->speed_entry.rate, memory2.spec->speed_entry.rate);
 
 #endif /* PRINT_STATISTICS_INTO_FILE */
 }

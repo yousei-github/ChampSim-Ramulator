@@ -314,7 +314,7 @@
 		},
 		{
 			"type": "shell",
-			"label": "Test ChampSim + Ramulator with hybrid memory",
+			"label": "Test ChampSim + Ramulator with single memory",
 			"command": "${workspaceFolder}/bin/${input:variable1}",
 			"args": [
 				"--warmup-instructions",
@@ -324,7 +324,55 @@
 				"--stats",
 				"${input:variable5}.stats",
 				"${input:variable6}",
+				"${input:variable4}/${input:variable5}", // [TRACE]
+			],
+			"problemMatcher": [],
+			/**
+			 * Any Windows specific properties
+			 * It will be used instead of the default properties when the command is executed on the Windows operating system
+			 */
+			"windows": {
+				// @Todo
+			},
+			// Defines to which group the task belongs
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			// Defines how the task output is handled in the user interface
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front.
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": true, // Show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "new", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
+			// Defines when and how a task is run
+			"runOptions": {
+				"reevaluateOnRerun": true, // Variables will be reevaluated when a task is rerun
+				"runOn": "default", // The task will only be run when executed through the Run Task command
+				"instanceLimit": 16, // The number of instances of the task that are allowed to run simultaneously
+			},
+			// Hides the task from the Run Task Quick Pick, which can be useful for elements of a compound task that are not independently runnable.
+			"hide": false,
+			"detail": "For champsim + ramulator with single memory, e.g., '$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] --stats [FILENAME] [CFG1] [TRACE]'",
+		},
+		{
+			"type": "shell",
+			"label": "Test ChampSim + Ramulator with hybrid memory",
+			"command": "${workspaceFolder}/bin/${input:variable1}",
+			"args": [
+				"--warmup-instructions",
+				"${input:variable2}", // [N_WARM]
+				"--simulation-instructions",
+				"${input:variable3}", // [N_SIM]
+				"--stats",
+				"${input:variable5}.stats",
 				"${input:variable7}",
+				"${input:variable8}",
 				"${input:variable4}/${input:variable5}", // [TRACE]
 			],
 			"problemMatcher": [],
@@ -513,9 +561,74 @@
 			"default": "600.perlbench",
 		},
 		{
-			/* Trace name */
+			/* Memory name */
 			"type": "pickString",
 			"id": "variable6",
+			"description": "Which memory do you want to use in single memory systems?",
+			"options": [
+				{
+					"label": "ALDRAM",
+					"value": "configs/ALDRAM-config.cfg"
+				},
+				{
+					"label": "DDR3",
+					"value": "configs/DDR3-config.cfg"
+				},
+				{
+					"label": "DDR4",
+					"value": "configs/DDR4-config.cfg"
+				},
+				{
+					"label": "DSARP",
+					"value": "configs/DSARP-config.cfg"
+				},
+				{
+					"label": "GDDR5",
+					"value": "configs/GDDR5-config.cfg"
+				},
+				{
+					"label": "HBM",
+					"value": "configs/HBM-config.cfg"
+				},
+				{
+					"label": "LPDDR3",
+					"value": "configs/LPDDR3-config.cfg"
+				},
+				{
+					"label": "LPDDR4",
+					"value": "configs/LPDDR4-config.cfg"
+				},
+				{
+					"label": "PCM",
+					"value": "configs/PCM-config.cfg"
+				},
+				{
+					"label": "SALP",
+					"value": "configs/SALP-config.cfg"
+				},
+				{
+					"label": "STTMRAM",
+					"value": "configs/STTMRAM-config.cfg"
+				},
+				{
+					"label": "TLDRAM",
+					"value": "configs/TLDRAM-config.cfg"
+				},
+				{
+					"label": "WideIO",
+					"value": "configs/WideIO-config.cfg"
+				},
+				{
+					"label": "WideIO2",
+					"value": "configs/WideIO2-config.cfg"
+				},
+			],
+			"default": "HBM",
+		},
+		{
+			/* Memory name */
+			"type": "pickString",
+			"id": "variable7",
 			"description": "Which fast memory do you want to use in hybrid memory systems?",
 			"options": [
 				{
@@ -578,9 +691,9 @@
 			"default": "HBM",
 		},
 		{
-			/* Trace name */
+			/* Memory name */
 			"type": "pickString",
-			"id": "variable7",
+			"id": "variable8",
 			"description": "Which slow memory do you want to use in hybrid memory systems?",
 			"options": [
 				{
