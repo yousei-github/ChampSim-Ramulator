@@ -123,8 +123,20 @@ vcpkg_installed/
 # (17) Listing your tages:
 # git tag
 
-# Creating a lightweight tag:
+# Creating a lightweight tag with a tag name "v1.0.0":
 # git tag v1.0.0
+
+# Creating an annotated tag:
+# git tag -a <tagname> -m "A tagging message"
+
+# Uploading tags to a shared server
+# git push origin <tagname>
+
+# Deleting a tag on your local repository:
+# git tag -d <tagname>
+
+# Deleting a tag from a remote server
+# git push origin --delete <tagname>
 
 # (18) Creating a new branch:
 # git branch [name]
