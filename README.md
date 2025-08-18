@@ -91,14 +91,17 @@ Before starting to build or debug this project, you might need to be familiar wi
 Build methods are explained below.
 
 ### 1. Visual Studio Code-based method.
-- You may need to modify the compiler's path in the `tasks.json` file in the `.vscode` directory.
+- You may need to modify the compiler's path in the [tasks.json](.vscode/tasks.json) file in the `.vscode` directory.
 - Click `Run Build Task` in the `Terminal` tab.
 
+If your Visual Studio Code does not show valid tasks to run, reloading your window might solve the problem.
+
 ### 2. Command line-based method.
-By referring the contents of `tasks.json` file in the `.vscode` directory, input the below command,
+By referring to the contents of [tasks.json](.vscode/tasks.json) file in the `.vscode` directory, input the command like below,
 ```
-$ [COMPILER] -O3 -g -Wall -fopenmp -std=c++17 -I project_directory/inc/ -I project_directory/inc/ChampSim/ -I project_directory/inc/Ramulator/ 
-project_directory/src/ChampSim/*.cc project_directory/src/ChampSim/branch/bimodal/*.cc project_directory/src/ChampSim/branch/gshare/*.cc project_directory/src/ChampSim/branch/hashed_perceptron/*.cc project_directory/src/ChampSim/branch/perceptron/*.cc project_directory/src/ChampSim/prefetcher/no/*.cc project_directory/src/ChampSim/prefetcher/next_line/*.cc project_directory/src/ChampSim/prefetcher/ip_stride/*.cc project_directory/src/ChampSim/prefetcher/no_instr/*.cc project_directory/src/ChampSim/prefetcher/next_line_instr/*.cc project_directory/src/ChampSim/replacement/lru/*.cc project_directory/src/ChampSim/replacement/ship/*.cc project_directory/src/ChampSim/replacement/srrip/*.cc project_directory/src/ChampSim/replacement/drrip/*.cc project_directory/src/ChampSim/btb/basic_btb/*.cc project_directory/src/Ramulator/*.cpp project_directory/src/*.cc
+$ [COMPILER] -O3 -g -Wall -fopenmp -std=c++17 -I [VCPKG_INCLUDE_PATH] -I [PROJECT_INCLUDE_PATH] -L [VCPKG_LIBRARY_PATH] -L [VCPKG_MANUAL_LINK_LIBRARY_PATH]
+[CHAMPSIM_MAIN_SOURCE_PATH] [CHAMPSIM_BRANCH_SOURCE_PATH] [CHAMPSIM_PREFETCHER_SOURCE_PATH] [CHAMPSIM_REPLACEMENT_SOURCE_PATH] [CHAMPSIM_BRANCH_TARGET_BUFFER_SOURCE_PATH] [RAMULATOR_SOURCE_PATH] [PROJECT_SOURCE_PATH]
+-l lzma -l z -l bz2 -l fmt
 -o project_directory/bin/champsim_plus_ramulator
 ```
 where [COMPILER] is the compiler's name, such as g++.
@@ -107,11 +110,13 @@ where [COMPILER] is the compiler's name, such as g++.
 Debug methods are explained below.
 
 ### 1. Visual Studio Code-based method.
-- You may need to modify the debugger's path in the `launch.json` file in the `.vscode` directory.
+- You may need to modify the debugger's path in the [launch.json](.vscode/launch.json) file in the `.vscode` directory.
 - Click `Start Debugging` in the `Run` tab.
 
+If your Visual Studio Code does not show valid tasks to run, reloading your window might solve the problem.
+
 ### 2. Command line-based method.
-By referring the contents of `launch.json` file in the `.vscode` directory, input the below command,
+By referring the contents of [launch.json](.vscode/launch.json) file in the `.vscode` directory, input the below command,
 ```
 (waiting for updating)
 ```
