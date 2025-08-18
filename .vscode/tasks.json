@@ -36,6 +36,44 @@
 	"tasks": [
 		{
 			"type": "shell",
+			"label": "Create bin/ directory",
+			"command": "mkdir -p bin/; echo 'Created bin/ directory'",
+			"args": [],
+			"problemMatcher": [],
+			/**
+			 * Any Windows specific properties
+			 * It will be used instead of the default properties when the command is executed on the Windows operating system
+			 */
+			"windows": {
+				"command": "If (!(test-path 'bin/')) {mkdir 'bin/'}",
+				"args": [],
+				"options": {
+					"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
+				},
+				"problemMatcher": []
+			},
+			// Defines to which group the task belongs
+			"group": {
+				"kind": "none",
+				"isDefault": false
+			},
+			// Defines how the task output is handled in the user interface
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front.
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": false, // Don't show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
+			// Hides the task from the Run Task Quick Pick, which can be useful for elements of a compound task that are not independently runnable.
+			"hide": true,
+			"detail": "Create directory to store executable files",
+		},
+		{
+			"type": "shell",
 			"label": "C/C++: Build all files",
 			"command": "/usr/bin/g++", // The path of compiler
 			"args": [
@@ -262,6 +300,7 @@
 			"hide": false,
 			"detail": "Use g++ in Linux and cl.exe in Windows (Windows settings are not supported yet)",
 			"dependsOn": [
+				"Create bin/ directory",
 				"C/C++: Build all files",
 				"Show binary folder",
 			],
