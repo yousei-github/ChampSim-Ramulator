@@ -308,6 +308,103 @@
 		},
 		{
 			"type": "shell",
+			"label": "CMake: Configure (ccache)",
+			"command": "cmake",
+			"args": [
+				"-S", "${workspaceFolder}",
+				"-B", "${workspaceFolder}/build",
+				"-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+				"-DCMAKE_BUILD_TYPE=Release"
+			],
+			"problemMatcher": [],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"detail": "Configure the CMake build (ccache auto-detected, vcpkg toolchain).",
+		},
+		{
+			"type": "shell",
+			"label": "CMake: Build (ccache, parallel)",
+			"command": "cmake",
+			"args": [
+				"--build", "${workspaceFolder}/build",
+				"-j", "8"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"dependsOn": [
+				"CMake: Configure (ccache)"
+			],
+			"dependsOrder": "sequence",
+			"detail": "Per-file build with ccache + parallel make. Output: bin/champsim_plus_ramulator.",
+		},
+		{
+			"type": "shell",
+			"label": "CMake: Clean build artifacts",
+			"command": "cmake",
+			"args": [
+				"--build", "${workspaceFolder}/build",
+				"--target", "clean"
+			],
+			"problemMatcher": [],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"detail": "Remove compiled objects and the binary; keep the configured build/ tree (ccache cache untouched).",
+		},
+		{
+			"type": "shell",
+			"label": "CMake: Wipe build directory",
+			"command": "rm",
+			"args": [
+				"-rf",
+				"${workspaceFolder}/build"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			"windows": {
+				"command": "rd",
+				"args": [
+					"/s", "/q",
+					"${workspaceFolder}\\build"
+				],
+				"options": {
+					"cwd": "${workspaceFolder}"
+				},
+				"problemMatcher": []
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"detail": "Delete the entire build/ directory (forces re-configure next build; ccache cache untouched).",
+		},
+		{
+			"type": "shell",
 			"label": "Test ChampSim with single memory",
 			"command": "${workspaceFolder}/bin/${input:variable1}",
 			"args": [

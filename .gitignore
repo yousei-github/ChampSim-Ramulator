@@ -2,6 +2,7 @@
 # ignore all files in below directories
 tracer/pin/obj-intel64/
 vcpkg_installed/
+/build/
 
 # ignore the specified type of files (.stats/.statistics/.trace/Dockerfile/.sh)
 /bin/*
