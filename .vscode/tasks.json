@@ -313,8 +313,10 @@
 			"label": "CMake: Configure (ccache)",
 			"command": "cmake",
 			"args": [
-				"-S", "${workspaceFolder}",
-				"-B", "${workspaceFolder}/build",
+				"-S",
+				"${workspaceFolder}",
+				"-B",
+				"${workspaceFolder}/build",
 				"-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake",
 				"-DCMAKE_BUILD_TYPE=Release"
 			],
@@ -326,6 +328,7 @@
 				"showReuseMessage": false,
 				"clear": false
 			},
+			"hide": true,
 			"detail": "Configure the CMake build (ccache auto-detected, vcpkg toolchain).",
 		},
 		{
@@ -333,8 +336,10 @@
 			"label": "CMake: Build (ccache, parallel)",
 			"command": "cmake",
 			"args": [
-				"--build", "${workspaceFolder}/build",
-				"-j", "8"
+				"--build",
+				"${workspaceFolder}/build",
+				"-j",
+				"8"
 			],
 			"problemMatcher": [
 				"$gcc"
@@ -360,8 +365,10 @@
 			"label": "CMake: Clean build artifacts",
 			"command": "cmake",
 			"args": [
-				"--build", "${workspaceFolder}/build",
-				"--target", "clean"
+				"--build",
+				"${workspaceFolder}/build",
+				"--target",
+				"clean"
 			],
 			"problemMatcher": [],
 			"group": "build",
@@ -388,7 +395,8 @@
 			"windows": {
 				"command": "rd",
 				"args": [
-					"/s", "/q",
+					"/s",
+					"/q",
 					"${workspaceFolder}\\build"
 				],
 				"options": {
