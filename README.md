@@ -15,6 +15,8 @@ This project is based on the [ChampSim](https://github.com/yousei-github/ChampSi
 
 The CPU's parameters are defined in the `./inc/ChampSim/champsim_constants.h` file.
 
+For a detailed explanation of how ChampSim and Ramulator are integrated — including the templated `MEMORY_CONTROLLER`, the runtime DRAM type resolution, address partitioning for hybrid memory, and the OS-transparent management layer — see [integration_architecture.md](integration_architecture.md).
+
 ## ChampSim
 [ChampSim](https://github.com/ChampSim/ChampSim) is a trace-based simulator for a microarchitecture study. If you have questions about how to use ChampSim, we encourage you to search the threads in the [Discussions tab](https://github.com/ChampSim/ChampSim/discussions) or start your own thread. If you are aware of a bug or have a feature request, open a new [Issue](https://github.com/ChampSim/ChampSim/issues).
 

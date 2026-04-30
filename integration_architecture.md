@@ -108,10 +108,10 @@ This layer intercepts every LLC miss inside `add_rq()`/`add_wq()` and decides:
 - Whether to trigger a data migration (swap) between tiers.
 
 Research implementations selectable via `ProjectConfiguration.h`:
-- `IDEAL_LINE_LOCATION_TABLE` — CAMEO-style, cache-line granularity location table
-- `COLOCATED_LINE_LOCATION_TABLE` — co-located metadata variant
-- `IDEAL_VARIABLE_GRANULARITY` — variable-granularity migration regions
-- `IDEAL_SINGLE_MEMPOD` — MemPod single-tier emulation
+- `IDEAL_LINE_LOCATION_TABLE` — CAMEO with an idealized LLT: the location of every cache line is always known instantly with zero lookup latency. Models CAMEO's best-case performance with no serialization overhead for any access (FM or SM). Corresponds to the "Ideal-LLT" baseline in the CAMEO paper.
+- `COLOCATED_LINE_LOCATION_TABLE` — CAMEO's practical Co-Located LLT design: the 2-byte Location Table Entry is stored alongside the 64B data line in the stacked DRAM row buffer as a 66-byte LEAD. For FM hits, LLT lookup and data arrive in the same row-buffer activation (zero serialization). For SM/off-chip accesses, the LLT must be read from FM first, then the data fetched from SM — modeled via `incomplete_read_request_queue` / `incomplete_write_request_queue` in `cameo.h`, which enforce the FM-access-before-SM-access ordering. This variant has lower performance than `IDEAL_LINE_LOCATION_TABLE` specifically for off-chip accesses.
+- `IDEAL_VARIABLE_GRANULARITY` — variable-granularity migration (64B–4KB); adapts migration size to the spatial locality of each accessed page region
+- `IDEAL_SINGLE_MEMPOD` — MemPod (interval-based, page-granularity migration using MEA counters); "ideal/single" means one centralized Pod with oracle knowledge, no distribution overhead
 
 ---
 
@@ -158,7 +158,11 @@ When `RAMULATOR=DISABLE`, the template degenerates to `generated_environment<ID>
 
 ## Simulation Loop
 
-After `generated_environment` is constructed, control passes to `champsim::main()` (ChampSim's unmodified simulation engine), which runs the event loop by repeatedly calling `operable_view()` to get all components and ticking them in order — CPUs, caches, MEMORY_CONTROLLER (which ticks Ramulator). The Warmup and Simulation phases are driven by `champsim::phase_info` objects populated from the command-line arguments.
+After `generated_environment` is constructed, control passes to `champsim::main()` (ChampSim's unmodified simulation engine), which runs the event loop by repeatedly calling `operable_view()` to get all components and ticking them in order — CPUs, caches, MEMORY_CONTROLLER (which ticks Ramulator).
+
+Two phases are driven by `champsim::phase_info` objects populated from the command-line arguments:
+1. **Warmup** — CPUs retire instructions, caches fill, but no statistics are collected. Default: 20% of simulation count if not explicitly specified.
+2. **Simulation** — statistics collected (IPC, cache hit rates, memory traffic, etc.). `PRINT_STATISTICS_INTO_FILE` writes these to a `.statistics` file alongside the trace.
 
 ---
 
@@ -172,3 +176,28 @@ The entire `source/Ramulator/` and `include/Ramulator/` directory is used verbat
 - `ramulator::Request` — carries the address, type (READ/WRITE), and a `std::function` callback
 
 All complexity of the integration lives on the ChampSim side, inside `MEMORY_CONTROLLER`.
+
+### Ramulator's Internal Design (relevant for debugging)
+
+Ramulator models each DRAM standard as a **tree of state-machines** using a generic `DRAM<T>` template (`include/Ramulator/DRAM.h`). Specializing `T = HBM` or `T = DDR4` infuses the tree with that standard's hierarchy (Channel→Rank→Bank→Row) and behavior (timing/transition lookup tables). This is why adding a new DRAM standard only requires editing lookup-table entries, not structural code.
+
+Each node exposes three functions: `decode()` (find prerequisite commands), `check()` (can this command issue right now?), and `update()` (issue the command, update timing horizons). `tick()` drives these state-machines forward each cycle.
+
+Ramulator's memory controller internally maintains **three queues**: read, write, and maintenance (refresh, power-down, self-refresh). It schedules them using FR-FCFS. This is why `tick()` does real work — it runs the scheduler and advances any in-flight DRAM commands, not just a counter.
+
+---
+
+## ChampSim's Pluggable Module System (relevant for adding new components)
+
+ChampSim defines four module types, each with a fixed set of **hook functions** called by the simulator on specific events. All hooks must be implemented (can be empty).
+
+**Per-core modules** (member functions of `O3_CPU`):
+- Branch predictor: `initialize_branch_predictor()`, `predict_branch(ip)`, `last_branch_result(ip, target, taken, type)`
+- BTB: `initialize_btb()`, `btb_prediction(ip, type)`, `update_btb(ip, target, taken, type)`
+- Instruction prefetcher: same hooks as data prefetcher below, plus `prefetch_code_line()` and `prefetcher_branch_operate()`
+
+**Per-cache modules** (member functions of `CACHE`):
+- Data prefetcher: `prefetcher_initialize()`, `prefetcher_cache_operate(addr, ip, hit, ...)`, `prefetcher_cache_fill(addr, set, way, ...)`, `prefetcher_cycle_operate()`, `prefetcher_final_stats()`, `prefetch_line(addr, fill_this_level, metadata)`
+- Replacement policy: `initialize_replacement()`, `find_victim(cpu, instr_id, set, ...)`, `update_replacement_state(cpu, set, way, addr, ...)`, `replacement_final_stats()`
+
+Implementations live in `source/ChampSim/branch/`, `source/ChampSim/prefetcher/`, `source/ChampSim/replacement/`, and `source/ChampSim/btb/`. The active module for each slot is selected at compile time via macros in `ProjectConfiguration.h` (`BRANCH_PREDICTOR`, `LLC_PREFETCHER`, `LLC_REPLACEMENT_POLICY`, `INSTRUCTION_PREFETCHER`).
