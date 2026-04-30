@@ -3,6 +3,7 @@
 tracer/pin/obj-intel64/
 vcpkg_installed/
 /build/
+/.ccache/
 
 # ignore the specified type of files (.stats/.statistics/.trace/Dockerfile/.sh)
 /bin/*

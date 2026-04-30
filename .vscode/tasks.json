@@ -28,6 +28,8 @@
 			"RAMULATOR_SOURCE_PATH": "${workspaceFolder}/source/Ramulator/*.cpp",
 			/* User */
 			"PROJECT_SOURCE_PATH": "${workspaceFolder}/source/*.cc",
+			/* ccache: project-scoped cache dir, isolated from the user's global ~/.cache/ccache */
+			"CCACHE_DIR": "${workspaceFolder}/.ccache",
 		}
 	},
 	/**
@@ -402,6 +404,58 @@
 				"clear": false
 			},
 			"detail": "Delete the entire build/ directory (forces re-configure next build; ccache cache untouched).",
+		},
+		{
+			"type": "shell",
+			"label": "ccache: Show stats",
+			"command": "ccache",
+			"args": [
+				"-s"
+			],
+			"problemMatcher": [],
+			"group": "none",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"detail": "Print ccache hit/miss counters and cache size (use 'ccache -z' to zero counters).",
+		},
+		{
+			"type": "shell",
+			"label": "ccache: Show configuration",
+			"command": "ccache",
+			"args": [
+				"-p"
+			],
+			"problemMatcher": [],
+			"group": "none",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"detail": "Print the active ccache configuration (cache_dir, max_size, compiler check, etc.). Each line shows the source: '(environment)', '(config)', or '(default)'.",
+		},
+		{
+			"type": "shell",
+			"label": "ccache: Clear cache",
+			"command": "ccache",
+			"args": [
+				"-C",
+				"-z"
+			],
+			"problemMatcher": [],
+			"group": "none",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"detail": "Wipe all cached objects and zero the stats. Use only when cache is suspected stale or to reclaim disk space; the next build will be a full cold rebuild.",
 		},
 		{
 			"type": "shell",
