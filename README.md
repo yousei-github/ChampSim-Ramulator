@@ -98,6 +98,20 @@ Build methods are explained below.
 
 If your Visual Studio Code does not show valid tasks to run, reloading your window might solve the problem.
 
+#### CMake + ccache tasks (recommended for faster builds)
+The following tasks are available in `Terminal → Run Task`:
+
+| Task | Description |
+|---|---|
+| `CMake: Build (ccache, parallel)` | Incremental per-file build using ccache with `-j8`. Output: `bin/champsim_plus_ramulator`. Configure runs automatically on first use or after a wipe. |
+| `CMake: Clean build artifacts` | Removes compiled objects and the binary while keeping `build/` configured (next build is still cache-fast). |
+| `CMake: Wipe build directory` | Deletes the entire `build/` directory. Use when switching toolchains or after vcpkg dependency changes. |
+| `ccache: Show stats` | Prints cache hit/miss counters and cache size for this project. |
+| `ccache: Show configuration` | Prints the active ccache configuration, including the project-local cache dir (`.ccache/`). |
+| `ccache: Clear cache` | Wipes the project-local ccache. The next build will be a full cold rebuild. |
+
+The project-local ccache directory is `ChampSim-Ramulator/.ccache/` (isolated from any global user cache).
+
 ### 2. Command line-based method.
 By referring to the contents of [tasks.json](.vscode/tasks.json) file in the `.vscode` directory, input the command like below,
 ```
