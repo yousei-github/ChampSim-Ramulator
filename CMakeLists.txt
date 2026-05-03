@@ -1,4 +1,12 @@
+# The cmake_minimum_required(VERSION 3.xx) is a compatibility guarantee provided by CMake to the project developer.
+# When called, it ensures that CMake will adopt the behavior of the listed version.
+# If a later version of CMake is invoked on a CML containing the above code, it will act exactly as if it were CMake 3.xx.
 cmake_minimum_required(VERSION 3.20)
+
+# The project() command is a conceptually simple command which provides a complex function.
+# It informs CMake that what follows is the description of a distinct software project of a given name (as opposed to a shell-like script).
+# When CMake sees the project() command it performs various checks to ensure the environment is suitable for building software;
+# such as checking for compilers and other build tooling, and discovering properties like the endianness of the host and target machines.
 project(champsim_plus_ramulator CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -32,7 +40,12 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
      "${CMAKE_SOURCE_DIR}/source/*.cc"
      "${CMAKE_SOURCE_DIR}/source/*.cpp")
 
-add_executable(champsim_plus_ramulator ${SOURCES})
+# Building an executable (Way 1)
+add_executable(champsim_plus_ramulator ${SOURCES}) # This command creates a target. In CMake lingo, a target is a name the developer gives to a collection of properties
+
+# Building an executable (Way 2)
+# add_executable(champsim_plus_ramulator)
+# target_sources(champsim_plus_ramulator PRIVATE ${SOURCES})
 
 target_include_directories(champsim_plus_ramulator PRIVATE
     "${CMAKE_SOURCE_DIR}/include")
@@ -40,7 +53,9 @@ target_include_directories(champsim_plus_ramulator PRIVATE
 target_compile_options(champsim_plus_ramulator PRIVATE
     -Wall -fdiagnostics-color=always)
 
-target_link_libraries(champsim_plus_ramulator PRIVATE
+# Combine libraries with the executable
+target_link_libraries(champsim_plus_ramulator
+    PRIVATE
     fmt::fmt
     OpenMP::OpenMP_CXX
     LibLZMA::LibLZMA
