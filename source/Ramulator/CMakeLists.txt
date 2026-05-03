@@ -1,0 +1,25 @@
+target_sources(champsim_plus_ramulator
+    PRIVATE
+    ALDRAM.cpp
+    Cache.cpp
+    Config.cpp
+    Controller.cpp
+    DDR3.cpp
+    DDR4.cpp
+    DSARP.cpp
+    GDDR5.cpp
+    Gem5Wrapper.cpp
+    HBM.cpp
+    LPDDR3.cpp
+    LPDDR4.cpp
+    MemoryFactory.cpp
+    PCM.cpp
+    Processor.cpp
+    Ramulator.cpp
+    Refresh.cpp
+    SALP.cpp
+    STTMRAM.cpp
+    StatType.cpp
+    TLDRAM.cpp
+    WideIO.cpp
+    WideIO2.cpp)

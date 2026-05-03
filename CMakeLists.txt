@@ -36,21 +36,15 @@ find_package(BZip2           REQUIRED)
 find_package(LibLZMA         REQUIRED)
 find_package(ZLIB            REQUIRED)
 
-file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS
-     "${CMAKE_SOURCE_DIR}/source/*.cc"
-     "${CMAKE_SOURCE_DIR}/source/*.cpp")
+# Building an executable
+add_executable(champsim_plus_ramulator) # This command creates a target. In CMake lingo, a target is a name the developer gives to a collection of properties
 
-# Building an executable (Way 1)
-add_executable(champsim_plus_ramulator ${SOURCES}) # This command creates a target. In CMake lingo, a target is a name the developer gives to a collection of properties
-
-# Building an executable (Way 2)
-# add_executable(champsim_plus_ramulator)
-# target_sources(champsim_plus_ramulator PRIVATE ${SOURCES})
-
-target_include_directories(champsim_plus_ramulator PRIVATE
+target_include_directories(champsim_plus_ramulator
+    PRIVATE
     "${CMAKE_SOURCE_DIR}/include")
 
-target_compile_options(champsim_plus_ramulator PRIVATE
+target_compile_options(champsim_plus_ramulator
+    PRIVATE
     -Wall -fdiagnostics-color=always)
 
 # Combine libraries with the executable
@@ -64,3 +58,7 @@ target_link_libraries(champsim_plus_ramulator
 
 set_target_properties(champsim_plus_ramulator PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+
+# Pull in per-directory source lists. Each subdirectory's CMakeLists.txt
+# attaches its files to the executable via target_sources().
+add_subdirectory(source)

@@ -1,0 +1,30 @@
+target_sources(champsim_plus_ramulator
+    PRIVATE
+    address.cc
+    bandwidth.cc
+    cache.cc
+    cache_stats.cc
+    champsim.cc
+    channel.cc
+    chrono.cc
+    core_inst.cc
+    core_stats.cc
+    dram_controller.cc
+    dram_stats.cc
+    extent.cc
+    generated_environment.cc
+    json_printer.cc
+    modules.cc
+    ooo_cpu.cc
+    operable.cc
+    plain_printer.cc
+    ptw.cc
+    ptw_builder.cc
+    register_allocator.cc
+    tracereader.cc
+    vmem.cc)
+
+add_subdirectory(branch)
+add_subdirectory(btb)
+add_subdirectory(prefetcher)
+add_subdirectory(replacement)
