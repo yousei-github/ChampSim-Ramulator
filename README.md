@@ -98,11 +98,13 @@ Build methods are explained below.
 If your Visual Studio Code does not show valid tasks to run, reloading your window might solve the problem.
 
 #### CMake + ccache tasks (recommended for faster builds)
-Use [CMake](https://cmake.org/) to enable parallel builds and [ccache](https://ccache.dev/) to speed up recompilation. The following tasks are available in `Terminal → Run Task`:
+Use [CMake](https://cmake.org/) (≥ 3.21) to enable parallel builds and [ccache](https://ccache.dev/) to speed up recompilation. Build configurations are selected via [CMake Presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html) — the available presets (`default`, `debug`, `release`, `strict`) and their flag combinations are described in [`CMakePresets.json`](CMakePresets.json) (each preset's `displayName` and `description` fields). Local-only overrides go in `CMakeUserPresets.json`, which is gitignored; inherit one of the project presets and tweak from there.
+
+The following tasks are available in `Terminal → Run Task`:
 
 | Task | Description |
 |---|---|
-| `CMake: Build (ccache, parallel)` | Incremental per-file build using ccache with `-j8`. Output: `bin/champsim_plus_ramulator`. Configure runs automatically on first use or after a wipe. |
+| `CMake: Build (preset)` | Prompts for a preset, then configures and builds with ccache + `-j8`. Output: `bin/champsim_plus_ramulator`. |
 | `CMake: Clean build artifacts` | Removes compiled objects and the binary while keeping `build/` configured (next build is still cache-fast). |
 | `CMake: Wipe build directory` | Deletes the entire `build/` directory. Use when switching toolchains or after vcpkg dependency changes. |
 | `ccache: Show statistics` | Prints cache hit/miss counters and cache size for this project. |

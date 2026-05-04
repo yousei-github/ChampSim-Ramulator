@@ -1,0 +1,87 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "default",
+            "displayName": "Default (Release, asserts on)",
+            "description": "Everyday build. CMAKE_BUILD_TYPE=Release, asserts active (NDEBUG NOT defined), -Wall, no -Werror. Use this unless you need a debugger or strict CI checks.",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_ASSERT": "ON",
+                "SHOW_All_WARNING": "ON",
+                "ENABLE_All_WARNING_ERROR": "OFF"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "description": "CMAKE_BUILD_TYPE=Debug, asserts active, -Wall. Pick this when stepping through with gdb/lldb or chasing logic bugs.",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "ENABLE_ASSERT": "ON",
+                "SHOW_All_WARNING": "ON",
+                "ENABLE_All_WARNING_ERROR": "OFF"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release (asserts off / NDEBUG)",
+            "description": "Optimized release with NDEBUG defined so assert() calls are compiled out. Use for performance measurements and final simulation runs.",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "ENABLE_ASSERT": "OFF",
+                "SHOW_All_WARNING": "ON",
+                "ENABLE_All_WARNING_ERROR": "OFF"
+            }
+        },
+        {
+            "name": "strict",
+            "displayName": "Strict (Release + -Werror)",
+            "description": "Same as 'default' but turns every warning into a hard error via -Werror. Use in CI or before sending changes for review.",
+            "inherits": "default",
+            "cacheVariables": {
+                "ENABLE_All_WARNING_ERROR": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default",
+            "jobs": 8
+        },
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "jobs": 8
+        },
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "jobs": 8
+        },
+        {
+            "name": "strict",
+            "configurePreset": "strict",
+            "jobs": 8
+        }
+    ]
+}

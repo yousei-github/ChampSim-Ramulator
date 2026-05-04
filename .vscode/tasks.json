@@ -318,16 +318,15 @@
 		 */
 		{
 			"type": "shell",
-			"label": "CMake: Configure (ccache)",
+			"label": "CMake: Configure (preset)",
 			"command": "cmake",
 			"args": [
-				"-S", // Specifies the project root directory, where CMake will find the project to be built. This contains the root CMakeLists.txt file
-				"${workspaceFolder}",
-				"-B", // Specifies the build directory, where CMake will output the files for the generated build system, as well as artifacts of the build itself when the build system is run
-				"${workspaceFolder}/build",
-				"-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-				"-DCMAKE_BUILD_TYPE=Release" // The default configurations are Debug, Release, RelWithDebInfo, and MinRelSize.
+				"--preset", // Reads CMakePresets.json (and CMakeUserPresets.json) and applies the named configure preset.
+				"${input:cmakePreset}"
 			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
 			"problemMatcher": [],
 			// Defines to which group the task belongs
 			"group": {
@@ -344,20 +343,21 @@
 				"clear": false,
 				"close": false
 			},
-			// Hides the task from the Run Task Quick Pick, which can be useful for elements of a compound task that are not independently runnable.
 			"hide": true,
-			"detail": "Configure the CMake build (ccache auto-detected, vcpkg toolchain).",
+			"detail": "Configure via CMake preset (vcpkg toolchain + ccache auto-detected).",
 		},
 		{
 			"type": "shell",
-			"label": "CMake: Build (ccache, parallel)",
+			"label": "CMake: Build (preset)",
 			"command": "cmake",
 			"args": [
-				"--build", // Runs the build system in the specified build directory. This is a generic command for all generaors. For multi-configuration generators, the desired configuration can be requested via: cmake --build <dir> --config <cfg>
-				"${workspaceFolder}/build",
-				"-j", // The maximum number of concurrent processes to use when building
-				"8"
+				"--build", // Runs the build system for the named build preset. Each build preset references a configure preset and carries its own jobs setting.
+				"--preset",
+				"${input:cmakePreset}"
 			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
 			"problemMatcher": [
 				"$gcc"
 			],
@@ -377,12 +377,11 @@
 				"close": false
 			},
 			"dependsOn": [
-				"CMake: Configure (ccache)"
+				"CMake: Configure (preset)"
 			],
 			"dependsOrder": "sequence",
-			// Hides the task from the Run Task Quick Pick, which can be useful for elements of a compound task that are not independently runnable.
 			"hide": false,
-			"detail": "Per-file build with ccache + parallel make. Output: bin/champsim_plus_ramulator.",
+			"detail": "Configure + build via CMake preset (default/debug/release/strict). Output: bin/champsim_plus_ramulator.",
 		},
 		{
 			"type": "shell",
@@ -689,6 +688,20 @@
 	 * The variableID refers to entries in the inputs section of launch.json and tasks.json, where additional configuration attributes are specified.
 	 */
 	"inputs": [
+		{
+			/* CMake preset name (resolved against CMakePresets.json + CMakeUserPresets.json) */
+			"type": "pickString", // Show a Quick Pick dropdown to let the user select from several options
+			"id": "cmakePreset",
+			"description": "Which CMake preset do you want to use?",
+			// An array of options for the user to pick from
+			"options": [
+				"default",
+				"debug",
+				"release",
+				"strict"
+			],
+			"default": "default", // Default value that will be used if the user doesn't enter something else. It must be one of the option values
+		},
 		{
 			/* Optimization level */
 			"type": "pickString", // Show a Quick Pick dropdown to let the user select from several options

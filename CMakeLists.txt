@@ -1,7 +1,7 @@
 # The cmake_minimum_required(VERSION 3.xx) is a compatibility guarantee provided by CMake to the project developer.
 # When called, it ensures that CMake will adopt the behavior of the listed version.
 # If a later version of CMake is invoked on a CML containing the above code, it will act exactly as if it were CMake 3.xx.
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 
 # The project() command is a conceptually simple command which provides a complex function.
 # It informs CMake that what follows is the description of a distinct software project of a given name (as opposed to a shell-like script).
@@ -32,9 +32,9 @@ message(STATUS "ENABLE_All_WARNING_ERROR: ${ENABLE_All_WARNING_ERROR}")
 
 # Convert build system options into flags for compiler, CMake, and so on
 if(ENABLE_ASSERT)
-    set(AssertConfig "-D NDEBUG")
-else()
     set(AssertConfig "")
+else()
+    set(AssertConfig "-DNDEBUG")
 endif()
 
 if(SHOW_All_WARNING)
