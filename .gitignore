@@ -4,7 +4,6 @@ tracer/pin/obj-intel64/
 vcpkg_installed/
 /build/
 /.ccache/
-/CMakeUserPresets.json
 
 # ignore the specified type of files (.stats/.statistics/.trace/Dockerfile/.sh)
 /bin/*
@@ -13,8 +12,8 @@ vcpkg_installed/
 /*.trace
 /Dockerfile
 /*.sh
-
 **/*.o
+/CMakeUserPresets.json
 
 # Common git commands are listed below, the main branch is the branch pointed by the HEAD pointer.
 

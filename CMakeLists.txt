@@ -34,7 +34,7 @@ message(STATUS "ENABLE_All_WARNING_ERROR: ${ENABLE_All_WARNING_ERROR}")
 if(ENABLE_ASSERT)
     set(AssertConfig "")
 else()
-    set(AssertConfig "-DNDEBUG")
+    set(AssertConfig "-D NDEBUG")
 endif()
 
 if(SHOW_All_WARNING)

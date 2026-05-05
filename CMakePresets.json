@@ -5,11 +5,32 @@
         "minor": 21,
         "patch": 0
     },
+    "vendor": {
+        "CMakePresets.json": "CMakePresets.json is meant to specify project-wide build details (configure options), and may be checked into a version control system. See https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html#manual:cmake-presets(7) for more details",
+        "configurePresets": "configurePresets is an optional array of Configure Preset objects.",
+        "buildPresets": "buildPresets is an optional array of Build Preset objects.",
+        "testPresets": "testPresets is an optional array of Test Preset objects.",
+        "name": "name is a required string representing the machine-friendly name of the preset. This identifier is used in the [cmake --preset] option. There must not be two configure presets in the union of CMakePresets.json and CMakeUserPresets.json in the same directory with the same name. However, a configure preset may have the same name as a build, test, package, or workflow preset.",
+        "hidden": "hidden is an optional boolean specifying whether or not a preset should be hidden. If a preset is hidden, it cannot be used in the --preset argument, will not show up in the CMake GUI, and does not have to have a valid generator or binaryDir, even from inheritance. hidden presets are intended to be used as a base for other presets to inherit via the inherits field.",
+        "inherits": "inherits is an optional array of strings representing the names of presets to inherit from. This field can also be a string, which is equivalent to an array containing one string. The preset will inherit all of the fields from the inherits presets by default (except name, hidden, inherits, description, and displayName), but can override them as desired. A preset can only inherit from another preset that is defined in the same file or in one of the files it includes (directly or indirectly). Presets in CMakePresets.json may not inherit from presets in CMakeUserPresets.json.",
+        "displayName": "displayName is an optional string with a human-friendly name of the preset.",
+        "description": "description is an optional string with a human-friendly description of the preset.",
+        "generator": "generator is an optional string representing the generator to use for the preset. If generator is not specified, it must be inherited from the inherits preset (unless this preset is hidden). In version 3 or above, this field may be omitted to fall back to regular generator discovery procedure.",
+        "toolchainFile": "toolchainFile is an optional string representing the path to the toolchain file. This field supports macro expansion. If a relative path is specified, it is calculated relative to the build directory, and if not found, relative to the source directory. This field takes precedence over any CMAKE_TOOLCHAIN_FILE value.",
+        "binaryDir": "binaryDir is an optional string representing the path to the output binary directory. This field supports macro expansion. If a relative path is specified, it is calculated relative to the source directory. If binaryDir is not specified, it must be inherited from the inherits preset (unless this preset is hidden). In version 3 or above, this field may be omitted.",
+        "cacheVariables": "cacheVariables is an optional map of cache variables. The key is the variable name (which may not be an empty string), and the value is either null, a boolean (which is equivalent to a value of \"TRUE\" or \"FALSE\" and a type of BOOL), a string representing the value of the variable (which supports macro expansion), or an object with the follow ing fields: 1. type (An optional string representing the type of the variable); 2. value (A required string or boolean representing the value of the variable. A boolean is equivalent to \"TRUE\" or \"FALSE\". This field supports macro expansion.",
+        "environment": "environment is an optional map of environment variables. The key is the variable name (which may not be an empty string), and the value is either null or a string representing the value of the variable. Each variable is set regardless of whether or not a value was given to it by the process's environment.",
+        "configurePreset": "[buildPresets] configurePreset is an optional string specifying the name of a configure preset to associate with this build preset. If configurePreset is not specified, it must be inherited from the inherits preset (unless this preset is hidden). The build directory is inferred from the configure preset, so the build will take place in the same binaryDir that the configuration did.",
+        "inheritConfigureEnvironment": "[buildPresets] inheritConfigureEnvironment is an optional boolean that defaults to true. If true, the environment variables from the associated configure preset are inherited after all inherited build preset environments, but before environment variables explicitly specified in this build preset.",
+        "jobs": "[buildPresets] jobs is an optional integer. Equivalent to passing --parallel or -j on the command line. If the value is 0, it is equivalent to passing --parallel with <jobs> omitted; alternatively, one can define the environment variable CMAKE_BUILD_PARALLEL_LEVEL as an empty string using the environment field.",
+        "targets": "[buildPresets] targets is an optional string or array of strings. Equivalent to passing --target or -t on the command line. Vendors may ignore the targets property or hide build presets that explicitly specify targets. This field supports macro expansion.",
+        "cleanFirst": "[buildPresets] cleanFirst is an optional bool. If true, equivalent to passing [--clean-first] on the command line.",
+        "verbose": "[buildPresets] verbose is an optional bool. If true, equivalent to passing --verbose on the command line."
+    },
     "configurePresets": [
         {
             "name": "base",
             "hidden": true,
-            "generator": "Unix Makefiles",
             "binaryDir": "${sourceDir}/build",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "cacheVariables": {
@@ -66,22 +87,26 @@
         {
             "name": "default",
             "configurePreset": "default",
-            "jobs": 8
+            "jobs": 8,
+            "cleanFirst": false
         },
         {
             "name": "debug",
             "configurePreset": "debug",
-            "jobs": 8
+            "jobs": 8,
+            "cleanFirst": true
         },
         {
             "name": "release",
             "configurePreset": "release",
-            "jobs": 8
+            "jobs": 8,
+            "cleanFirst": true
         },
         {
             "name": "strict",
             "configurePreset": "strict",
-            "jobs": 8
+            "jobs": 8,
+            "cleanFirst": true
         }
     ]
 }
