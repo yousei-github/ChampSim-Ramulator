@@ -318,6 +318,35 @@
 		 */
 		{
 			"type": "shell",
+			"label": "CMake: List presets",
+			"command": "cmake",
+			"args": [
+				"--list-presets=all" // List configure, build, test, package, and workflow presets from CMakePresets.json and CMakeUserPresets.json.
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			// Defines to which group the task belongs
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": false, // Don't show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
+			"hide": false,
+			"detail": "List all CMake presets (configure/build/test/package/workflow) from CMakePresets.json and CMakeUserPresets.json.",
+		},
+		{
+			"type": "shell",
 			"label": "CMake: Configure (preset)",
 			"command": "cmake",
 			"args": [

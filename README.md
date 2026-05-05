@@ -86,7 +86,7 @@ $ ./download_dpc3_traces.sh
 
 # Build and debug
 
-Before starting to build or debug this project, you might need to be familiar with [Visual Studio Code tutorial](https://code.visualstudio.com/docs/cpp/config-linux). Also, a C++11 compiler is required for compilation.
+Before starting to build or debug this project, you might need to be familiar with [Visual Studio Code tutorial](https://code.visualstudio.com/docs/cpp/config-linux). Also, a C++17 compiler is required for compilation.
 
 ## Build
 Build methods are explained below.
@@ -98,13 +98,14 @@ Build methods are explained below.
 If your Visual Studio Code does not show valid tasks to run, reloading your window might solve the problem.
 
 #### CMake + ccache tasks (recommended for faster builds)
-Use [CMake](https://cmake.org/) (≥ 3.21) to enable parallel builds and [ccache](https://ccache.dev/) to speed up recompilation. Build configurations are selected via [CMake Presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html) — the available presets (`default`, `debug`, `release`, `strict`) and their flag combinations are described in [`CMakePresets.json`](CMakePresets.json) (each preset's `displayName` and `description` fields). Local-only overrides go in `CMakeUserPresets.json`, which is gitignored; inherit one of the project presets and tweak from there.
+Use [CMake](https://cmake.org/) (≥ 3.21) to enable parallel builds and [ccache](https://ccache.dev/) to speed up recompilation. Build configurations are selected via [CMake Presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html) — the available presets (`default`, `debug`, `release`, `strict`) and their flag combinations are described in [`CMakePresets.json`](CMakePresets.json) (each preset's `displayName` and `description` fields). Run the `CMake: List presets` task (or `cmake --list-presets=all` from a terminal) to enumerate every preset.
 
 The following tasks are available in `Terminal → Run Task`:
 
 | Task | Description |
 |---|---|
 | `CMake: Build (preset)` | Prompts for a preset, then configures and builds with ccache + `-j8`. Output: `bin/champsim_plus_ramulator`. |
+| `CMake: List presets` | Runs `cmake --list-presets=all` in the workspace, printing every configure / build / test / package / workflow preset from `CMakePresets.json`. |
 | `CMake: Clean build artifacts` | Removes compiled objects and the binary while keeping `build/` configured (next build is still cache-fast). |
 | `CMake: Wipe build directory` | Deletes the entire `build/` directory. Use when switching toolchains or after vcpkg dependency changes. |
 | `ccache: Show statistics` | Prints cache hit/miss counters and cache size for this project. |
