@@ -62,6 +62,12 @@ void start_run_simulation(const ramulator::Config& configs, T* spec, const ramul
 template<typename T, typename T2>
 void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramulator::Controller>& memory, const ramulator::Config& configs2, ramulator::Memory<T2, ramulator::Controller>& memory2, simulator_input_parameter& input_parameter);
 
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
+/** Stand-alone swapping-unit smoke test. Runs in place of normal simulation
+ *  when both MEMORY_USE_SWAPPING_UNIT and TEST_SWAPPING_UNIT are enabled. */
+void run_swapping_unit_test();
+#endif /* MEMORY_USE_SWAPPING_UNIT && TEST_SWAPPING_UNIT */
+
 #else
 
 void configure_memory_to_run_simulation(const std::string& standard, ramulator::Config& configs, simulator_input_parameter& input_parameter);
@@ -655,32 +661,14 @@ void start_run_simulation(const ramulator::Config& configs, T* spec, const ramul
     }
 }
 
-template<typename T, typename T2>
-void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramulator::Controller>& memory, const ramulator::Config& configs2, ramulator::Memory<T2, ramulator::Controller>& memory2, simulator_input_parameter& input_parameter)
-{
-    /** Prepare the hardware modules */
-    champsim::configured::generated_environment<CHAMPSIM_BUILD, T, T2> gen_environment(memory, memory2);
-
-    if (input_parameter.hide_heartbeat)
-    {
-        for (O3_CPU& cpu : gen_environment.cpu_view())
-        {
-            cpu.show_heartbeat = false;
-        }
-    }
-
-#if (USE_VCPKG == ENABLE)
-    fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* USE_VCPKG */
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
-        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* PRINT_STATISTICS_INTO_FILE */
-
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
-    /* Test */
-
+/** Smoke test for the swapping unit — preserved from the previous in-line
+ *  block in run_simulation(). The body still references symbols that may no
+ *  longer be in scope (LLC, memory_controller, all_warmup_complete, PACKET,
+ *  MemoryRequestProducer, warmup_instructions, simulation_instructions);
+ *  reviving this test requires reattaching those bindings. */
+void run_swapping_unit_test()
+{
     all_warmup_complete = 1;
     while (true)
     {
@@ -746,9 +734,39 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
         count++;
         if (count >= warmup_instructions + simulation_instructions)
         {
-            exit(0);
+            return;
         }
     }
+}
+#endif /* MEMORY_USE_SWAPPING_UNIT && TEST_SWAPPING_UNIT */
+
+template<typename T, typename T2>
+void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramulator::Controller>& memory, const ramulator::Config& configs2, ramulator::Memory<T2, ramulator::Controller>& memory2, simulator_input_parameter& input_parameter)
+{
+    /** Prepare the hardware modules */
+    champsim::configured::generated_environment<CHAMPSIM_BUILD, T, T2> gen_environment(memory, memory2);
+
+    if (input_parameter.hide_heartbeat)
+    {
+        for (O3_CPU& cpu : gen_environment.cpu_view())
+        {
+            cpu.show_heartbeat = false;
+        }
+    }
+
+#if (USE_VCPKG == ENABLE)
+    fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
+#endif /* USE_VCPKG */
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
+        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
+#endif /* PRINT_STATISTICS_INTO_FILE */
+
+#if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
+    fmt::print("\n*** TEST_SWAPPING_UNIT enabled — bypassing real simulation ***\n\n");
+    run_swapping_unit_test();
+    return;
 #endif /* MEMORY_USE_SWAPPING_UNIT && TEST_SWAPPING_UNIT */
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
