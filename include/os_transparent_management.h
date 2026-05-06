@@ -1,6 +1,7 @@
 #ifndef OS_TRANSPARENT_MANAGEMENT_H
 #define OS_TRANSPARENT_MANAGEMENT_H
 #include <cassert>
+#include <cstdlib>
 #include <deque>
 #include <iostream>
 #include <map>

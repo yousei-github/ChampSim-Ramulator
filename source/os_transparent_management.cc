@@ -61,7 +61,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
     else
     {
         std::cout << __func__ << ": remapping error." << std::endl;
-        assert(false);
+        std::abort();
         return false; // Error
     }
 

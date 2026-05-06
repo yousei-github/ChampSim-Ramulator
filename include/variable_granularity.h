@@ -2,6 +2,7 @@
 #define VARIABLE_GRANULARITY_H
 
 #include <cassert>
+#include <cstdlib>
 #include <deque>
 #include <iostream>
 #include <map>

@@ -2,6 +2,7 @@
 #define IDEAL_SINGLE_MEMPOD_H
 
 #include <cassert>
+#include <cstdlib>
 #include <deque>
 #include <iostream>
 #include <map>

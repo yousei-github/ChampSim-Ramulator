@@ -128,7 +128,7 @@ void OS_TRANSPARENT_MANAGEMENT::update_mea_counter(uint64_t segment_address)
     else
     {
         std::cout << __func__ << ": mea counter error" << std::endl;
-        assert(false);
+        std::abort();
     }
 };
 
@@ -185,7 +185,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         if (data_segment_h_address_fm == data_segment_h_address_sm)
         {
             std::cout << __func__ << ": read remapping location error." << std::endl;
-            abort();
+            std::abort();
         }
 
         address_remapping_table[data_segment_p_address_sm]        = data_segment_h_address_fm;
@@ -197,7 +197,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
     else
     {
         std::cout << __func__ << ": remapping error." << std::endl;
-        assert(false);
+        std::abort();
         return false; // Error
     }
     return true;
@@ -265,7 +265,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
                 if (remapping_request.address_in_fm == remapping_request.address_in_sm)    // check
                 {
                     std::cout << __func__ << ": add new remapping request error 2." << std::endl;
-                    abort();
+                    std::abort();
                 }
 
                 // enqueue a remapping request
@@ -287,7 +287,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
         if (remapping_request.h_address_in_fm == remapping_request.h_address_in_sm) // Check
         {
             std::cout << __func__ << ": add new remapping request error 2." << std::endl;
-            abort();
+            std::abort();
         }
 
         // Enqueue a remapping request
@@ -351,7 +351,7 @@ void OS_TRANSPARENT_MANAGEMENT::determine_swap_pair(std::vector<REMAPPING_TABLE_
         else
         {
             std::cout << __func__ << ": hot page range error" << std::endl;
-            assert(false);
+            std::abort();
         }
     }
 

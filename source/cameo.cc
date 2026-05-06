@@ -70,7 +70,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     if (location >= REMAPPING_LOCATION_WIDTH(RemappingLocation::Max))
     {
         std::cout << __func__ << ": address input error (location)." << std::endl;
-        abort();
+        std::abort();
     }
 
 #if (BITS_MANIPULATION == ENABLE)
@@ -109,7 +109,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     else
     {
         std::cout << __func__ << ": type input error." << std::endl;
-        assert(false);
+        std::abort();
     }
 
     // Add new remapping requests to queue
@@ -148,7 +148,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
         if (fm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Max))
         {
             std::cout << __func__ << ": find the fm_location error." << std::endl;
-            abort();
+            std::abort();
         }
 
         if (fm_remapping_location == remapping_location) // Check
@@ -163,7 +163,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
             std::printf("line_location_table.at(%ld)\n", line_location_table_index);
             std::printf("remapping_location: %d, fm_remapping_location: %d.\n", remapping_location, fm_remapping_location);
 #endif /* BITS_MANIPULATION */
-            abort();
+            std::abort();
         }
 
         remapping_request.address_in_fm = champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(fm_remapping_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
@@ -200,7 +200,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     if (location >= REMAPPING_LOCATION_WIDTH(RemappingLocation::Max))
     {
         std::cout << __func__ << ": address input error (location)." << std::endl;
-        abort();
+        std::abort();
     }
 
 #if (BITS_MANIPULATION == ENABLE)
@@ -239,7 +239,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     else
     {
         std::cout << __func__ << ": type input error." << std::endl;
-        assert(false);
+        std::abort();
     }
 
     // Add new remapping requests to queue
@@ -278,7 +278,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
         if (fm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Max))
         {
             std::cout << __func__ << ": find the fm_location error." << std::endl;
-            abort();
+            std::abort();
         }
 
         if (fm_remapping_location == remapping_location) // check
@@ -293,7 +293,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
             std::printf("line_location_table.at(%ld)\n", line_location_table_index);
             std::printf("remapping_location: %d, fm_remapping_location: %d.\n", remapping_location, fm_remapping_location);
 #endif /* BITS_MANIPULATION */
-            abort();
+            std::abort();
         }
 
         remapping_request.address_in_fm = champsim::replace_bits(line_location_table_index << DATA_MANAGEMENT_OFFSET_BITS, uint64_t(fm_remapping_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
@@ -400,7 +400,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         if (fm_remapping_location == sm_remapping_location)
         {
             std::cout << __func__ << ": read remapping location error." << std::endl;
-            abort();
+            std::abort();
         }
 
         REMAPPING_LOCATION_WIDTH sum_of_remapping_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
@@ -426,13 +426,13 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         {
             std::cout << __func__ << ": sum_of_remapping_location verification error." << std::endl;
             std::printf("sum_of_remapping_location: %d, correct_result: %d.\n", sum_of_remapping_location, correct_result);
-            abort();
+            std::abort();
         }
     }
     else
     {
         std::cout << __func__ << ": remapping error." << std::endl;
-        assert(false);
+        std::abort();
         return false; // Error
     }
 
@@ -477,7 +477,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
             if (remapping_request.address_in_fm == remapping_request.address_in_sm) // Check
             {
                 std::cout << __func__ << ": add new remapping request error 2." << std::endl;
-                abort();
+                std::abort();
             }
 
             // Enqueue a remapping request

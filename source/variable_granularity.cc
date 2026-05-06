@@ -160,7 +160,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     else
     {
         std::cout << __func__ << ": type input error." << std::endl;
-        assert(false);
+        std::abort();
     }
 
     // Prepare a remapping request
@@ -187,7 +187,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
                 printf("start_address[%d]: %d, ", i, placement_table.at(placement_table_index).start_address[i]);
                 printf("granularity[%d]: %d.\n", i, placement_table.at(placement_table_index).granularity[i]);
             }
-            assert(false);
+            std::abort();
         }
 
         // Calculate the start address
@@ -390,7 +390,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
         if (migration_granularity == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
         {
             std::cout << __func__ << ": migration granularity calculation error." << std::endl;
-            assert(false);
+            std::abort();
         }
 
         if (is_expanded) // This data block can be expanded in fast memory
@@ -831,7 +831,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                         std::cout << __func__ << ": start address calculation error." << std::endl;
                         printf("existing_group_start_address: %d, ", existing_group_start_address);
                         printf("start_address: %d.\n", start_address);
-                        assert(false);
+                        std::abort();
 #endif /* FLEXIBLE_DATA_PLACEMENT */
                     }
                 }
@@ -883,7 +883,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                     printf("placement_table.at(%ld).granularity[%d] is %d.\n", placement_table_index, data_block_position, placement_table.at(placement_table_index).granularity[data_block_position]);
                     printf("remapping_request.size is %d.\n", remapping_request.size);
                     printf("tag is %d.\n", tag);
-                    assert(false);
+                    std::abort();
                 }
 #endif /* FLEXIBLE_GRANULARITY */
             }
@@ -916,7 +916,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                 else
                 {
                     std::cout << __func__ << ": cursor calculation error." << std::endl;
-                    assert(false);
+                    std::abort();
                 }
 
                 // Calculate the free space in fast memory for this set
@@ -937,7 +937,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                         std::printf("start_address[%d]: %d, ", i, placement_table.at(placement_table_index).start_address[i]);
                         std::printf("granularity[%d]: %d.\n", i, placement_table.at(placement_table_index).granularity[i]);
                     }
-                    assert(false);
+                    std::abort();
                 }
             }
         }
@@ -964,7 +964,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                         if (placement_table.at(placement_table_index).granularity[i] != remapping_request.size)
                         {
                             std::cout << __func__ << ": migration granularity calculation error." << std::endl;
-                            assert(false);
+                            std::abort();
                         }
 
                         find_occupied_group   = true;
@@ -988,7 +988,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                 std::printf("size: %d.\n", remapping_request.size);
                 std::printf("start_address_in_fm: %d, ", start_address_in_fm);
                 std::printf("start_address: %d.\n", start_address);
-                assert(false);
+                std::abort();
             }
 
             // Fill tag in placement table entry
@@ -1043,19 +1043,19 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
                     std::printf("start_address[%d]: %d, ", i, placement_table.at(placement_table_index).start_address[i]);
                     std::printf("granularity[%d]: %d.\n", i, placement_table.at(placement_table_index).granularity[i]);
                 }
-                assert(false);
+                std::abort();
             }
         }
         else
         {
             std::cout << __func__ << ": fm_location calculation error." << std::endl;
-            assert(false);
+            std::abort();
         }
     }
     else
     {
         std::cout << __func__ << ": remapping queue empty error." << std::endl;
-        assert(false);
+        std::abort();
         return false; // Error
     }
 
@@ -1165,7 +1165,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
         if (placement_table.at(placement_table_index).granularity[i] == MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None))
         {
             std::cout << __func__ << ": used space calculation error." << std::endl;
-            assert(false);
+            std::abort();
         }
 
         used_space += placement_table.at(placement_table_index).granularity[i];
@@ -1325,7 +1325,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
             if (remapping_request.address_in_fm == remapping_request.address_in_sm) // Check
             {
                 std::cout << __func__ << ": add new remapping request error." << std::endl;
-                abort();
+                std::abort();
             }
 
             // Enqueue a remapping request
@@ -1350,7 +1350,7 @@ MIGRATION_GRANULARITY_WIDTH OS_TRANSPARENT_MANAGEMENT::calculate_migration_granu
     if (start_address > end_address)
     {
         std::cout << __func__ << ": migration granularity calculation error." << std::endl;
-        assert(false);
+        std::abort();
     }
 
     // Calculate the migration granularity
@@ -1387,7 +1387,7 @@ MIGRATION_GRANULARITY_WIDTH OS_TRANSPARENT_MANAGEMENT::calculate_migration_granu
     else
     {
         std::cout << __func__ << ": migration granularity calculation error 2." << std::endl;
-        assert(false);
+        std::abort();
     }
 
     return migration_granularity;
@@ -1432,7 +1432,7 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(cons
             else
             {
                 std::cout << __func__ << ": migration granularity calculation error." << std::endl;
-                assert(false);
+                std::abort();
             }
 #endif /* FLEXIBLE_GRANULARITY */
         }
@@ -1486,7 +1486,7 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::round_down_migration_granularity(
             else
             {
                 std::cout << __func__ << ": migration granularity calculation error." << std::endl;
-                assert(false);
+                std::abort();
             }
 #endif /* FLEXIBLE_GRANULARITY */
         }
