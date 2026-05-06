@@ -359,9 +359,9 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
     ramulator::Config configs2(argv[start_position_of_configs + 1]); // Slow memory
 
     const std::string& standard = configs["standard"];
-    assert(standard != "" || "DRAM standard should be specified.");
+    assert(standard != "" && "DRAM standard should be specified.");
     const std::string& standard2 = configs2["standard"];
-    assert(standard2 != "" || "DRAM standard should be specified.");
+    assert(standard2 != "" && "DRAM standard should be specified.");
 
     configs.add("trace_type", "DRAM");
     configs2.add("trace_type", "DRAM");
@@ -398,7 +398,7 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
     ramulator::Config configs(argv[start_position_of_configs]);
 
     const std::string& standard = configs["standard"];
-    assert(standard != "" || "DRAM standard should be specified.");
+    assert(standard != "" && "DRAM standard should be specified.");
 
     configs.add("trace_type", "DRAM");
 

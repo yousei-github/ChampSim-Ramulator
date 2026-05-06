@@ -903,7 +903,11 @@ public:
         }
         else if (opstring == "/")
         {
+#if (USER_CODES == ENABLE)
+            assert(fabs(r) > 1e-8 && "divide zero error");
+#else
             assert(fabs(r) > 1e-8 || "divide zero error");
+#endif /* USER_CODES */
             return l / r;
         }
         else
