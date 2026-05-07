@@ -1,15 +1,47 @@
 #include "ProjectConfiguration.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <stddef.h>
 #include <string.h>
 
+#include <algorithm>
 #include <cassert>
+#include <cstdio>
 #include <cstdlib>
+#include <functional>
 #include <iostream>
 #include <string>
 
-#define FILE_OPEN_RETRY_TIME (2u)
+// Functions private to a Compilation Unit (TU - Translation Unit): using anonymous namespaces or the static keyword
+namespace
+{
+// Linux file systems cap a single path component at NAME_MAX (typically 255).
+// If the basename of `path` would exceed that, replace its middle with a
+// deterministic hash so the resulting name is short, unique per original
+// input, and keeps the original extension.
+std::string shorten_path_if_needed(const std::string& path)
+{
+    const size_t slash     = path.find_last_of('/');
+    const std::string dir  = (slash == std::string::npos) ? "" : path.substr(0, slash + 1); // Directory
+    const std::string base = (slash == std::string::npos) ? path : path.substr(slash + 1);  // Base name
+
+    if (base.size() <= NAME_MAX)
+        return path;
+
+    const size_t dot       = base.find_last_of('.');
+    const std::string ext  = (dot == std::string::npos) ? "" : base.substr(dot);      // Extension
+    const std::string stem = (dot == std::string::npos) ? base : base.substr(0, dot); // Stem
+
+    char hash_suffix[18]; // "_" + 16 hex + NUL
+    std::snprintf(hash_suffix, sizeof(hash_suffix), "_%016zx", std::hash<std::string> {}(base));
+
+    const size_t budget              = NAME_MAX - ext.size() - (sizeof(hash_suffix) - 1);
+    const std::string shortened_stem = stem.substr(0, std::min(stem.size(), budget));
+
+    return dir + shortened_stem + hash_suffix + ext;
+}
+} // namespace
 
 MEMORY_TRACE output_memorytrace("memory trace", ".trace");
 SIMULATOR_STATISTICS output_statistics("ChampSim statistics", ".statistics");
@@ -47,36 +79,30 @@ DATA_OUTPUT::~DATA_OUTPUT()
 
 void DATA_OUTPUT::output_file_initialization(const char* string)
 {
-    file_handler = fopen(string, "w");
+    const std::string original_name = string;
+    const std::string actual_name   = shorten_path_if_needed(original_name);
 
-    for (size_t i = 0; i < FILE_OPEN_RETRY_TIME; i++)
+    if (actual_name != original_name)
     {
-        if (file_handler == nullptr)
-        {
-            std::cerr << __func__ << ": File Open Error: " << strerror(errno) << std::endl;
-            if (i == (FILE_OPEN_RETRY_TIME - 1))
-            {
-                abort();
-            }
-
-            std::string new_file_name = "file_open_retry_" + std::to_string(i);
-            file_handler              = fopen(new_file_name.c_str(), "w");
-        }
-        else
-        {
-            break; // Open file successfully
-        }
+        std::cerr << __func__ << ": output filename '" << original_name << "' (" << original_name.size() << " bytes) exceeds NAME_MAX; shortened to '" << actual_name << "'." << std::endl;
     }
 
-    file_name = (char*) malloc(strlen(string) + 1);
+    file_handler = fopen(actual_name.c_str(), "w");
+    if (file_handler == nullptr)
+    {
+        std::cerr << __func__ << ": File Open Error opening '" << actual_name << "': " << strerror(errno) << std::endl;
+        std::abort();
+    }
+
+    file_name = (char*) malloc(actual_name.size() + 1);
 
     if (file_name == nullptr)
     {
         std::cerr << __func__ << ": Memory Allocation Error." << std::endl;
-        abort();
+        std::abort();
     }
 
-    strcpy(file_name, string);
+    strcpy(file_name, actual_name.c_str());
 }
 
 void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t number)
@@ -89,7 +115,7 @@ void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t numbe
         if (string_temp == nullptr)
         {
             std::cerr << __func__ << ": Memory Allocation Error." << std::endl;
-            abort();
+            std::abort();
         }
 
         strcpy(string_temp, string_array[i]);
@@ -117,36 +143,29 @@ void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t numbe
     // Append file_extension to benchmark_names.
     benchmark_names += file_extension.c_str();
 
-    file_handler = fopen(benchmark_names.c_str(), "w");
+    const std::string actual_name = shorten_path_if_needed(benchmark_names);
 
-    for (size_t i = 0; i < FILE_OPEN_RETRY_TIME; i++)
+    if (actual_name != benchmark_names)
     {
-        if (file_handler == nullptr)
-        {
-            std::cerr << __func__ << ": File Open Error: " << strerror(errno) << std::endl;
-            if (i == (FILE_OPEN_RETRY_TIME - 1))
-            {
-                abort();
-            }
-
-            std::string new_file_name = "file_open_retry_" + std::to_string(i);
-            file_handler              = fopen(new_file_name.c_str(), "w");
-        }
-        else
-        {
-            break; // Open file successfully
-        }
+        std::cerr << __func__ << ": output filename '" << benchmark_names << "' (" << benchmark_names.size() << " bytes) exceeds NAME_MAX; shortened to '" << actual_name << "'." << std::endl;
     }
 
-    file_name = (char*) malloc(benchmark_names.size() + 1);
+    file_handler = fopen(actual_name.c_str(), "w");
+    if (file_handler == nullptr)
+    {
+        std::cerr << __func__ << ": File Open Error opening '" << actual_name << "': " << strerror(errno) << std::endl;
+        std::abort();
+    }
+
+    file_name = (char*) malloc(actual_name.size() + 1);
 
     if (file_name == nullptr)
     {
         std::cerr << __func__ << ": Memory Allocation Error." << std::endl;
-        abort();
+        std::abort();
     }
 
-    strcpy(file_name, benchmark_names.c_str());
+    strcpy(file_name, actual_name.c_str());
 }
 
 MEMORY_TRACE::MEMORY_TRACE(std::string v1, std::string v2)
