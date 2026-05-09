@@ -141,7 +141,9 @@
 
 #include <array>
 #include <cassert>
+#include <cerrno>
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 
 #if (USE_OPENMP == ENABLE)

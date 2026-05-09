@@ -122,6 +122,41 @@ const unsigned LOG2_PAGE_SIZE  = champsim::lg2(PAGE_SIZE);
 
 #if (USER_CODES == ENABLE)
 
+namespace
+{
+// Parse a long-long-valued CLI argument with full validation. On failure,
+// prints a diagnostic in the same style as the surrounding parsing loop and
+// bumps `abort_flag`, which the loop checks at the end of each iteration.
+long long parse_long_long_arg(const char* flag_name, const char* arg_value, uint8_t& abort_flag)
+{
+    if (arg_value == nullptr || *arg_value == '\0')
+    {
+        std::cout << __func__ << ": Empty value for " << flag_name << "." << std::endl;
+        abort_flag++;
+        return 0;
+    }
+
+    errno                 = 0;
+    char* end             = nullptr;
+    const long long value = std::strtoll(arg_value, &end, 10);
+
+    if (errno == ERANGE)
+    {
+        std::cout << __func__ << ": Out-of-range value for " << flag_name << ": '" << arg_value << "'." << std::endl;
+        abort_flag++;
+        return 0;
+    }
+    if (end == arg_value || *end != '\0')
+    {
+        std::cout << __func__ << ": Invalid value for " << flag_name << ": '" << arg_value << "'." << std::endl;
+        abort_flag++;
+        return 0;
+    }
+
+    return value;
+}
+} // namespace
+
 int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
 {
 #if (USE_OPENMP == ENABLE)
@@ -205,7 +240,7 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
             input_parameter.warmup_given = true;
             if (i + 1 < argc)
             {
-                input_parameter.warmup_instructions = atol(argv[++i]);
+                input_parameter.warmup_instructions = parse_long_long_arg("--warmup-instructions", argv[++i], abort_flag);
 
 #if (RAMULATOR == ENABLE)
                 start_position_of_configs = i + 1;
@@ -228,7 +263,7 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
             input_parameter.simulation_given = true;
             if (i + 1 < argc)
             {
-                input_parameter.simulation_instructions = atol(argv[++i]);
+                input_parameter.simulation_instructions = parse_long_long_arg("--simulation-instructions", argv[++i], abort_flag);
 
 #if (RAMULATOR == ENABLE)
                 start_position_of_configs = i + 1;
