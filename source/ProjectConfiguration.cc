@@ -110,35 +110,19 @@ void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t numbe
     std::string benchmark_names;
     for (uint32_t i = 0; i < number; i++)
     {
-        char* string_temp = (char*) malloc(strlen(string_array[i]) + 1);
+        const std::string path     = string_array[i];
+        const size_t slash         = path.find_last_of('/');
+        const std::string basename = (slash == std::string::npos) ? path : path.substr(slash + 1);
 
-        if (string_temp == nullptr)
+        if (basename.empty())
         {
-            std::cerr << __func__ << ": Memory Allocation Error." << std::endl;
+            std::cerr << __func__ << ": Empty basename for input '" << path << "'." << std::endl;
             std::abort();
         }
 
-        strcpy(string_temp, string_array[i]);
-
-        const char* delimiter = "/";
-        char* token           = NULL;
-        char* last_token      = NULL;
-
-        /* Get the first token */
-        token                 = strtok(string_temp, delimiter);
-
-        /* Walk through other tokens */
-        while (token != NULL)
-        {
-            last_token = token;
-            token      = strtok(NULL, delimiter);
-        }
-
-        benchmark_names += std::string(last_token) + "_";
-
-        free(string_temp);
+        benchmark_names += basename + "_";
     }
-    benchmark_names.erase(benchmark_names.size() - 1);
+    benchmark_names.erase(benchmark_names.size() - 1); // Delete the last "_"
 
     // Append file_extension to benchmark_names.
     benchmark_names += file_extension.c_str();
