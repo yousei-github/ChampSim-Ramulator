@@ -568,6 +568,10 @@ void configure_fast_memory_to_run_simulation(const std::string& standard, ramula
         ramulator::TLDRAM* tldram = new ramulator::TLDRAM(configs["org"], configs["speed"], configs.get_subarrays());
         next_configure_slow_memory_to_run_simulation(standard2, configs2, configs, tldram, input_parameter);
     }
+    else
+    {
+        std::cout << __func__ << ": Unknown fast-memory standard '" << standard << "'." << std::endl;
+    }
 }
 
 template<typename T>
@@ -647,6 +651,11 @@ void next_configure_slow_memory_to_run_simulation(const std::string& standard2, 
     {
         ramulator::TLDRAM* tldram = new ramulator::TLDRAM(configs2["org"], configs2["speed"], configs2.get_subarrays());
         start_run_simulation(configs, spec, configs2, tldram, input_parameter);
+    }
+    else
+    {
+        std::cout << __func__ << ": Unknown slow-memory standard '" << standard2 << "'." << std::endl;
+        delete spec;
     }
 }
 
@@ -842,7 +851,8 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 
 void configure_memory_to_run_simulation(const std::string& standard, ramulator::Config& configs, simulator_input_parameter& input_parameter)
 {
-    /** @todo When to delete the memory? */
+    /** @note Memory<T>::~Memory deletes spec on the happy path */
+
     if (standard == "DDR3")
     {
         ramulator::DDR3* ddr3 = new ramulator::DDR3(configs["org"], configs["speed"]);
@@ -917,6 +927,10 @@ void configure_memory_to_run_simulation(const std::string& standard, ramulator::
     {
         ramulator::TLDRAM* tldram = new ramulator::TLDRAM(configs["org"], configs["speed"], configs.get_subarrays());
         start_run_simulation(configs, tldram, input_parameter);
+    }
+    else
+    {
+        std::cout << __func__ << ": Unknown DRAM standard '" << standard << "'." << std::endl;
     }
 }
 
