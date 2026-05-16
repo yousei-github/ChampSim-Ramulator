@@ -725,7 +725,6 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
         else
         {
             // The data of this physical address is in slow memory, no need for translation
-            address = address;
         }
     }
     else
@@ -765,7 +764,6 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
         if (in_fm)
         {
             // The data of this physical address is in fast memory, no need for translaton
-            address = address;
         }
         else
         {
