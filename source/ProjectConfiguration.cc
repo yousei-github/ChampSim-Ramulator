@@ -162,13 +162,6 @@ MEMORY_TRACE::MEMORY_TRACE(std::string v1, std::string v2, char** string_array, 
 {
 }
 
-MEMORY_TRACE::~MEMORY_TRACE()
-{
-    if (file_handler) // Check the validity of this file handler
-    {
-    }
-}
-
 void MEMORY_TRACE::output_memory_trace_hexadecimal(uint64_t address, char type)
 {
     assert(file_handler);

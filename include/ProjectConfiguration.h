@@ -195,7 +195,6 @@ class MEMORY_TRACE : public DATA_OUTPUT
 public:
     MEMORY_TRACE(std::string v1, std::string v2);
     MEMORY_TRACE(std::string v1, std::string v2, char** string_array, uint32_t number);
-    ~MEMORY_TRACE();
 
     void output_memory_trace_hexadecimal(uint64_t address, char type);
 };
