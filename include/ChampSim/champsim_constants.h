@@ -231,44 +231,24 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #define L1I_WAYS                 (8)                                    // (ways)
 #define L1I_SETS                 (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS) // (sets)
 #define L1I_PQ_SIZE              (32)
-// #define L1I_MSHR_SIZE            (32)
-// #define L1I_HIT_LATENCY          (3)
-// #define L1I_FILL_LATENCY         (1)
-// #define L1I_TAG_BANDWIDTH        (1)
-// #define L1I_FILL_BANDWIDTH       (1)
 
 /* L1D */
 #define L1D_CAPACITY             (48 * KiB) // Default: 48 KiB
 #define L1D_WAYS                 (12)
 #define L1D_SETS                 (L1D_CAPACITY / BLOCK_SIZE / L1D_WAYS)
 #define L1D_PQ_SIZE              (8)
-// #define L1D_MSHR_SIZE            (32)
-#define L1D_HIT_LATENCY          (4)
-// #define L1D_FILL_LATENCY         (1)
-// #define L1D_TAG_BANDWIDTH        (1)
-// #define L1D_FILL_BANDWIDTH       (1)
 
 /* L2C */
 #define L2C_CAPACITY             (512 * KiB) // Default: 512 KiB
 #define L2C_WAYS                 (8)
 #define L2C_SETS                 (L2C_CAPACITY / BLOCK_SIZE / L2C_WAYS)
 #define L2C_PQ_SIZE              (16)
-// #define L2C_MSHR_SIZE            (64)
-// #define L2C_HIT_LATENCY          (9)
-// #define L2C_FILL_LATENCY         (1)
-// #define L2C_TAG_BANDWIDTH        (1)
-// #define L2C_FILL_BANDWIDTH       (1)
 
 /* ITLB */
 #define ITLB_CAPACITY            (256 * KiB)
 #define ITLB_WAYS                (4)
 #define ITLB_SETS                (ITLB_CAPACITY / PAGE_SIZE / ITLB_WAYS)
 #define ITLB_PQ_SIZE             (0)
-// #define ITLB_MSHR_SIZE           (8)
-// #define ITLB_HIT_LATENCY         (1)
-// #define ITLB_FILL_LATENCY        (1)
-// #define ITLB_TAG_BANDWIDTH       (1)
-// #define ITLB_FILL_BANDWIDTH      (1)
 
 /* DTLB */
 #define DTLB_CAPACITY            (256 * KiB)
@@ -276,35 +256,29 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #define DTLB_SETS                (DTLB_CAPACITY / PAGE_SIZE / DTLB_WAYS)
 #define DTLB_PQ_SIZE             (0)
 #define DTLB_MSHR_SIZE           (8)
-// #define DTLB_HIT_LATENCY         (1)
-// #define DTLB_FILL_LATENCY        (1)
-// #define DTLB_TAG_BANDWIDTH       (1)
-// #define DTLB_FILL_BANDWIDTH      (1)
 
 /* STLB */
 #define STLB_CAPACITY            (6 * MiB)
 #define STLB_WAYS                (12)
 #define STLB_SETS                (STLB_CAPACITY / PAGE_SIZE / STLB_WAYS)
 #define STLB_PQ_SIZE             (0)
-// #define STLB_MSHR_SIZE           (16)
-// #define STLB_HIT_LATENCY         (7)
-// #define STLB_FILL_LATENCY        (1)
-// #define STLB_TAG_BANDWIDTH       (1)
-// #define STLB_FILL_BANDWIDTH      (1)
 
 /* LLC */
 #define LLC_CAPACITY             (2 * MiB) // Default: 2 MiB
 #define LLC_WAYS                 (16)
 #define LLC_SETS                 (LLC_CAPACITY / BLOCK_SIZE / LLC_WAYS)
 #define LLC_PQ_SIZE              (32)
-// #define LLC_MSHR_SIZE            (64)
-// #define LLC_HIT_LATENCY          (19)
-// #define LLC_FILL_LATENCY         (1)
-// #define LLC_TAG_BANDWIDTH        (NUM_CPUS)
-// #define LLC_FILL_BANDWIDTH       (NUM_CPUS)
 
 /* PTW */
 #define PTW_MSHR_SIZE            (5)
+#define PTW_PSCL5_SET            (1)
+#define PTW_PSCL5_WAY            (2)
+#define PTW_PSCL4_SET            (1)
+#define PTW_PSCL4_WAY            (4)
+#define PTW_PSCL3_SET            (2)
+#define PTW_PSCL3_WAY            (4)
+#define PTW_PSCL2_SET            (4)
+#define PTW_PSCL2_WAY            (8)
 
 /** @todo [deprecated] */
 // Clock scale

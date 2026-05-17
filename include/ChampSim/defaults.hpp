@@ -162,7 +162,13 @@ const auto default_llc = champsim::cache_builder<champsim::cache_builder_module_
                              .reset_wq_checks_full_addr()
                              .prefetch_activate(access_type::LOAD, access_type::PREFETCH);
 
-const auto default_ptw = champsim::ptw_builder {}.bandwidth_factor(2).mshr_factor(PTW_MSHR_SIZE).add_pscl(5, 1, 2).add_pscl(4, 1, 4).add_pscl(3, 2, 4).add_pscl(2, 4, 8);
+const auto default_ptw = champsim::ptw_builder {}
+                             .bandwidth_factor(2)
+                             .mshr_factor(PTW_MSHR_SIZE)
+                             .add_pscl(5, PTW_PSCL5_SET, PTW_PSCL5_WAY)
+                             .add_pscl(4, PTW_PSCL4_SET, PTW_PSCL4_WAY)
+                             .add_pscl(3, PTW_PSCL3_SET, PTW_PSCL3_WAY)
+                             .add_pscl(2, PTW_PSCL2_SET, PTW_PSCL2_WAY);
 } // namespace champsim::defaults
 
 #endif
