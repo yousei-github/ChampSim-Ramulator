@@ -457,6 +457,14 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
     // Check duplicated remapping request in remapping_request_queue
     // If duplicated remapping requests exist, we won't add this new remapping request into the remapping_request_queue.
     bool duplicated_remapping_request  = false;
+    /** @todo O(N) scan over remapping_request_queue is acceptable at
+     *  REMAPPING_REQUEST_QUEUE_LENGTH = 64. If that macro is bumped to
+     *  1024/4096 (see the comment on its definition in include/cameo.h),
+     *  replace this loop with an std::unordered_set<uint64_t> of
+     *  line_location_table_index values kept in sync with the deque
+     *  (push_back / pop_front) for O(1) duplicate detection on the
+     *  LLC-miss path.
+     */
     for (uint64_t i = 0; i < remapping_request_queue.size(); i++)
     {
         uint64_t data_block_address_to_check        = remapping_request_queue[i].address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
