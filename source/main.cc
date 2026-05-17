@@ -214,7 +214,7 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
 
     for (auto i = 1; i < argc; i++)
     {
-        static uint8_t abort_flag = 0;
+        uint8_t abort_flag = 0;
 
         /** Read all traces using the cloudsuite format */
         if ((strcmp(argv[i], "--cloudsuite") == 0) || (strcmp(argv[i], "-c") == 0))
