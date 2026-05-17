@@ -192,93 +192,149 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 
 #endif /* CPU_USE_MULTIPLE_CORES */
 
-#define CPU_FREQUENCY            (4000.0)                                                 // MHz (ooo_cpu's frequency)
-#define CPU_CLOCK_PERIOD         ((uint32_t) (ONE_SECOND_IN_MICROSECOND / CPU_FREQUENCY)) // Picosecond
+#define CPU_FREQUENCY                (4000.0)                                                 // MHz (ooo_cpu's frequency)
+#define CPU_CLOCK_PERIOD             ((uint32_t) (ONE_SECOND_IN_MICROSECOND / CPU_FREQUENCY)) // Picosecond
 
-#define CPU_DIB_SET              (32)  // DIB (Decoded Instruction Buffer) sets (sets)
-#define CPU_DIB_WAY              (8)   // DIB ways (ways)
-#define CPU_DIB_WINDOW           (16)  // DIB window size (window_size)
-#define CPU_IFETCH_BUFFER_SIZE   (64)  // (ifetch_buffer_size)
-#define CPU_DECODE_BUFFER_SIZE   (32)  // (decode_buffer_size)
-#define CPU_DISPATCH_BUFFER_SIZE (32)  // (dispatch_buffer_size)
-#define CPU_DIB_HIT_BUFFER_SIZE  (32)  // DIB hit buffer size
-#define CPU_REGISTER_FILE_SIZE   (128) // (register_file_size)
-#define CPU_ROB_SIZE             (352) // (rob_size)
-#define CPU_LQ_SIZE              (128) // (lq_size)
-#define CPU_SQ_SIZE              (72)  // (sq_size)
-#define CPU_FETCH_WIDTH          (6)   // (fetch_width)
-#define CPU_DECODE_WIDTH         (6)   // (decode_width)
-#define CPU_DISPATCH_WIDTH       (6)   // (dispatch_width)
-#define CPU_EXECUTE_WIDTH        (4)   // (execute_width)
-#define CPU_LQ_WIDTH             (2)   // (lq_width)
-#define CPU_SQ_WIDTH             (2)   // (sq_width)
-#define CPU_RETIRE_WIDTH         (5)   // (retire_width)
-#define CPU_DIB_INORDER_WIDTH    (5)   // DIB inorder width
-#define CPU_MISPREDICT_PENALTY   (1)   // (mispredict_penalty)
-#define CPU_SCHEDULER_SIZE       (128) // (scheduler_size)
-#define CPU_DECODE_LATENCY       (1)   // (decode_latency)
-#define CPU_DIB_HIT_LATENCY      (1)   // DIB hit latency
-#define CPU_DISPATCH_LATENCY     (1)   // (dispatch_latency)
-#define CPU_SCHEDULE_LATENCY     (0)   // (schedule_latency)
-#define CPU_EXECUTE_LATENCY      (0)   // (execute_latency)
-#define CPU_L1I_BANDWIDTH        (1)
-#define CPU_L1D_BANDWIDTH        (1)
+#define CPU_DIB_SET                  (32)  // DIB (Decoded Instruction Buffer) sets (sets)
+#define CPU_DIB_WAY                  (8)   // DIB ways (ways)
+#define CPU_DIB_WINDOW               (16)  // DIB window size (window_size)
+#define CPU_IFETCH_BUFFER_SIZE       (64)  // (ifetch_buffer_size)
+#define CPU_DECODE_BUFFER_SIZE       (32)  // (decode_buffer_size)
+#define CPU_DISPATCH_BUFFER_SIZE     (32)  // (dispatch_buffer_size)
+#define CPU_DIB_HIT_BUFFER_SIZE      (32)  // DIB hit buffer size
+#define CPU_REGISTER_FILE_SIZE       (128) // (register_file_size)
+#define CPU_ROB_SIZE                 (352) // (rob_size)
+#define CPU_LQ_SIZE                  (128) // (lq_size)
+#define CPU_SQ_SIZE                  (72)  // (sq_size)
+#define CPU_FETCH_WIDTH              (6)   // (fetch_width)
+#define CPU_DECODE_WIDTH             (6)   // (decode_width)
+#define CPU_DISPATCH_WIDTH           (6)   // (dispatch_width)
+#define CPU_EXECUTE_WIDTH            (4)   // (execute_width)
+#define CPU_LQ_WIDTH                 (2)   // (lq_width)
+#define CPU_SQ_WIDTH                 (2)   // (sq_width)
+#define CPU_RETIRE_WIDTH             (5)   // (retire_width)
+#define CPU_DIB_INORDER_WIDTH        (5)   // DIB inorder width
+#define CPU_MISPREDICT_PENALTY       (1)   // (mispredict_penalty)
+#define CPU_SCHEDULER_SIZE           (128) // (scheduler_size)
+#define CPU_DECODE_LATENCY           (1)   // (decode_latency)
+#define CPU_DIB_HIT_LATENCY          (1)   // DIB hit latency
+#define CPU_DISPATCH_LATENCY         (1)   // (dispatch_latency)
+#define CPU_SCHEDULE_LATENCY         (0)   // (schedule_latency)
+#define CPU_EXECUTE_LATENCY          (0)   // (execute_latency)
+#define CPU_L1I_BANDWIDTH            (1)
+#define CPU_L1D_BANDWIDTH            (1)
 
 /** @todo Delete unused macro and add champsim_config.json setting to here */
 
 /* L1I */
-#define L1I_CAPACITY             (32 * KiB)                             // Default: 32 KiB
-#define L1I_WAYS                 (8)                                    // (ways)
-#define L1I_SETS                 (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS) // (sets)
-#define L1I_PQ_SIZE              (32)
+#define L1I_CAPACITY                 (32 * KiB)                             // Default: 32 KiB
+#define L1I_WAYS                     (8)                                    // (ways)
+#define L1I_SETS                     (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS) // (sets)
+#define L1I_PQ_SIZE                  (32)
 
 /* L1D */
-#define L1D_CAPACITY             (48 * KiB) // Default: 48 KiB
-#define L1D_WAYS                 (12)
-#define L1D_SETS                 (L1D_CAPACITY / BLOCK_SIZE / L1D_WAYS)
-#define L1D_PQ_SIZE              (8)
+#define L1D_CAPACITY                 (48 * KiB) // Default: 48 KiB
+#define L1D_WAYS                     (12)
+#define L1D_SETS                     (L1D_CAPACITY / BLOCK_SIZE / L1D_WAYS)
+#define L1D_PQ_SIZE                  (8)
 
 /* L2C */
-#define L2C_CAPACITY             (512 * KiB) // Default: 512 KiB
-#define L2C_WAYS                 (8)
-#define L2C_SETS                 (L2C_CAPACITY / BLOCK_SIZE / L2C_WAYS)
-#define L2C_PQ_SIZE              (16)
+#define L2C_CAPACITY                 (512 * KiB) // Default: 512 KiB
+#define L2C_WAYS                     (8)
+#define L2C_SETS                     (L2C_CAPACITY / BLOCK_SIZE / L2C_WAYS)
+#define L2C_PQ_SIZE                  (16)
 
 /* ITLB */
-#define ITLB_CAPACITY            (256 * KiB)
-#define ITLB_WAYS                (4)
-#define ITLB_SETS                (ITLB_CAPACITY / PAGE_SIZE / ITLB_WAYS)
-#define ITLB_PQ_SIZE             (0)
+#define ITLB_CAPACITY                (256 * KiB)
+#define ITLB_WAYS                    (4)
+#define ITLB_SETS                    (ITLB_CAPACITY / PAGE_SIZE / ITLB_WAYS)
+#define ITLB_PQ_SIZE                 (0)
 
 /* DTLB */
-#define DTLB_CAPACITY            (256 * KiB)
-#define DTLB_WAYS                (4)
-#define DTLB_SETS                (DTLB_CAPACITY / PAGE_SIZE / DTLB_WAYS)
-#define DTLB_PQ_SIZE             (0)
-#define DTLB_MSHR_SIZE           (8)
+#define DTLB_CAPACITY                (256 * KiB)
+#define DTLB_WAYS                    (4)
+#define DTLB_SETS                    (DTLB_CAPACITY / PAGE_SIZE / DTLB_WAYS)
+#define DTLB_PQ_SIZE                 (0)
+#define DTLB_MSHR_SIZE               (8)
 
 /* STLB */
-#define STLB_CAPACITY            (6 * MiB)
-#define STLB_WAYS                (12)
-#define STLB_SETS                (STLB_CAPACITY / PAGE_SIZE / STLB_WAYS)
-#define STLB_PQ_SIZE             (0)
+#define STLB_CAPACITY                (6 * MiB)
+#define STLB_WAYS                    (12)
+#define STLB_SETS                    (STLB_CAPACITY / PAGE_SIZE / STLB_WAYS)
+#define STLB_PQ_SIZE                 (0)
 
 /* LLC */
-#define LLC_CAPACITY             (2 * MiB) // Default: 2 MiB
-#define LLC_WAYS                 (16)
-#define LLC_SETS                 (LLC_CAPACITY / BLOCK_SIZE / LLC_WAYS)
-#define LLC_PQ_SIZE              (32)
+#define LLC_CAPACITY                 (2 * MiB) // Default: 2 MiB
+#define LLC_WAYS                     (16)
+#define LLC_SETS                     (LLC_CAPACITY / BLOCK_SIZE / LLC_WAYS)
+#define LLC_PQ_SIZE                  (32)
 
 /* PTW */
-#define PTW_MSHR_SIZE            (5)
-#define PTW_PSCL5_SET            (1)
-#define PTW_PSCL5_WAY            (2)
-#define PTW_PSCL4_SET            (1)
-#define PTW_PSCL4_WAY            (4)
-#define PTW_PSCL3_SET            (2)
-#define PTW_PSCL3_WAY            (4)
-#define PTW_PSCL2_SET            (4)
-#define PTW_PSCL2_WAY            (8)
+#define PTW_MSHR_SIZE                (5)
+#define PTW_PSCL5_SET                (1)
+#define PTW_PSCL5_WAY                (2)
+#define PTW_PSCL4_SET                (1)
+#define PTW_PSCL4_WAY                (4)
+#define PTW_PSCL3_SET                (2)
+#define PTW_PSCL3_WAY                (4)
+#define PTW_PSCL2_SET                (4)
+#define PTW_PSCL2_WAY                (8)
+
+/**
+ * Cache and PTW channel (inter-component queue) sizes — shared across all CPUs.
+ * These size the champsim::channel queues constructed in include/ChampSim/core_inst.h.
+ * Distinct from the *_PQ_SIZE macros above, which size each cache's internal PQ via
+ * cache_builder.pq_size().
+ */
+/* From CPU pipeline */
+#define CPU_to_L1I_CHANNEL_RQ_SIZE   (32)
+#define CPU_to_L1I_CHANNEL_PQ_SIZE   (32)
+#define CPU_to_L1I_CHANNEL_WQ_SIZE   (32)
+#define CPU_to_L1D_CHANNEL_RQ_SIZE   (32)
+#define CPU_to_L1D_CHANNEL_PQ_SIZE   (32)
+#define CPU_to_L1D_CHANNEL_WQ_SIZE   (32)
+
+/* From PTW */
+#define PTW_to_L1D_CHANNEL_RQ_SIZE   (32)
+#define PTW_to_L1D_CHANNEL_PQ_SIZE   (32)
+#define PTW_to_L1D_CHANNEL_WQ_SIZE   (32)
+
+/* L1 → Translation lookaside buffer */
+#define L1D_to_DTLB_CHANNEL_RQ_SIZE  (16)
+#define L1D_to_DTLB_CHANNEL_PQ_SIZE  (16)
+#define L1D_to_DTLB_CHANNEL_WQ_SIZE  (16)
+#define L1I_to_ITLB_CHANNEL_RQ_SIZE  (16)
+#define L1I_to_ITLB_CHANNEL_PQ_SIZE  (16)
+#define L1I_to_ITLB_CHANNEL_WQ_SIZE  (16)
+
+/* L1 → L2 */
+#define L1D_to_L2C_CHANNEL_RQ_SIZE   (16)
+#define L1D_to_L2C_CHANNEL_PQ_SIZE   (16)
+#define L1D_to_L2C_CHANNEL_WQ_SIZE   (16)
+#define L1I_to_L2C_CHANNEL_RQ_SIZE   (16)
+#define L1I_to_L2C_CHANNEL_PQ_SIZE   (16)
+#define L1I_to_L2C_CHANNEL_WQ_SIZE   (16)
+
+/* L1/L2 TLB → STLB */
+#define DTLB_to_STLB_CHANNEL_RQ_SIZE (16)
+#define DTLB_to_STLB_CHANNEL_PQ_SIZE (16)
+#define DTLB_to_STLB_CHANNEL_WQ_SIZE (16)
+#define ITLB_to_STLB_CHANNEL_RQ_SIZE (16)
+#define ITLB_to_STLB_CHANNEL_PQ_SIZE (16)
+#define ITLB_to_STLB_CHANNEL_WQ_SIZE (16)
+#define L2C_to_STLB_CHANNEL_RQ_SIZE  (16)
+#define L2C_to_STLB_CHANNEL_PQ_SIZE  (16)
+#define L2C_to_STLB_CHANNEL_WQ_SIZE  (16)
+
+/* STLB → PTW (read-only path: pq and wq are 0 by design) */
+#define STLB_to_PTW_CHANNEL_RQ_SIZE  (32)
+#define STLB_to_PTW_CHANNEL_PQ_SIZE  (0)
+#define STLB_to_PTW_CHANNEL_WQ_SIZE  (0)
+
+/* L2 → LLC */
+#define L2C_to_LLC_CHANNEL_RQ_SIZE   (32)
+#define L2C_to_LLC_CHANNEL_PQ_SIZE   (32)
+#define L2C_to_LLC_CHANNEL_WQ_SIZE   (32)
 
 /** @todo [deprecated] */
 // Clock scale

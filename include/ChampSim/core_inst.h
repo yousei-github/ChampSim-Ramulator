@@ -183,56 +183,56 @@ champsim::configured::generated_environment<ID>::generated_environment()
   channels {
       /* CPU 0's channels */
       // CPU0_PTW_to_CPU0_L1D_Queues
-      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel {  PTW_to_L1D_CHANNEL_RQ_SIZE,   PTW_to_L1D_CHANNEL_PQ_SIZE,   PTW_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU0_DTLB_to_CPU0_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {DTLB_to_STLB_CHANNEL_RQ_SIZE, DTLB_to_STLB_CHANNEL_PQ_SIZE, DTLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_ITLB_to_CPU0_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {ITLB_to_STLB_CHANNEL_RQ_SIZE, ITLB_to_STLB_CHANNEL_PQ_SIZE, ITLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_L1D_to_CPU0_L2C_Queues
-      champsim::channel {                                     16,                                      16,                                      16, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel { L1D_to_L2C_CHANNEL_RQ_SIZE,  L1D_to_L2C_CHANNEL_PQ_SIZE,  L1D_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_L1I_to_CPU0_L2C_Queues
-      champsim::channel {                                     16,                                      16,                                      16, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel { L1I_to_L2C_CHANNEL_RQ_SIZE,  L1I_to_L2C_CHANNEL_PQ_SIZE,  L1I_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_L2C_to_LLC_Queues
-      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel { L2C_to_LLC_CHANNEL_RQ_SIZE,  L2C_to_LLC_CHANNEL_PQ_SIZE,  L2C_to_LLC_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_STLB_to_CPU0_PTW_Queues
-      champsim::channel {                                     32,                                       0,                                       0,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel { STLB_to_PTW_CHANNEL_RQ_SIZE,  STLB_to_PTW_CHANNEL_PQ_SIZE,  STLB_to_PTW_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_L1D_to_CPU0_DTLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
+      champsim::channel {L1D_to_DTLB_CHANNEL_RQ_SIZE, L1D_to_DTLB_CHANNEL_PQ_SIZE, L1D_to_DTLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU0_L1I_to_CPU0_ITLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
+      champsim::channel {L1I_to_ITLB_CHANNEL_RQ_SIZE, L1I_to_ITLB_CHANNEL_PQ_SIZE, L1I_to_ITLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU0_L2C_to_CPU0_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel { L2C_to_STLB_CHANNEL_RQ_SIZE,  L2C_to_STLB_CHANNEL_PQ_SIZE,  L2C_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_to_CPU0_L1I_Queues
-      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel { CPU_to_L1I_CHANNEL_RQ_SIZE,  CPU_to_L1I_CHANNEL_PQ_SIZE,  CPU_to_L1I_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU0_to_CPU0_L1D_Queues
-      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel { CPU_to_L1D_CHANNEL_RQ_SIZE,  CPU_to_L1D_CHANNEL_PQ_SIZE,  CPU_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
 
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)
       /* CPU 1's channels */
       // CPU1_PTW_to_CPU1_L1D_Queues
-      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel {  PTW_to_L1D_CHANNEL_RQ_SIZE,   PTW_to_L1D_CHANNEL_PQ_SIZE,   PTW_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU1_DTLB_to_CPU1_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {DTLB_to_STLB_CHANNEL_RQ_SIZE, DTLB_to_STLB_CHANNEL_PQ_SIZE, DTLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_ITLB_to_CPU1_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {ITLB_to_STLB_CHANNEL_RQ_SIZE, ITLB_to_STLB_CHANNEL_PQ_SIZE, ITLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_L1D_to_CPU1_L2C_Queues
-      champsim::channel {                                     16,                                      16,                                      16, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel { L1D_to_L2C_CHANNEL_RQ_SIZE,  L1D_to_L2C_CHANNEL_PQ_SIZE,  L1D_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_L1I_to_CPU1_L2C_Queues
-      champsim::channel {                                     16,                                      16,                                      16, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel { L1I_to_L2C_CHANNEL_RQ_SIZE,  L1I_to_L2C_CHANNEL_PQ_SIZE,  L1I_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_L2C_to_LLC_Queues
-      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel { L2C_to_LLC_CHANNEL_RQ_SIZE,  L2C_to_LLC_CHANNEL_PQ_SIZE,  L2C_to_LLC_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_STLB_to_CPU1_PTW_Queues
-      champsim::channel {                                     32,                                       0,                                       0,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel { STLB_to_PTW_CHANNEL_RQ_SIZE,  STLB_to_PTW_CHANNEL_PQ_SIZE,  STLB_to_PTW_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_L1D_to_CPU1_DTLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
+      champsim::channel {L1D_to_DTLB_CHANNEL_RQ_SIZE, L1D_to_DTLB_CHANNEL_PQ_SIZE, L1D_to_DTLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU1_L1I_to_CPU1_ITLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
+      champsim::channel {L1I_to_ITLB_CHANNEL_RQ_SIZE, L1I_to_ITLB_CHANNEL_PQ_SIZE, L1I_to_ITLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU1_L2C_to_CPU1_STLB_Queues
-      champsim::channel {                                     16,                                      16,                                      16,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel { L2C_to_STLB_CHANNEL_RQ_SIZE,  L2C_to_STLB_CHANNEL_PQ_SIZE,  L2C_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_to_CPU1_L1I_Queues
-      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel { CPU_to_L1I_CHANNEL_RQ_SIZE,  CPU_to_L1I_CHANNEL_PQ_SIZE,  CPU_to_L1I_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU1_to_CPU1_L1D_Queues
-      champsim::channel {                                     32,                                      32,                                      32, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel { CPU_to_L1D_CHANNEL_RQ_SIZE,  CPU_to_L1D_CHANNEL_PQ_SIZE,  CPU_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
 
 #endif  /* CPU_USE_MULTIPLE_CORES */
 
