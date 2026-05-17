@@ -403,6 +403,10 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
             std::abort();
         }
 
+#ifndef NDEBUG
+        // Debug invariant: after the swap, the location table entry must still
+        // be a permutation of {0, 1, ..., NUMBER_OF_BLOCK - 1}, so the sum is
+        // the constant 0 + 1 + ... + (NUMBER_OF_BLOCK - 1).
         REMAPPING_LOCATION_WIDTH sum_of_remapping_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
         for (REMAPPING_LOCATION_WIDTH i = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero); i < REMAPPING_LOCATION_WIDTH(RemappingLocation::Max); i++)
         {
@@ -428,6 +432,7 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
             std::printf("sum_of_remapping_location: %d, correct_result: %d.\n", sum_of_remapping_location, correct_result);
             std::abort();
         }
+#endif /* NDEBUG */
     }
     else
     {
