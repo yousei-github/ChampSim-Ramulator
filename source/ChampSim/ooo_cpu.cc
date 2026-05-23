@@ -267,7 +267,7 @@ void O3_CPU::do_check_dib(ooo_model_instr& instr)
     if constexpr (champsim::debug_print)
     {
 #if (USE_VCPKG == ENABLE)
-        fmt::print("[DIB] {} instr_id: {} ip: {:#x} hit: {} cycle: {}\n", __func__, instr.instr_id, instr.ip, dib_result.has_value(), current_time.time_since_epoch() / clock_period);
+        fmt::print("[DIB] {} instr_id: {} ip: {} hit: {} cycle: {}\n", __func__, instr.instr_id, instr.ip, dib_result.has_value(), current_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
     }
 }
@@ -289,7 +289,7 @@ long O3_CPU::fetch_instruction()
     };
 
     auto l1i_req_begin = std::find_if(std::begin(IFETCH_BUFFER), std::end(IFETCH_BUFFER), fetch_ready);
-    for (champsim::bandwidth to_read {L1I_BANDWIDTH}; to_read.has_remaining() && l1i_req_begin != std::end(IFETCH_BUFFER); to_read.consume())
+    for (champsim::bandwidth l1i_bw {L1I_BANDWIDTH}; l1i_bw.has_remaining() && l1i_req_begin != std::end(IFETCH_BUFFER); l1i_bw.consume())
     {
         auto l1i_req_end = std::adjacent_find(l1i_req_begin, std::end(IFETCH_BUFFER), no_match_ip);
         if (l1i_req_end != std::end(IFETCH_BUFFER))
@@ -495,7 +495,7 @@ long O3_CPU::schedule_instruction()
     {
         // if there aren't enough physical registers available for the next instruction, stop scheduling
         unsigned long sources_to_allocate = std::count_if(rob_it->source_registers.begin(), rob_it->source_registers.end(),
-            [alloc = std::as_const(reg_allocator)](auto srcreg)
+            [&alloc = std::as_const(reg_allocator)](auto srcreg)
             { return ! alloc.isAllocated(srcreg); });
 
         if (reg_allocator.count_free_registers() < (sources_to_allocate + rob_it->destination_registers.size()))
@@ -543,7 +543,7 @@ long O3_CPU::execute_instruction()
     {
         if (rob_it->scheduled && ! rob_it->executed && rob_it->ready_time <= current_time)
         {
-            bool ready = std::all_of(std::begin(rob_it->source_registers), std::end(rob_it->source_registers), [alloc = std::as_const(reg_allocator)](auto srcreg)
+            bool ready = std::all_of(std::begin(rob_it->source_registers), std::end(rob_it->source_registers), [&alloc = std::as_const(reg_allocator)](auto srcreg)
                 { return alloc.isValid(srcreg); });
 
             if (ready)
@@ -688,7 +688,7 @@ void O3_CPU::do_finish_store(const LSQ_ENTRY& sq_entry)
     if constexpr (champsim::debug_print)
     {
 #if (USE_VCPKG == ENABLE)
-        fmt::print("[SQ] {} instr_id: {} vaddr: {:x}\n", __func__, sq_entry.instr_id, sq_entry.virtual_address);
+        fmt::print("[SQ] {} instr_id: {} vaddr: {}\n", __func__, sq_entry.instr_id, sq_entry.virtual_address);
 #endif /* USE_VCPKG */
     }
 
@@ -715,7 +715,7 @@ bool O3_CPU::do_complete_store(const LSQ_ENTRY& sq_entry)
     if constexpr (champsim::debug_print)
     {
 #if (USE_VCPKG == ENABLE)
-        fmt::print("[SQ] {} instr_id: {} vaddr: {:x}\n", __func__, data_packet.instr_id, data_packet.v_address);
+        fmt::print("[SQ] {} instr_id: {} vaddr: {}\n", __func__, data_packet.instr_id, data_packet.v_address);
 #endif /* USE_VCPKG */
     }
 
@@ -732,7 +732,7 @@ bool O3_CPU::execute_load(const LSQ_ENTRY& lq_entry)
     if constexpr (champsim::debug_print)
     {
 #if (USE_VCPKG == ENABLE)
-        fmt::print("[LQ] {} instr_id: {} vaddr: {:#x}\n", __func__, data_packet.instr_id, data_packet.v_address);
+        fmt::print("[LQ] {} instr_id: {} vaddr: {}\n", __func__, data_packet.instr_id, data_packet.v_address);
 #endif /* USE_VCPKG */
     }
 
@@ -775,17 +775,17 @@ long O3_CPU::handle_memory_return()
 {
     long progress {0};
 
-    for (champsim::bandwidth l1i_bw {FETCH_WIDTH}, to_read {L1I_BANDWIDTH}; l1i_bw.has_remaining() && to_read.has_remaining() && ! L1I_bus.lower_level->returned.empty(); to_read.consume())
+    for (champsim::bandwidth fetch_bw {FETCH_WIDTH}, l1i_bw {L1I_BANDWIDTH}; fetch_bw.has_remaining() && l1i_bw.has_remaining() && ! L1I_bus.lower_level->returned.empty(); l1i_bw.consume())
     {
         auto& l1i_entry = L1I_bus.lower_level->returned.front();
 
-        while (l1i_bw.has_remaining() && ! l1i_entry.instr_depend_on_me.empty())
+        while (fetch_bw.has_remaining() && ! l1i_entry.instr_depend_on_me.empty())
         {
             auto fetched = std::find_if(std::begin(IFETCH_BUFFER), std::end(IFETCH_BUFFER), ooo_model_instr::matches_id(l1i_entry.instr_depend_on_me.front()));
             if (fetched != std::end(IFETCH_BUFFER) && champsim::block_number {fetched->ip} == champsim::block_number {l1i_entry.v_address} && fetched->fetch_issued)
             {
                 fetched->fetch_completed = true;
-                l1i_bw.consume();
+                fetch_bw.consume();
                 ++progress;
 
                 if constexpr (champsim::debug_print)
@@ -959,7 +959,7 @@ void LSQ_ENTRY::finish(ooo_model_instr& rob_entry) const
     if constexpr (champsim::debug_print)
     {
 #if (USE_VCPKG == ENABLE)
-        fmt::print("[LSQ] {} instr_id: {} full_address: {:#x} remain_mem_ops: {}\n", __func__, instr_id, virtual_address, rob_entry.num_mem_ops() - rob_entry.completed_mem_ops);
+        fmt::print("[LSQ] {} instr_id: {} full_address: {} remain_mem_ops: {}\n", __func__, instr_id, virtual_address, rob_entry.num_mem_ops() - rob_entry.completed_mem_ops);
 #endif /* USE_VCPKG */
     }
 }

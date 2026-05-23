@@ -107,6 +107,7 @@ endif()
 
 # Finds and reports the full path to a package (file / static archive / shared object, usually provided by something external to the project) suitable for use with target_link_libraries()
 find_package(fmt      CONFIG REQUIRED)
+find_package(CLI11    CONFIG REQUIRED)
 find_package(OpenMP          REQUIRED)
 find_package(BZip2           REQUIRED)
 find_package(LibLZMA         REQUIRED)
@@ -138,6 +139,7 @@ target_compile_options(champsim_plus_ramulator
 target_link_libraries(champsim_plus_ramulator
     PRIVATE
     fmt::fmt
+    CLI11::CLI11
     OpenMP::OpenMP_CXX
     LibLZMA::LibLZMA
     BZip2::BZip2

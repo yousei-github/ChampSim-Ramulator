@@ -3,7 +3,7 @@
 </p>
 
 # About This Project
-This project is based on the [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: [24cc41b](https://github.com/ChampSim/ChampSim/commit/24cc41bb94bac4da7ffa18774524529bb0e57c44)) and [Ramulator](https://github.com/yousei-github/ramulator) (Commit: [743b940](https://github.com/CMU-SAFARI/ramulator/commit/743b940b70a8e18bcffb14eec22d2ed731059540)), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `./inc/ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
+This project is based on the [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: [06de8d3](https://github.com/ChampSim/ChampSim/commit/06de8d3d03d9ba39b4726166aa6364881812365f)) and [Ramulator](https://github.com/yousei-github/ramulator) (Commit: [743b940](https://github.com/CMU-SAFARI/ramulator/commit/743b940b70a8e18bcffb14eec22d2ed731059540)), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `./inc/ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
 - Set the preprocessor `RAMULATOR` to `ENABLE` for enabling Ramulator or to `DISABLE` for just using ChampSim.
 - Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` for enabling hybrid memory systems or to `DISABLE` for enabling single memory systems.
 - Set the preprocessor `CPU_USE_MULTIPLE_CORES` to `ENABLE` for enabling multiple cores to run the simulation. Note that you also need to add multiple trace paths to run this simulator.

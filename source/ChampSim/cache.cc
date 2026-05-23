@@ -219,7 +219,7 @@ bool CACHE::handle_fill(const mshr_type& fill_mshr)
         if constexpr (champsim::debug_print)
         {
 #if (USE_VCPKG == ENABLE)
-            fmt::print("[{}] {} evict address: {:#x} v_address: {:#x} prefetch_metadata: {}\n", NAME, __func__, writeback_packet.address, writeback_packet.v_address, fill_mshr.data_promise->pf_metadata);
+            fmt::print("[{}] {} evict address: {} v_address: {} prefetch_metadata: {}\n", NAME, __func__, writeback_packet.address, writeback_packet.v_address, fill_mshr.data_promise->pf_metadata);
 #endif /* USE_VCPKG */
         }
 
@@ -1232,7 +1232,7 @@ bool CACHE::handle_fill(const mshr_type& fill_mshr)
 
         if constexpr (champsim::debug_print)
         {
-            fmt::print("[{}] {} evict address: {:#x} v_address: {:#x} prefetch_metadata: {}\n", NAME, __func__, writeback_packet.address, writeback_packet.v_address,
+            fmt::print("[{}] {} evict address: {} v_address: {} prefetch_metadata: {}\n", NAME, __func__, writeback_packet.address, writeback_packet.v_address,
                 fill_mshr.data_promise->pf_metadata);
         }
 
