@@ -44,6 +44,7 @@
 #include "ChampSim/vmem.h"
 
 // Includes of Ramulator
+#if (RAMULATOR == ENABLE)
 #include <stdlib.h>
 
 #include <cstdio>
@@ -76,6 +77,8 @@
 #include "Ramulator/TLDRAM.h"
 #include "Ramulator/WideIO.h"
 #include "Ramulator/WideIO2.h"
+
+#endif /* RAMULATOR */
 
 /* Macro */
 
