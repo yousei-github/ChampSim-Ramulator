@@ -32,13 +32,9 @@
 #include "ChampSim/util/span.h"
 #include "ChampSim/util/units.h"
 
-#if (USER_CODES == ENABLE)
-
-#if (RAMULATOR == ENABLE)
-
-/* No code here */
-
-#else
+#if (USER_CODES == ENABLE) && (RAMULATOR != ENABLE)
+// Ramulator-backed MEMORY_CONTROLLER lives in include/ChampSim/ramulator_dram_controller.h
+// (templated; header-only). This translation unit only provides the native ChampSim variant.
 
 MEMORY_CONTROLLER::MEMORY_CONTROLLER(champsim::chrono::picoseconds dbus_period, champsim::chrono::picoseconds mc_period, std::size_t t_rp, std::size_t t_rcd,
     std::size_t t_cas, std::size_t t_ras, champsim::chrono::microseconds refresh_period, std::vector<channel_type*>&& ul,
@@ -774,9 +770,7 @@ void DRAM_CHANNEL::print_deadlock()
 
 // LCOV_EXCL_STOP
 
-#endif /* RAMULATOR */
-
-#else
+#elif (USER_CODES != ENABLE)
 /* Original code of ChampSim */
 
 MEMORY_CONTROLLER::MEMORY_CONTROLLER(champsim::chrono::picoseconds dbus_period, champsim::chrono::picoseconds mc_period, std::size_t t_rp, std::size_t t_rcd,
