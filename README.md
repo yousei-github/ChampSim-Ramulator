@@ -72,8 +72,8 @@ Accesses.* HPCA 2014.](https://users.ece.cmu.edu/~omutlu/pub/dram-access-refresh
 ChampSim uses [vcpkg](https://vcpkg.io) to manage its dependencies. In this repository, vcpkg is included as a submodule. You can download the dependencies with
 ```sh
 $ git submodule update --init
-$ ./vcpkg/bootstrap-vcpkg.sh
-$ ./vcpkg/vcpkg install
+$ ./external/vcpkg/bootstrap-vcpkg.sh
+$ ./external/vcpkg/vcpkg install
 ```
 
 # Download DPC-3 trace
