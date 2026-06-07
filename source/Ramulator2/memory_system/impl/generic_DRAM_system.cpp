@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "memory_system/memory_system.h"
 #include "translation/translation.h"
 #include "dram_controller/controller.h"
@@ -109,7 +111,10 @@ class GenericDRAMSystem final : public IMemorySystem, public Implementation {
          * This is the same as the bus width (the "x" number).
          */
         const int density         = m_dram->m_organization.density;
-        const int number_of_chips = m_dram->m_channel_width / m_dram->m_organization.dq;
+        // Guard against pseudochannel models where channel_width < dq (e.g. HBM2/HBM3:
+        // channel_width 64 < dq 128), which would otherwise truncate to 0 chips and
+        // report a 0-byte capacity, tripping ChampSim's vmem assertion.
+        const int number_of_chips = std::max(1, m_dram->m_channel_width / m_dram->m_organization.dq);
         const size_t capacity     = ((density * number_of_chips) / 8) * MiB; // Unit is byte
         return capacity;
     };

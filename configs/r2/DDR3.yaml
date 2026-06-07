@@ -1,0 +1,38 @@
+# Ramulator 2.0 DDR3 configuration
+# Matches: standard=DDR3, channels=1, ranks=1, speed=DDR3_1600K, org=DDR3_4Gb_x8.
+#
+# The Frontend is the ChampSim external_wrapper (empty tick, passthrough send) —
+# ChampSim drives requests directly into the MemorySystem
+
+Frontend:
+  impl: ChampSim
+  # clock_ratio: 8 # Unused, CPU frequency is defined in include/ChampSim/champsim_constants.h
+
+MemorySystem:
+  impl: GenericDRAM
+  clock_ratio: 3 # Unused, automatically calculated in source/ChampSim/ramulator2_dram_controller.cc
+
+  DRAM:
+    impl: DDR3
+    org:
+      preset: DDR3_4Gb_x8
+      channel: 1
+      rank: 1
+    timing:
+      preset: DDR3_1600K
+
+  Controller:
+    impl: Generic
+    Scheduler:
+      impl: FRFCFS
+    RefreshManager:
+      impl: AllBank
+    # OpenRowPolicy is used (not ClosedRowPolicy as in DDR4.yaml): ClosedRowPolicy
+    # requires rank + bankgroup levels and a "close-row" request, which this model
+    # does not define.
+    RowPolicy:
+      impl: OpenRowPolicy
+    plugins:
+
+  AddrMapper:
+    impl: RoBaRaCoCh
