@@ -45,7 +45,7 @@ endif()
 
 # C++ language standard configuration
 # See https://cmake.org/cmake/help/latest/manual/cmake-properties.7.html#manual:cmake-properties(7) for more details
-set(CMAKE_CXX_STANDARD 17) # This property specifies the C++ standard whose features are requested to build this target. Supported values are: 98 (C++98), 11 (C++11), 14 (C++14), 17 (C++17), 20 (C++20), 23 (C++23), 26 (C++26)
+set(CMAKE_CXX_STANDARD 20) # This property specifies the C++ standard whose features are requested to build this target. Supported values are: 98 (C++98), 11 (C++11), 14 (C++14), 17 (C++17), 20 (C++20), 23 (C++23), 26 (C++26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON) # If this property is set to ON, then the value of the CXX_STANDARD target property is treated as a requirement. If this property is OFF or unset, the CXX_STANDARD target property is treated as optional and may "decay" to a previous standard if the requested is not available
 set(CMAKE_CXX_EXTENSIONS OFF) # This property specifies whether compiler specific extensions should be used. For some compilers, this results in adding a flag such as -std=gnu++11 instead of -std=c++11 to the compile line
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # If enabled, generates a compile_commands.json file containing the exact compiler calls for all translation units of the project in machine-readable form
@@ -112,6 +112,8 @@ find_package(OpenMP          REQUIRED)
 find_package(BZip2           REQUIRED)
 find_package(LibLZMA         REQUIRED)
 find_package(ZLIB            REQUIRED)
+find_package(yaml-cpp CONFIG REQUIRED)
+find_package(spdlog   CONFIG REQUIRED)
 
 # Building an executable
 add_executable(champsim_plus_ramulator) # This command creates a target. In CMake lingo, a target is a name the developer gives to a collection of properties
@@ -126,7 +128,8 @@ endif()
 # Specifies include directories (map to the -I compiler flag) to use when compiling a given target
 target_include_directories(champsim_plus_ramulator
     PRIVATE
-    "${CMAKE_SOURCE_DIR}/include")
+    "${CMAKE_SOURCE_DIR}/include"
+    "${CMAKE_SOURCE_DIR}/include/Ramulator2")
 
 # Adds options (compiler flags) to the COMPILE_OPTIONS or INTERFACE_COMPILE_OPTIONS target properties. These options are used when compiling the given target
 target_compile_options(champsim_plus_ramulator
@@ -143,7 +146,9 @@ target_link_libraries(champsim_plus_ramulator
     OpenMP::OpenMP_CXX
     LibLZMA::LibLZMA
     BZip2::BZip2
-    ZLIB::ZLIB)
+    ZLIB::ZLIB
+    yaml-cpp
+    spdlog::spdlog)
 
 # Sets properties on a given target:
 # RUNTIME_OUTPUT_DIRECTORY property specifies the directory into which runtime target files should be built

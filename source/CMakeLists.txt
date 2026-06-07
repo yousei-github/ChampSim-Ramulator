@@ -9,3 +9,4 @@ target_sources(champsim_plus_ramulator
 
 add_subdirectory(ChampSim)
 add_subdirectory(Ramulator)
+add_subdirectory(Ramulator2)

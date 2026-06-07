@@ -80,6 +80,10 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 
 #endif /* MEMORY_USE_HYBRID */
 
+#elif (RAMULATOR2 == ENABLE)
+/** Ramulator 2.0 dispatch: YAML-configured, single memory (P1). */
+void start_run_simulation_r2(const std::string& yaml_path, simulator_input_parameter& input_parameter);
+
 #else
 void run_simulation(simulator_input_parameter& input_parameter);
 
@@ -99,6 +103,8 @@ std::vector<phase_stats> main(environment& env, std::vector<phase_info>& phases,
 #if (RAMULATOR == ENABLE)
 /** Memory type is determined later in main() */
 #else
+// Both v2 (Ramulator 2.0) and built-in ChampSim DRAM use a non-templated
+// generated_environment specialization parameterized only on the build ID.
 using configured_environment = champsim::configured::generated_environment<CHAMPSIM_BUILD>;
 
 #endif /* RAMULATOR */
@@ -187,6 +193,11 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
             "Example: %s --warmup-instructions 1000000 --simulation-instructions 2000000 ramulator-configs1.cfg cpu_trace.xz\n",
             argv[0], argv[0]);
 #endif /* MEMORY_USE_HYBRID */
+#elif (RAMULATOR2 == ENABLE)
+        std::printf(
+            "Usage: %s --warmup-instructions <warmup-instructions> --simulation-instructions <simulation-instructions> <ramulator2-yaml-config> <trace-filename1>\n"
+            "Example: %s --warmup-instructions 1000000 --simulation-instructions 2000000 configs/r2/DDR4.yaml cpu_trace.xz\n",
+            argv[0], argv[0]);
 #else
         std::printf(
             "Usage: %s --warmup-instructions <warmup-instructions> --simulation-instructions <simulation-instructions> <trace-filename1>\n"
@@ -203,12 +214,14 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
 
     argc_type start_position_of_traces = 0;
 
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
     argc_type start_position_of_configs = 0;
+#endif /* RAMULATOR || RAMULATOR2 */
+#if (RAMULATOR == ENABLE)
     string stats_out;
     bool stats_flag {false};
-    bool mapping_flag {false};
     argc_type start_position_of_stats   = 0;
+    bool mapping_flag {false};
     argc_type start_position_of_mapping = 0;
 #endif /* RAMULATOR */
 
@@ -242,12 +255,12 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
             {
                 input_parameter.warmup_instructions = parse_long_long_arg("--warmup-instructions", argv[++i], abort_flag);
 
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
                 start_position_of_configs = i + 1;
                 start_position_of_traces  = start_position_of_configs + NUMBER_OF_MEMORIES;
 #else
                 start_position_of_traces = i + 1;
-#endif /* RAMULATOR */
+#endif /* RAMULATOR || RAMULATOR2 */
                 continue;
             }
             else
@@ -265,12 +278,12 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
             {
                 input_parameter.simulation_instructions = parse_long_long_arg("--simulation-instructions", argv[++i], abort_flag);
 
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
                 start_position_of_configs = i + 1;
                 start_position_of_traces  = start_position_of_configs + NUMBER_OF_MEMORIES;
 #else
                 start_position_of_traces = i + 1;
-#endif /* RAMULATOR */
+#endif /* RAMULATOR || RAMULATOR2 */
 
                 continue;
             }
@@ -289,12 +302,12 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
             {
                 input_parameter.json_file_name = argv[++i];
 
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
                 start_position_of_configs = i + 1;
                 start_position_of_traces  = start_position_of_configs + NUMBER_OF_MEMORIES;
 #else
                 start_position_of_traces = i + 1;
-#endif /* RAMULATOR */
+#endif /* RAMULATOR || RAMULATOR2 */
                 continue;
             }
             else
@@ -479,6 +492,12 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
 #endif /* MEMORY_USE_HYBRID */
 
     std::printf("Simulation done. Statistics written to %s\n", stats_out.c_str());
+#elif (RAMULATOR2 == ENABLE)
+    {
+        const std::string yaml_path = argv[start_position_of_configs];
+        start_run_simulation_r2(yaml_path, input_parameter);
+        std::printf("Simulation done. YAML config: %s\n", yaml_path.c_str());
+    }
 #else
     run_simulation(input_parameter);
     std::printf("Simulation done.\n");
@@ -1021,6 +1040,59 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 }
 
 #endif /* MEMORY_USE_HYBRID */
+
+#elif (RAMULATOR2 == ENABLE)
+void start_run_simulation_r2(const std::string& yaml_path, simulator_input_parameter& input_parameter)
+{
+    /* Prepare the hardware modules. The Ramulator 2.0 stack (frontend +
+     * memory system) is built inside MEMORY_CONTROLLER from the YAML config. */
+    configured_environment gen_environment {yaml_path};
+
+    if (input_parameter.hide_heartbeat)
+    {
+        for (O3_CPU& cpu : gen_environment.cpu_view())
+        {
+            cpu.show_heartbeat = false;
+        }
+    }
+
+#if (USE_VCPKG == ENABLE)
+    fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
+#endif /* USE_VCPKG */
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
+        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
+#endif /* PRINT_STATISTICS_INTO_FILE */
+
+    auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
+
+#if (USE_VCPKG == ENABLE)
+    fmt::print("\nChampSim completed all CPUs\n\n");
+#endif /* USE_VCPKG */
+
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
+#endif /* PRINT_STATISTICS_INTO_FILE */
+
+    champsim::plain_printer {std::cout}.print(phase_stats);
+
+    for (CACHE& cache : gen_environment.cache_view())
+    {
+        cache.impl_prefetcher_final_stats();
+    }
+
+    for (CACHE& cache : gen_environment.cache_view())
+    {
+        cache.impl_replacement_final_stats();
+    }
+
+    if (input_parameter.json_given)
+    {
+        std::ofstream json_file {input_parameter.json_file_name};
+        champsim::json_printer {json_file}.print(phase_stats);
+    }
+}
 
 #else
 void run_simulation(simulator_input_parameter& input_parameter)

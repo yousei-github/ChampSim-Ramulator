@@ -61,9 +61,14 @@ void range_print_deadlock(const R& range, std::string kind_name, detail::fmtstr_
         return;
     }
 
+    // Use fmt::vformat (runtime path) instead of fmt::format. Under C++20 fmt v9's
+    // fmt::format would try to reconstruct a format_string<T...> from the captured
+    // format_string<Args...>, which goes through the consteval `operator
+    // basic_string_view` conversion and fails. vformat takes a plain string_view
+    // and validates at runtime — matching the rest of fmt::runtime() use here.
     auto unpacker = [fmtstr](auto... args) -> std::string
     {
-        return fmt::format(fmtstr, args...);
+        return fmt::vformat(fmt::string_view(fmtstr), fmt::make_format_args(args...));
     };
 
     auto formatter = [unpacker, &packing_func](auto entry) -> std::string

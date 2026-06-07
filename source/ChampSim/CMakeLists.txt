@@ -11,6 +11,7 @@ target_sources(champsim_plus_ramulator
     core_stats.cc
     dram_controller.cc
     dram_stats.cc
+    ramulator2_dram_controller.cc
     extent.cc
     generated_environment.cc
     json_printer.cc

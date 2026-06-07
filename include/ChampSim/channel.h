@@ -30,12 +30,12 @@
 
 #if (USER_CODES == ENABLE)
 
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
 #include "ChampSim/chrono.h"
 #include "ChampSim/dram_stats.h"
 #include "ChampSim/operable.h"
 
-#endif /* RAMULATOR */
+#endif /* RAMULATOR || RAMULATOR2 */
 
 namespace champsim
 {
@@ -150,7 +150,7 @@ public:
 };
 } // namespace champsim
 
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
 
 struct DRAM_CHANNEL final : public champsim::operable
 {
@@ -192,7 +192,7 @@ struct DRAM_CHANNEL final : public champsim::operable
     stats_type roi_stats, sim_stats;
 };
 
-#endif /* RAMULATOR */
+#endif /* RAMULATOR || RAMULATOR2 */
 
 #else
 /* Original code of ChampSim */

@@ -1,18 +1,4 @@
-/*
- *    Copyright 2023 The ChampSim Contributors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Use Ramulator 1.0 to simulate the memory
 
 #ifndef RAMULATOR_DRAM_CONTROLLER_H
 #define RAMULATOR_DRAM_CONTROLLER_H
@@ -52,8 +38,6 @@
 #include "Ramulator/Memory.h"
 #include "Ramulator/Request.h"
 #include "os_transparent_management.h"
-
-// Use Ramulator to simulate the memory
 
 /* Macro */
 
@@ -146,6 +130,8 @@ public:
     /** 
      * @brief
      * Get the size of the physical space of the memory system.
+     *
+     * @return Size of the physical space [Byte]
      */
     [[nodiscard]] champsim::data::bytes size() const;
 
@@ -162,7 +148,11 @@ public:
      * The address is physical address.
      */
     uint32_t get_queue_size(ramulator::Request::Type queue_type, uint64_t address);
-
+    
+    /**
+     * @brief Return responses (like data) to LLC when the request is completed by memory system
+     * @note Write requests don't return responses to LLC
+     */
     void return_data(ramulator::Request& request);
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -200,7 +190,7 @@ MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_per
   queues(std::move(ul)), memory(memory), memory2(memory2)
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 {
-    std::printf("Memory IO frequency: %f MH/z, memory IO frequency 2: %f MH/z.\n", io_freq, io_freq2);
+    std::printf("Memory IO frequency: %f MH/z, memory IO frequency 2: %f MH/z (Ramulator 1.0 backend).\n", io_freq, io_freq2);
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     swapping_count = swapping_traffic_in_bytes = 0;
@@ -335,7 +325,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             if ((memory.max_address <= address) && (address < memory.max_address + memory2.max_address))
             {
                 // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-                ramulator::Request request(address - memory.max_address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), rq_it, packet.cpu, memory2_id);
+                ramulator::Request request(address - memory.max_address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory2_id);
                 stall = ! memory2.send(request);
 
                 if (stall == false)
@@ -369,7 +359,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             // Assign the request to the right memory.
             if (address < memory.max_address)
             {
-                ramulator::Request request(address, ramulator::Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), wq_it, packet.cpu, memory_id);
+                ramulator::Request request(address, ramulator::Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory_id);
                 stall = ! memory.send(request);
 
                 if (stall == false)
@@ -381,7 +371,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             else if (address < memory.max_address + memory2.max_address)
             {
                 // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-                ramulator::Request request(address - memory.max_address, ramulator::Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), wq_it, packet.cpu, memory2_id);
+                ramulator::Request request(address - memory.max_address, ramulator::Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory2_id);
                 stall = ! memory2.send(request);
 
                 if (stall == false)
@@ -546,24 +536,21 @@ void MEMORY_CONTROLLER<T, T2>::end_phase(unsigned)
     /* No code here */
 }
 
-// LCOV_EXCL_START Exclude the following function from LCOV
 template<typename T, typename T2>
 void MEMORY_CONTROLLER<T, T2>::print_deadlock()
 {
 #if (USE_VCPKG == ENABLE)
-    fmt::print("Memory controller {}\n", __func__);
+    fmt::print("Memory controller (Ramulator 1.0) {}\n", __func__);
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "Memory controller %s\n", __func__);
+    std::fprintf(output_statistics.file_handler, "Memory controller (Ramulator 1.0) %s\n", __func__);
 #endif /* PRINT_STATISTICS_INTO_FILE */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     std::printf("base_address[0]: %ld, base_address[1]: %ld.\n", base_address[0], base_address[1]);
 #endif /* MEMORY_USE_SWAPPING_UNIT */
 }
-
-// LCOV_EXCL_STOP
 
 template<typename T, typename T2>
 champsim::data::bytes MEMORY_CONTROLLER<T, T2>::size() const
@@ -685,7 +672,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
     // Assign the request to the right memory.
     if (address < memory.max_address)
     {
-        ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), rq_it, packet.cpu, memory_id);
+        ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory_id);
         stall = ! memory.send(request);
 
         if (stall == false)
@@ -724,7 +711,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
     else if (address < memory.max_address + memory2.max_address)
     {
         // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-        ramulator::Request request(address - memory.max_address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), rq_it, packet.cpu, memory2_id);
+        ramulator::Request request(address - memory.max_address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory2_id);
         stall = ! memory2.send(request);
 
         if (stall == false)
@@ -761,10 +748,8 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
     {
         return false; // Queue is full, note Ramulator doesn't merge requests.
     }
-    else
-    {
-        return true;
-    }
+
+    return true;
 }
 
 template<typename T, typename T2>
@@ -823,7 +808,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
     }
 
     address = wq_it.h_address_fm = packet.h_address_fm; // Pretend to access the Location Entry and Data (LEAD) in fast memory
-    ramulator::Request request(address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), wq_it, packet.cpu, memory_id);
+    ramulator::Request request(address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory_id);
     stall = ! memory.send(request);
 
     if (stall == false)
@@ -850,7 +835,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
     // Assign the request to the right memory.
     if (address < memory.max_address)
     {
-        ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), wq_it, packet.cpu, memory_id);
+        ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory_id);
         stall = ! memory.send(request);
 
         if (stall == false)
@@ -861,7 +846,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
     else if (address < memory.max_address + memory2.max_address)
     {
         // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-        ramulator::Request request(address - memory.max_address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, placeholders::_1), wq_it, packet.cpu, memory2_id);
+        ramulator::Request request(address - memory.max_address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory2_id);
         stall = ! memory2.send(request);
 
         if (stall == false)
@@ -883,10 +868,8 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
     {
         return false; // Queue is full, note Ramulator doesn't merge requests.
     }
-    else
-    {
-        return true;
-    }
+
+    return true;
 }
 
 template<class T, class T2>
@@ -1122,13 +1105,13 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
                         // Assign the request to the right memory.
                         if (address < memory.max_address)
                         {
-                            ramulator::Request request(address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, placeholders::_1), coreid, memory_id);
+                            ramulator::Request request(address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, std::placeholders::_1), coreid, memory_id);
                             stall = ! memory.send(request);
                         }
                         else if (address < memory.max_address + memory2.max_address)
                         {
                             // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-                            ramulator::Request request(address - memory.max_address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, placeholders::_1), coreid, memory2_id);
+                            ramulator::Request request(address - memory.max_address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, std::placeholders::_1), coreid, memory2_id);
                             stall = ! memory2.send(request);
                         }
                         else
@@ -1464,6 +1447,8 @@ public:
     /**
      * @brief
      * Get the size of the physical space of the memory system.
+     *
+     * @return Size of the physical space [Byte]
      */
     [[nodiscard]] champsim::data::bytes size() const;
 
@@ -1481,6 +1466,10 @@ public:
      */
     uint32_t get_queue_size(ramulator::Request::Type queue_type, uint64_t address);
 
+    /**
+     * @brief Return responses (like data) to LLC when the request is completed by memory system
+     * @note Write requests don't return responses to LLC
+     */
     void return_data(ramulator::Request& request);
 };
 
@@ -1489,7 +1478,7 @@ MEMORY_CONTROLLER<T>::MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period,
 : champsim::operable(mc_period), io_freq_scale((ONE_SECOND_IN_MICROSECOND / io_freq) / mc_period.count()),
   queues(std::move(ul)), memory(memory)
 {
-    std::printf("Memory IO frequency: %f MH/z.\n", io_freq);
+    std::printf("Memory IO frequency: %f MH/z (Ramulator 1.0 backend).\n", io_freq);
 
     read_request_in_memory  = 0;
     write_request_in_memory = 0;
@@ -1599,20 +1588,17 @@ void MEMORY_CONTROLLER<T>::end_phase(unsigned)
     /* No code here */
 }
 
-// LCOV_EXCL_START Exclude the following function from LCOV
 template<typename T>
 void MEMORY_CONTROLLER<T>::print_deadlock()
 {
 #if (USE_VCPKG == ENABLE)
-    fmt::print("Memory controller {}\n", __func__);
+    fmt::print("Memory controller (Ramulator 1.0) {}\n", __func__);
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "Memory controller %s\n", __func__);
+    std::fprintf(output_statistics.file_handler, "Memory controller (Ramulator 1.0) %s\n", __func__);
 #endif /* PRINT_STATISTICS_INTO_FILE */
 }
-
-// LCOV_EXCL_STOP
 
 template<typename T>
 champsim::data::bytes MEMORY_CONTROLLER<T>::size() const
@@ -1658,14 +1644,14 @@ bool MEMORY_CONTROLLER<T>::add_rq(const request_type& packet, champsim::channel*
         rq_it.to_return = {&ul->returned}; // Store the response queue to communicate with the LLC
 
     /* Send memory request below */
-    bool stall       = true;
+    bool stall             = true;
 
-    uint64_t address = packet.address.to<uint64_t>();
+    const uint64_t address = packet.address.to<uint64_t>();
 
     // Assign the request to the right memory.
     if (address < memory.max_address)
     {
-        ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T>::return_data, this, placeholders::_1), rq_it, packet.cpu, memory_id);
+        ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory_id);
         stall = ! memory.send(request);
 
         if (stall == false)
@@ -1687,10 +1673,8 @@ bool MEMORY_CONTROLLER<T>::add_rq(const request_type& packet, champsim::channel*
     {
         return false; // Queue is full, note Ramulator doesn't merge requests.
     }
-    else
-    {
-        return true;
-    }
+
+    return true;
 }
 
 template<typename T>
@@ -1711,7 +1695,7 @@ bool MEMORY_CONTROLLER<T>::add_wq(const request_type& packet)
     // Assign the request to the right memory.
     if (address < memory.max_address)
     {
-        ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T>::return_data, this, placeholders::_1), wq_it, packet.cpu, memory_id);
+        ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory_id);
         stall = ! memory.send(request);
 
         if (stall == false)
@@ -1733,10 +1717,8 @@ bool MEMORY_CONTROLLER<T>::add_wq(const request_type& packet)
     {
         return false; // Queue is full, note Ramulator doesn't merge requests.
     }
-    else
-    {
-        return true;
-    }
+
+    return true;
 }
 
 template<class T>

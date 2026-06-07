@@ -50,6 +50,7 @@ public:
     uint8_t memory_id                    = NUMBER_OF_MEMORIES;
 
     /* Member functions */
+    
     Request(long addr, Type type, int coreid = 0)
     : is_first_command(true), addr(addr), coreid(coreid), type(type),
       callback([](Request& req) {})

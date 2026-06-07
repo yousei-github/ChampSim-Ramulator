@@ -88,6 +88,42 @@
             "miDebuggerPath": "/usr/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
         },
         {
+            "name": "(gdb) Launch for champsim_plus_ramulator2 with single cores",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/champsim_plus_ramulator", // the executable file's name for debugging
+            // Below are parmeters input into the executable file
+            "args": [
+                "--warmup-instructions",
+                "1000000", // 1000000
+                "--simulation-instructions",
+                "1990000000",
+                "--json",
+                "test.json",
+                "configs/r2/DDR4.yaml",
+                "../../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
+            ],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            //"preLaunchTask": "C/C++: g++ build all files",
+            "miDebuggerPath": "/usr/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
+        },
+        {
             "name": "(gdb) Launch for champsim with single cores",
             "type": "cppdbg",
             "request": "launch",

@@ -18,6 +18,8 @@ template<unsigned long long ID, typename MEMORY_TYPE, typename MEMORY_TYPE2>
 #else
 template<unsigned long long ID, typename MEMORY_TYPE>
 #endif /* MEMORY_USE_HYBRID */
+#elif (RAMULATOR2 == ENABLE)
+template<unsigned long long ID>
 #else
 template<unsigned long long ID>
 #endif /* RAMULATOR */
@@ -74,6 +76,8 @@ private:
 #else
     MEMORY_CONTROLLER<MEMORY_TYPE> memory_controller;
 #endif /* MEMORY_USE_HYBRID */
+#elif (RAMULATOR2 == ENABLE)
+    MEMORY_CONTROLLER memory_controller;
 #else
     MEMORY_CONTROLLER DRAM;
 #endif /* RAMULATOR */
@@ -151,6 +155,8 @@ public:
 #else
     generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory);
 #endif /* MEMORY_USE_HYBRID */
+#elif (RAMULATOR2 == ENABLE)
+    generated_environment(std::string configs);
 #else
     generated_environment();
 #endif /* RAMULATOR */
@@ -161,6 +167,7 @@ public:
 
 #if (RAMULATOR == ENABLE)
 #else
+    // v2 and built-in DRAM both expose a non-templated MEMORY_CONTROLLER.
     MEMORY_CONTROLLER& dram_view() final;
 #endif /* RAMULATOR */
 
@@ -175,6 +182,9 @@ champsim::configured::generated_environment<ID, MEMORY_TYPE, MEMORY_TYPE2>::gene
 template<unsigned long long ID, typename MEMORY_TYPE>
 champsim::configured::generated_environment<ID, MEMORY_TYPE>::generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory)
 #endif /* MEMORY_USE_HYBRID */
+#elif (RAMULATOR2 == ENABLE)
+template<unsigned long long ID>
+champsim::configured::generated_environment<ID>::generated_environment(std::string configs)
 #else
 template<unsigned long long ID>
 champsim::configured::generated_environment<ID>::generated_environment()
@@ -183,56 +193,56 @@ champsim::configured::generated_environment<ID>::generated_environment()
   channels {
       /* CPU 0's channels */
       // CPU0_PTW_to_CPU0_L1D_Queues
-      champsim::channel {  PTW_to_L1D_CHANNEL_RQ_SIZE,   PTW_to_L1D_CHANNEL_PQ_SIZE,   PTW_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel {             PTW_to_L1D_CHANNEL_RQ_SIZE,              PTW_to_L1D_CHANNEL_PQ_SIZE,              PTW_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU0_DTLB_to_CPU0_STLB_Queues
-      champsim::channel {DTLB_to_STLB_CHANNEL_RQ_SIZE, DTLB_to_STLB_CHANNEL_PQ_SIZE, DTLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {           DTLB_to_STLB_CHANNEL_RQ_SIZE,            DTLB_to_STLB_CHANNEL_PQ_SIZE,            DTLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_ITLB_to_CPU0_STLB_Queues
-      champsim::channel {ITLB_to_STLB_CHANNEL_RQ_SIZE, ITLB_to_STLB_CHANNEL_PQ_SIZE, ITLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {           ITLB_to_STLB_CHANNEL_RQ_SIZE,            ITLB_to_STLB_CHANNEL_PQ_SIZE,            ITLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_L1D_to_CPU0_L2C_Queues
-      champsim::channel { L1D_to_L2C_CHANNEL_RQ_SIZE,  L1D_to_L2C_CHANNEL_PQ_SIZE,  L1D_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel {             L1D_to_L2C_CHANNEL_RQ_SIZE,              L1D_to_L2C_CHANNEL_PQ_SIZE,              L1D_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_L1I_to_CPU0_L2C_Queues
-      champsim::channel { L1I_to_L2C_CHANNEL_RQ_SIZE,  L1I_to_L2C_CHANNEL_PQ_SIZE,  L1I_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel {             L1I_to_L2C_CHANNEL_RQ_SIZE,              L1I_to_L2C_CHANNEL_PQ_SIZE,              L1I_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_L2C_to_LLC_Queues
-      champsim::channel { L2C_to_LLC_CHANNEL_RQ_SIZE,  L2C_to_LLC_CHANNEL_PQ_SIZE,  L2C_to_LLC_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel {             L2C_to_LLC_CHANNEL_RQ_SIZE,              L2C_to_LLC_CHANNEL_PQ_SIZE,              L2C_to_LLC_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU0_STLB_to_CPU0_PTW_Queues
-      champsim::channel { STLB_to_PTW_CHANNEL_RQ_SIZE,  STLB_to_PTW_CHANNEL_PQ_SIZE,  STLB_to_PTW_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {            STLB_to_PTW_CHANNEL_RQ_SIZE,             STLB_to_PTW_CHANNEL_PQ_SIZE,             STLB_to_PTW_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_L1D_to_CPU0_DTLB_Queues
-      champsim::channel {L1D_to_DTLB_CHANNEL_RQ_SIZE, L1D_to_DTLB_CHANNEL_PQ_SIZE, L1D_to_DTLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
+      champsim::channel {            L1D_to_DTLB_CHANNEL_RQ_SIZE,             L1D_to_DTLB_CHANNEL_PQ_SIZE,             L1D_to_DTLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU0_L1I_to_CPU0_ITLB_Queues
-      champsim::channel {L1I_to_ITLB_CHANNEL_RQ_SIZE, L1I_to_ITLB_CHANNEL_PQ_SIZE, L1I_to_ITLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
+      champsim::channel {            L1I_to_ITLB_CHANNEL_RQ_SIZE,             L1I_to_ITLB_CHANNEL_PQ_SIZE,             L1I_to_ITLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU0_L2C_to_CPU0_STLB_Queues
-      champsim::channel { L2C_to_STLB_CHANNEL_RQ_SIZE,  L2C_to_STLB_CHANNEL_PQ_SIZE,  L2C_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {            L2C_to_STLB_CHANNEL_RQ_SIZE,             L2C_to_STLB_CHANNEL_PQ_SIZE,             L2C_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU0_to_CPU0_L1I_Queues
-      champsim::channel { CPU_to_L1I_CHANNEL_RQ_SIZE,  CPU_to_L1I_CHANNEL_PQ_SIZE,  CPU_to_L1I_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel {             CPU_to_L1I_CHANNEL_RQ_SIZE,              CPU_to_L1I_CHANNEL_PQ_SIZE,              CPU_to_L1I_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU0_to_CPU0_L1D_Queues
-      champsim::channel { CPU_to_L1D_CHANNEL_RQ_SIZE,  CPU_to_L1D_CHANNEL_PQ_SIZE,  CPU_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel {             CPU_to_L1D_CHANNEL_RQ_SIZE,              CPU_to_L1D_CHANNEL_PQ_SIZE,              CPU_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
 
 #if (CPU_USE_MULTIPLE_CORES == ENABLE)
       /* CPU 1's channels */
       // CPU1_PTW_to_CPU1_L1D_Queues
-      champsim::channel {  PTW_to_L1D_CHANNEL_RQ_SIZE,   PTW_to_L1D_CHANNEL_PQ_SIZE,   PTW_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel {             PTW_to_L1D_CHANNEL_RQ_SIZE,              PTW_to_L1D_CHANNEL_PQ_SIZE,              PTW_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU1_DTLB_to_CPU1_STLB_Queues
-      champsim::channel {DTLB_to_STLB_CHANNEL_RQ_SIZE, DTLB_to_STLB_CHANNEL_PQ_SIZE, DTLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {           DTLB_to_STLB_CHANNEL_RQ_SIZE,            DTLB_to_STLB_CHANNEL_PQ_SIZE,            DTLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_ITLB_to_CPU1_STLB_Queues
-      champsim::channel {ITLB_to_STLB_CHANNEL_RQ_SIZE, ITLB_to_STLB_CHANNEL_PQ_SIZE, ITLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {           ITLB_to_STLB_CHANNEL_RQ_SIZE,            ITLB_to_STLB_CHANNEL_PQ_SIZE,            ITLB_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_L1D_to_CPU1_L2C_Queues
-      champsim::channel { L1D_to_L2C_CHANNEL_RQ_SIZE,  L1D_to_L2C_CHANNEL_PQ_SIZE,  L1D_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel {             L1D_to_L2C_CHANNEL_RQ_SIZE,              L1D_to_L2C_CHANNEL_PQ_SIZE,              L1D_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_L1I_to_CPU1_L2C_Queues
-      champsim::channel { L1I_to_L2C_CHANNEL_RQ_SIZE,  L1I_to_L2C_CHANNEL_PQ_SIZE,  L1I_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel {             L1I_to_L2C_CHANNEL_RQ_SIZE,              L1I_to_L2C_CHANNEL_PQ_SIZE,              L1I_to_L2C_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_L2C_to_LLC_Queues
-      champsim::channel { L2C_to_LLC_CHANNEL_RQ_SIZE,  L2C_to_LLC_CHANNEL_PQ_SIZE,  L2C_to_LLC_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
+      champsim::channel {             L2C_to_LLC_CHANNEL_RQ_SIZE,              L2C_to_LLC_CHANNEL_PQ_SIZE,              L2C_to_LLC_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 0},
       // CPU1_STLB_to_CPU1_PTW_Queues
-      champsim::channel { STLB_to_PTW_CHANNEL_RQ_SIZE,  STLB_to_PTW_CHANNEL_PQ_SIZE,  STLB_to_PTW_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {            STLB_to_PTW_CHANNEL_RQ_SIZE,             STLB_to_PTW_CHANNEL_PQ_SIZE,             STLB_to_PTW_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_L1D_to_CPU1_DTLB_Queues
-      champsim::channel {L1D_to_DTLB_CHANNEL_RQ_SIZE, L1D_to_DTLB_CHANNEL_PQ_SIZE, L1D_to_DTLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
+      champsim::channel {            L1D_to_DTLB_CHANNEL_RQ_SIZE,             L1D_to_DTLB_CHANNEL_PQ_SIZE,             L1D_to_DTLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU1_L1I_to_CPU1_ITLB_Queues
-      champsim::channel {L1I_to_ITLB_CHANNEL_RQ_SIZE, L1I_to_ITLB_CHANNEL_PQ_SIZE, L1I_to_ITLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
+      champsim::channel {            L1I_to_ITLB_CHANNEL_RQ_SIZE,             L1I_to_ITLB_CHANNEL_PQ_SIZE,             L1I_to_ITLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 1},
       // CPU1_L2C_to_CPU1_STLB_Queues
-      champsim::channel { L2C_to_STLB_CHANNEL_RQ_SIZE,  L2C_to_STLB_CHANNEL_PQ_SIZE,  L2C_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
+      champsim::channel {            L2C_to_STLB_CHANNEL_RQ_SIZE,             L2C_to_STLB_CHANNEL_PQ_SIZE,             L2C_to_STLB_CHANNEL_WQ_SIZE,  champsim::data::bits {champsim::lg2(PAGE_SIZE)}, 0},
       // CPU1_to_CPU1_L1I_Queues
-      champsim::channel { CPU_to_L1I_CHANNEL_RQ_SIZE,  CPU_to_L1I_CHANNEL_PQ_SIZE,  CPU_to_L1I_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel {             CPU_to_L1I_CHANNEL_RQ_SIZE,              CPU_to_L1I_CHANNEL_PQ_SIZE,              CPU_to_L1I_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
       // CPU1_to_CPU1_L1D_Queues
-      champsim::channel { CPU_to_L1D_CHANNEL_RQ_SIZE,  CPU_to_L1D_CHANNEL_PQ_SIZE,  CPU_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
+      champsim::channel {             CPU_to_L1D_CHANNEL_RQ_SIZE,              CPU_to_L1D_CHANNEL_PQ_SIZE,              CPU_to_L1D_CHANNEL_WQ_SIZE, champsim::data::bits {champsim::lg2(BLOCK_SIZE)}, 1},
 
 #endif  /* CPU_USE_MULTIPLE_CORES */
 
@@ -248,12 +258,15 @@ champsim::configured::generated_environment<ID>::generated_environment()
   /* Memory's initialization */
   memory_controller {champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}, memory.spec->speed_entry.freq, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, memory},
 #endif /* MEMORY_USE_HYBRID */
+#elif (RAMULATOR2 == ENABLE)
+  /* Memory's initialization */
+  memory_controller {champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, std::move(configs)},
 #else
   /* Memory's initialization */
   DRAM {champsim::chrono::picoseconds {DRAM_DATA_TRANSFER_PERIOD}, champsim::chrono::picoseconds {DRAM_IO_CLOCK_PERIOD}, std::size_t {24}, std::size_t {24}, std::size_t {24}, std::size_t {52}, champsim::chrono::microseconds {32000}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, DRAM_RQ_SIZE, DRAM_WQ_SIZE, DRAM_CHANNELS, champsim::data::bytes {DRAM_CHANNEL_WIDTH}, DRAM_ROWS, DRAM_COLUMNS, DRAM_RANKS, DRAM_BANK_GROUPS, DRAM_BANKS, 8192},
 #endif /* RAMULATOR */
 
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
   /* Virtual memory's initialization */
   vmem {champsim::data::bytes {PAGE_SIZE}, PAGE_TABLE_LEVELS, champsim::chrono::picoseconds {MINOR_FAULT_PENALTY}, memory_controller.size(), 1},
 #else
@@ -557,7 +570,7 @@ auto champsim::configured::generated_environment<ID>::operable_view() -> std::ve
     std::transform(std::begin(caches), std::end(caches), std::back_inserter(retval), make_ref);
     std::transform(std::begin(ptws), std::end(ptws), std::back_inserter(retval), make_ref);
 
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
     retval.push_back(std::ref<champsim::operable>(memory_controller));
 #else
     retval.push_back(std::ref<champsim::operable>(DRAM));
@@ -567,6 +580,12 @@ auto champsim::configured::generated_environment<ID>::operable_view() -> std::ve
 }
 
 #if (RAMULATOR == ENABLE)
+#elif (RAMULATOR2 == ENABLE)
+template<unsigned long long ID>
+auto champsim::configured::generated_environment<ID>::dram_view() -> MEMORY_CONTROLLER&
+{
+    return memory_controller;
+}
 #else
 template<unsigned long long ID>
 auto champsim::configured::generated_environment<ID>::dram_view() -> MEMORY_CONTROLLER&

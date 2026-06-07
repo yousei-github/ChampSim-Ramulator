@@ -32,9 +32,11 @@
 #include "ChampSim/util/span.h"
 #include "ChampSim/util/units.h"
 
-#if (USER_CODES == ENABLE) && (RAMULATOR != ENABLE)
-// Ramulator-backed MEMORY_CONTROLLER lives in include/ChampSim/ramulator_dram_controller.h
-// (templated; header-only). This translation unit only provides the native ChampSim variant.
+#if (USER_CODES == ENABLE) && (RAMULATOR != ENABLE) && (RAMULATOR2 != ENABLE)
+// Ramulator-backed MEMORY_CONTROLLER lives in either
+//   include/ChampSim/ramulator_dram_controller.h  (v1, templated; header-only) or
+//   include/ChampSim/ramulator2_dram_controller.h (v2, non-templated; with source/ChampSim/ramulator2_dram_controller.cc).
+// This translation unit only provides the native ChampSim variant.
 
 MEMORY_CONTROLLER::MEMORY_CONTROLLER(champsim::chrono::picoseconds dbus_period, champsim::chrono::picoseconds mc_period, std::size_t t_rp, std::size_t t_rcd,
     std::size_t t_cas, std::size_t t_ras, champsim::chrono::microseconds refresh_period, std::vector<channel_type*>&& ul,
@@ -757,7 +759,7 @@ void MEMORY_CONTROLLER::print_deadlock()
 void DRAM_CHANNEL::print_deadlock()
 {
 #if (USE_VCPKG == ENABLE)
-    std::string_view q_writer {"address: {} forward_checked: {} scheduled: {}"};
+    constexpr std::string_view q_writer {"address: {} forward_checked: {} scheduled: {}"};
     auto q_entry_pack = [](const auto& entry)
     {
         return std::tuple {entry->address, entry->forward_checked, entry->scheduled};
@@ -1465,7 +1467,7 @@ void MEMORY_CONTROLLER::print_deadlock()
 
 void DRAM_CHANNEL::print_deadlock()
 {
-    std::string_view q_writer {"address: {} forward_checked: {} scheduled: {}"};
+    constexpr std::string_view q_writer {"address: {} forward_checked: {} scheduled: {}"};
     auto q_entry_pack = [](const auto& entry)
     {
         return std::tuple {entry->address, entry->forward_checked, entry->scheduled};

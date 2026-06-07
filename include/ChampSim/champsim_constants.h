@@ -67,7 +67,8 @@ constexpr long long STAT_PRINTING_PERIOD     = 10000000; // heartbeat_frequency
  * to set chip address field in physical address.
 */
 constexpr uint32_t DRAM_DATA_TRANSFER_RATE   = 3200;                                                // MT/s (Data transfer rate)
-constexpr uint32_t ONE_SECOND_IN_MICROSECOND = 1000'000ul;                                          // Microsecond
+constexpr uint32_t ONE_SECOND_IN_MILLISECOND = 1000ul;                                              // Millisecond
+constexpr uint32_t ONE_SECOND_IN_MICROSECOND = ONE_SECOND_IN_MILLISECOND * 1000ul;                  // Microsecond
 constexpr uint32_t DRAM_DATA_TRANSFER_PERIOD = ONE_SECOND_IN_MICROSECOND / DRAM_DATA_TRANSFER_RATE; // Picosecond
 constexpr uint32_t DRAM_IO_FREQ              = DRAM_DATA_TRANSFER_RATE / 2;                         // MH/z
 constexpr uint32_t DRAM_IO_CLOCK_PERIOD      = ONE_SECOND_IN_MICROSECOND / DRAM_IO_FREQ;            // Picosecond
@@ -338,7 +339,7 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 
 /** @todo [deprecated] */
 // Clock scale
-#if (RAMULATOR == ENABLE)
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
 #define MEMORY_CONTROLLER_CLOCK_SCALE (1.0)
 #else
 #define MEMORY_CONTROLLER_CLOCK_SCALE (CPU_FREQUENCY / DRAM_DATA_TRANSFER_RATE) // 4000 MHz / 3200 MHz = 1.25

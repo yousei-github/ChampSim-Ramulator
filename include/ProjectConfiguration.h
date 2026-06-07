@@ -14,11 +14,21 @@
 /** Main functionalities selection */
 #define USE_OPENMP                 (ENABLE)  // Whether use OpenMP to speedup the simulation
 #define USE_VCPKG                  (ENABLE)  // Whether use Vcpkg (Not work currently)
-#define RAMULATOR                  (ENABLE)  // Whether use ramulator, assuming ramulator uses addresses at byte granularity and returns data at cache line granularity.
+#define RAMULATOR                  (DISABLE) // Whether use Ramulator 1.0 (legacy, templated). Mutually exclusive with RAMULATOR2.
+#define RAMULATOR2                 (ENABLE)  // Whether use Ramulator 2.0 (modular, YAML-driven). Mutually exclusive with RAMULATOR. Phase 1: single memory only.
 #define MEMORY_USE_HYBRID          (DISABLE) // Whether use hybrid memory system instead of single memory systems
 #define CPU_USE_MULTIPLE_CORES     (DISABLE) // Whether CPU uses multiple cores to run simulation (go to include/ChampSim/champsim_constants.h to check related parameters)
 #define PRINT_STATISTICS_INTO_FILE (ENABLE)  // Whether print simulation statistics into files
 #define PRINT_MEMORY_TRACE         (ENABLE)  // Whether print memory trace into files
+
+// Check
+#if ((RAMULATOR == ENABLE) && (RAMULATOR2 == ENABLE))
+#error "RAMULATOR and RAMULATOR2 cannot both be ENABLE. Pick one."
+#endif
+
+#if ((RAMULATOR2 == ENABLE) && (MEMORY_USE_HYBRID == ENABLE))
+#error "RAMULATOR2 hybrid memory (P2) is not implemented yet. Set MEMORY_USE_HYBRID to DISABLE."
+#endif
 
 // Functionalities related to hybrid memory system
 #if (MEMORY_USE_HYBRID == ENABLE)
@@ -54,6 +64,7 @@
 #define IDEAL_VARIABLE_GRANULARITY    (DISABLE)
 #define IDEAL_SINGLE_MEMPOD           (DISABLE)
 
+// Check
 #if ((IDEAL_LINE_LOCATION_TABLE) + (COLOCATED_LINE_LOCATION_TABLE) + (IDEAL_VARIABLE_GRANULARITY) + (IDEAL_SINGLE_MEMPOD)) > 1
 #error "Exactly one of IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD may be enabled."
 #endif
@@ -144,6 +155,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
 #include <string>
 
 #if (USE_OPENMP == ENABLE)

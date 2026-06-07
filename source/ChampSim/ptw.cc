@@ -285,7 +285,7 @@ void PageTableWalker::begin_phase()
 void PageTableWalker::print_deadlock()
 {
 #if (USE_VCPKG == ENABLE)
-    champsim::range_print_deadlock(MSHR, NAME + "_MSHR", "address: {} v_address: {} translation_level: {}", [](const auto& entry)
+    champsim::range_print_deadlock(MSHR, NAME + "_MSHR", fmt::runtime("address: {} v_address: {} translation_level: {}"), [](const auto& entry)
         { return std::tuple {entry.address, entry.v_address, entry.translation_level}; });
 #endif /* USE_VCPKG */
 }

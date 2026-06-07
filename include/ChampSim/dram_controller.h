@@ -52,8 +52,12 @@
 
 // Define the MEMORY_CONTROLLER class
 #if (RAMULATOR == ENABLE)
-// Use Ramulator to simulate the memory
+// Use Ramulator 1.0 to simulate the memory
 #include "ChampSim/ramulator_dram_controller.h"
+
+#elif (RAMULATOR2 == ENABLE)
+// Use Ramulator 2.0 to simulate the memory
+#include "ChampSim/ramulator2_dram_controller.h"
 
 #else
 // Use ChampSim to simulate the memory

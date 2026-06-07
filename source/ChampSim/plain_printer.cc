@@ -144,12 +144,16 @@ std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats
 #endif /* USE_VCPKG, PRINT_STATISTICS_INTO_FILE */
 
 #if (USE_VCPKG == ENABLE)
-        fmt::format_string<std::string_view, std::string_view, int, int, int> hitmiss_fmtstr {"cpu{}->{} {:<12s} ACCESS: {:10d} HIT: {:10d} MISS: {:10d} MSHR_MERGE: {:10d}"};
+        // Under C++20, fmt v9's format_string<...> constructor is consteval and would validate the
+        // placeholder list against the (truncated) template arg list at compile time. The literal
+        // has 7 placeholders but the original declaration only listed 5 template args, so the check
+        // fails. Route through fmt::runtime() to use the runtime validation path instead.
+        constexpr std::string_view hitmiss_fmtstr {"cpu{}->{} {:<12s} ACCESS: {:10d} HIT: {:10d} MISS: {:10d} MSHR_MERGE: {:10d}"};
 
-        lines.push_back(fmt::format(hitmiss_fmtstr, cpu, stats.name, "TOTAL", total_hits + total_misses, total_hits, total_misses, total_mshr_merge));
+        lines.push_back(fmt::format(fmt::runtime(hitmiss_fmtstr), cpu, stats.name, "TOTAL", total_hits + total_misses, total_hits, total_misses, total_mshr_merge));
         for (const auto type : {access_type::LOAD, access_type::RFO, access_type::PREFETCH, access_type::WRITE, access_type::TRANSLATION})
         {
-            lines.push_back(fmt::format(hitmiss_fmtstr, cpu, stats.name, access_type_names.at(champsim::to_underlying(type)),
+            lines.push_back(fmt::format(fmt::runtime(hitmiss_fmtstr), cpu, stats.name, access_type_names.at(champsim::to_underlying(type)),
                 stats.hits.value_or(std::pair {type, cpu}, hits_value_type {}) + stats.misses.value_or(std::pair {type, cpu}, misses_value_type {}),
                 stats.hits.value_or(std::pair {type, cpu}, hits_value_type {}), stats.misses.value_or(std::pair {type, cpu}, misses_value_type {}),
                 stats.mshr_merge.value_or(std::pair {type, cpu}, mshr_merge_value_type {})));

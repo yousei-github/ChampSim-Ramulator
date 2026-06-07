@@ -232,8 +232,10 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
     std::transform(std::begin(caches), std::end(caches), std::back_inserter(stats.roi_cache_stats), [](const CACHE& cache)
         { return cache.roi_stats; });
 
-#if (RAMULATOR == ENABLE)
-    /** Use Ramulator to simulate DRAM, instead of ChampSim */
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
+    /** Use Ramulator (v1 or v2) to simulate DRAM. Per-channel stats live in
+     *  Ramulator's own stat registry — see Stats::statlist for v1 and
+     *  IMemorySystem::finalize() for v2. */
 #else
     auto dram = env.dram_view();
     std::transform(std::begin(dram.channels), std::end(dram.channels), std::back_inserter(stats.sim_dram_stats),
@@ -242,7 +244,7 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
     std::transform(std::begin(dram.channels), std::end(dram.channels), std::back_inserter(stats.roi_dram_stats),
         [](const DRAM_CHANNEL& chan)
         { return chan.roi_stats; });
-#endif /* RAMULATOR */
+#endif /* RAMULATOR || RAMULATOR2 */
 
     return stats;
 }
