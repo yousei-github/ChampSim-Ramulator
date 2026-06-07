@@ -1,3 +1,5 @@
+#include "ProjectConfiguration.h" // User file
+
 #include "dram/dram.h"
 #include "dram/lambdas.h"
 
@@ -460,7 +462,14 @@ class LPDDR5 : public IDRAM, public Implementation {
           case m_states["Closed"]: return m_commands["ACT-1"];
           case m_states["Pre-Opened"]: return m_commands["ACT-2"];
           case m_states["Opened"]: {
+#if (USER_CODES == ENABLE)
+            // Fix an upstream bug: check the *requested* row, not a hardcoded row 0.
+            // Action::Bank::ACT keys m_row_state by the actual row id (addr_vec[row]),
+            // so find(0) loops ACT<->PRE forever (deadlock) for any non-zero row.
+            if (node->m_row_state.find(addr_vec[m_levels["row"]]) != node->m_row_state.end()) {
+#else
             if (node->m_row_state.find(0) != node->m_row_state.end()) {
+#endif /* USER_CODES */
               Node* rank = node->m_parent_node->m_parent_node;
               if (rank->m_final_synced_cycle < clk) {
                 return m_commands["CASRD"];
@@ -482,7 +491,14 @@ class LPDDR5 : public IDRAM, public Implementation {
           case m_states["Closed"]: return m_commands["ACT-1"];
           case m_states["Pre-Opened"]: return m_commands["ACT-2"];
           case m_states["Opened"]: {
+#if (USER_CODES == ENABLE)
+            // Fix an upstream bug: check the *requested* row, not a hardcoded row 0.
+            // Action::Bank::ACT keys m_row_state by the actual row id (addr_vec[row]),
+            // so find(0) loops ACT<->PRE forever (deadlock) for any non-zero row.
+            if (node->m_row_state.find(addr_vec[m_levels["row"]]) != node->m_row_state.end()) {
+#else
             if (node->m_row_state.find(0) != node->m_row_state.end()) {
+#endif /* USER_CODES */
               Node* rank = node->m_parent_node->m_parent_node;
               if (rank->m_final_synced_cycle < clk) {
                 return m_commands["CASWR"];
