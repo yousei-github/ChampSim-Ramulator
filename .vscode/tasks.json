@@ -26,6 +26,8 @@
 			"CHAMPSIM_BRANCH_TARGET_BUFFER_SOURCE_PATH": "${workspaceFolder}/source/ChampSim/btb/basic_btb/*.cc",
 			/* Ramulator */
 			"RAMULATOR_SOURCE_PATH": "${workspaceFolder}/source/Ramulator/*.cpp",
+			/* Ramulator 2.0 */
+			"RAMULATOR2_SOURCE_PATH": "${workspaceFolder}/source/Ramulator2/*.cpp ${workspaceFolder}/source/Ramulator2/base/*.cpp ${workspaceFolder}/source/Ramulator2/addr_mapper/impl/*.cpp ${workspaceFolder}/source/Ramulator2/translation/impl/*.cpp ${workspaceFolder}/source/Ramulator2/dram/impl/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/bliss/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/blockhammer/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/device_config/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/prac/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/refresh/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/rowpolicy/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/scheduler/*.cpp ${workspaceFolder}/source/Ramulator2/memory_system/impl/*.cpp ${workspaceFolder}/source/Ramulator2/frontend/impl/external_wrapper/*.cpp ${workspaceFolder}/source/Ramulator2/frontend/impl/memory_trace/*.cpp ${workspaceFolder}/source/Ramulator2/frontend/impl/processor/bhO3/*.cpp ${workspaceFolder}/source/Ramulator2/frontend/impl/processor/simpleO3/*.cpp ${workspaceFolder}/source/Ramulator2/example/impl/*.cpp ${workspaceFolder}/source/Ramulator2/test/*.cpp",
 			/* User */
 			"PROJECT_SOURCE_PATH": "${workspaceFolder}/source/*.cc",
 			/* ccache: the project-scoped cache directory, isolated from the user's global ~/.cache/ccache */
@@ -85,7 +87,7 @@
 				"-Wall", // Turns on all optional warnings which are desirable for normal code
 				// "-Werror", // Make all warnings into hard errors. Source code which triggers warnings will be rejected
 				"-fopenmp", // Enables #pragma omp in source code
-				"-std=c++17", // c++11/c++17
+				"-std=c++20", // Ramulator 2.0 uses C++20 (concepts, consteval, .contains()); matches CMAKE_CXX_STANDARD 20
 				/**
 				 * Below are header files: (can be from multiples folders)
 				 */
@@ -106,6 +108,7 @@
 				"${CHAMPSIM_REPLACEMENT_SOURCE_PATH}",
 				"${CHAMPSIM_BRANCH_TARGET_BUFFER_SOURCE_PATH}",
 				"${RAMULATOR_SOURCE_PATH}",
+				"${RAMULATOR2_SOURCE_PATH}",
 				"${PROJECT_SOURCE_PATH}",
 				/**
                  * Below are library names:
@@ -122,6 +125,11 @@
 				"z",
 				"-l",
 				"bz2",
+				/* Ramulator 2.0 dependencies. spdlog is listed before fmt because libspdlog.a references fmt symbols (the linker resolves left-to-right). */
+				"-l",
+				"spdlog",
+				"-l",
+				"yaml-cpp",
 				"-l",
 				"fmt",
 				/**
