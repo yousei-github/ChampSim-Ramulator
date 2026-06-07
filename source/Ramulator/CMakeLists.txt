@@ -12,6 +12,7 @@ target_sources(champsim_plus_ramulator
     HBM.cpp
     LPDDR3.cpp
     LPDDR4.cpp
+    Main.cpp
     MemoryFactory.cpp
     PCM.cpp
     Processor.cpp

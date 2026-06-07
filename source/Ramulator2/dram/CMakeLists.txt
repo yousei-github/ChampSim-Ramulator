@@ -1,0 +1,14 @@
+target_sources(champsim_plus_ramulator
+    PRIVATE
+    impl/DDR3.cpp
+    impl/DDR4.cpp
+    impl/DDR4-RVRR.cpp
+    impl/DDR4-VRR.cpp
+    impl/DDR5.cpp
+    impl/DDR5-RVRR.cpp
+    impl/DDR5-VRR.cpp
+    impl/GDDR6.cpp
+    impl/HBM.cpp
+    impl/HBM2.cpp
+    impl/HBM3.cpp
+    impl/LPDDR5.cpp)

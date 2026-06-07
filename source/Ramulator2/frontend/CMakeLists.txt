@@ -1,0 +1,13 @@
+target_sources(champsim_plus_ramulator
+    PRIVATE
+    impl/external_wrapper/champSim_frontend.cpp
+    impl/external_wrapper/gem5_frontend.cpp
+    impl/memory_trace/loadstore_trace.cpp
+    impl/memory_trace/readwrite_trace.cpp
+    impl/processor/bhO3/bhO3.cpp
+    impl/processor/bhO3/bhcore.cpp
+    impl/processor/bhO3/bhllc.cpp
+    impl/processor/simpleO3/core.cpp
+    impl/processor/simpleO3/llc.cpp
+    impl/processor/simpleO3/simpleO3.cpp
+    impl/processor/simpleO3/trace.cpp)

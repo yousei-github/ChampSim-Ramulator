@@ -1,0 +1,29 @@
+# dram_controller/impl/plugin/trr.cpp is omitted: it is wrapped in
+# #if (USER_CODES != ENABLE) and compiles to an empty translation unit.
+target_sources(champsim_plus_ramulator
+    PRIVATE
+    impl/bh_dram_controller.cpp
+    impl/dummy_controller.cpp
+    impl/generic_dram_controller.cpp
+    impl/prac_dram_controller.cpp
+    impl/plugin/aqua.cpp
+    impl/plugin/cmd_counter.cpp
+    impl/plugin/graphene.cpp
+    impl/plugin/hydra.cpp
+    impl/plugin/oracle_rh.cpp
+    impl/plugin/para.cpp
+    impl/plugin/rfm_manager.cpp
+    impl/plugin/rrs.cpp
+    impl/plugin/trace_recorder.cpp
+    impl/plugin/twice.cpp
+    impl/plugin/bliss/bliss.cpp
+    impl/plugin/blockhammer/blockhammer.cpp
+    impl/plugin/device_config/device_config.cpp
+    impl/plugin/prac/prac.cpp
+    impl/refresh/all_bank_refresh.cpp
+    impl/rowpolicy/basic_rowpolicies.cpp
+    impl/scheduler/bh_scheduler.cpp
+    impl/scheduler/bliss_scheduler.cpp
+    impl/scheduler/blocking_scheduler.cpp
+    impl/scheduler/generic_scheduler.cpp
+    impl/scheduler/prac_scheduler.cpp)
