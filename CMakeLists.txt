@@ -128,8 +128,7 @@ endif()
 # Specifies include directories (map to the -I compiler flag) to use when compiling a given target
 target_include_directories(champsim_plus_ramulator
     PRIVATE
-    "${CMAKE_SOURCE_DIR}/include"
-    "${CMAKE_SOURCE_DIR}/include/Ramulator2")
+    "${CMAKE_SOURCE_DIR}/include")
 
 # Adds options (compiler flags) to the COMPILE_OPTIONS or INTERFACE_COMPILE_OPTIONS target properties. These options are used when compiling the given target
 target_compile_options(champsim_plus_ramulator

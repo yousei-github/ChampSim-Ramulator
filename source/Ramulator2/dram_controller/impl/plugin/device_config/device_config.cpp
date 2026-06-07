@@ -1,4 +1,4 @@
-#include "dram_controller/impl/plugin/device_config/device_config.h"
+#include "Ramulator2/dram_controller/impl/plugin/device_config/device_config.h"
 
 namespace Ramulator {
 

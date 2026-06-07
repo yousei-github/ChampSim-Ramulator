@@ -3,12 +3,12 @@
 #include <limits>
 #include <random>
 
-#include "base/base.h"
-#include "dram_controller/controller.h"
-#include "dram_controller/plugin.h"
-#include "translation/translation.h"
-#include "addr_mapper/impl/rit.h"
-#include "dram_controller/impl/plugin/device_config/device_config.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/dram_controller/controller.h"
+#include "Ramulator2/dram_controller/plugin.h"
+#include "Ramulator2/translation/translation.h"
+#include "Ramulator2/addr_mapper/impl/rit.h"
+#include "Ramulator2/dram_controller/impl/plugin/device_config/device_config.h"
 
 namespace Ramulator {
 

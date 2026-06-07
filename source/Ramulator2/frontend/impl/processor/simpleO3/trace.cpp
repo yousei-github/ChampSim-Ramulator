@@ -4,9 +4,9 @@
 
 #include <spdlog/spdlog.h>
 
-#include "base/exception.h"
-#include "base/utils.h"
-#include "frontend/impl/processor/simpleO3/trace.h"
+#include "Ramulator2/base/exception.h"
+#include "Ramulator2/base/utils.h"
+#include "Ramulator2/frontend/impl/processor/simpleO3/trace.h"
 
 
 namespace Ramulator {

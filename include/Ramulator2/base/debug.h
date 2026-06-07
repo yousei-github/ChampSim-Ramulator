@@ -5,7 +5,7 @@
 #include <string>
 #include <type_traits>
 
-#include "base/logging.h"
+#include "Ramulator2/base/logging.h"
 
 namespace Ramulator {
 

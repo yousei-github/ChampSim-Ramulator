@@ -7,12 +7,12 @@
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
-#include "base/base.h"
-#include "dram/dram.h"
-#include "dram_controller/scheduler.h"
-#include "dram_controller/plugin.h"
-#include "dram_controller/refresh.h"
-#include "dram_controller/rowpolicy.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/dram/dram.h"
+#include "Ramulator2/dram_controller/scheduler.h"
+#include "Ramulator2/dram_controller/plugin.h"
+#include "Ramulator2/dram_controller/refresh.h"
+#include "Ramulator2/dram_controller/rowpolicy.h"
 
 
 namespace Ramulator {

@@ -9,11 +9,11 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#include "base/base.h"
-#include "base/config.h"
-#include "frontend/frontend.h"
-#include "memory_system/memory_system.h"
-#include "example/example_ifce.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/base/config.h"
+#include "Ramulator2/frontend/frontend.h"
+#include "Ramulator2/memory_system/memory_system.h"
+#include "Ramulator2/example/example_ifce.h"
 
 int main(int argc, char* argv[]) {
   // Parse command line arguments

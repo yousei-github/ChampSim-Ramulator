@@ -6,8 +6,8 @@
 #include <string>
 #include <functional>
 
-#include "base/base.h"
-#include "base/request.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/base/request.h"
 
 
 namespace Ramulator {

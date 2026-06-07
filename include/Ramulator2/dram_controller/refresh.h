@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "base/base.h"
+#include "Ramulator2/base/base.h"
 
 
 namespace Ramulator {

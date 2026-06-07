@@ -7,8 +7,8 @@
 #include <functional>
 #include <concepts>
 
-#include "base/type.h"
-#include "dram/spec.h"
+#include "Ramulator2/base/type.h"
+#include "Ramulator2/dram/spec.h"
 
 namespace Ramulator {
 

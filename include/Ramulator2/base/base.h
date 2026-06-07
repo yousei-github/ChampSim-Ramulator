@@ -11,16 +11,16 @@
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
-#include "base/type.h"
-#include "base/factory.h"
-#include "base/clocked.h"
-#include "base/param.h"
-#include "base/exception.h"
-#include "base/logging.h"
-#include "base/debug.h"
-#include "base/request.h"
-#include "base/utils.h"
-#include "base/stats.h"
+#include "Ramulator2/base/type.h"
+#include "Ramulator2/base/factory.h"
+#include "Ramulator2/base/clocked.h"
+#include "Ramulator2/base/param.h"
+#include "Ramulator2/base/exception.h"
+#include "Ramulator2/base/logging.h"
+#include "Ramulator2/base/debug.h"
+#include "Ramulator2/base/request.h"
+#include "Ramulator2/base/utils.h"
+#include "Ramulator2/base/stats.h"
 
 
 #ifndef uint

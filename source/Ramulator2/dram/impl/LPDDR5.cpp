@@ -1,7 +1,7 @@
 #include "ProjectConfiguration.h" // User file
 
-#include "dram/dram.h"
-#include "dram/lambdas.h"
+#include "Ramulator2/dram/dram.h"
+#include "Ramulator2/dram/lambdas.h"
 
 namespace Ramulator {
 

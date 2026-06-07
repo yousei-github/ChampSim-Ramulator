@@ -7,9 +7,9 @@
 #include <vector>
 
 #include "ProjectConfiguration.h" // User file
-#include "base/base.h"
-#include "dram/node.h"
-#include "dram/spec.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/dram/node.h"
+#include "Ramulator2/dram/spec.h"
 
 #if (USER_CODES == ENABLE)
 #include "ChampSim/champsim_constants.h"

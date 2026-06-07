@@ -4,10 +4,10 @@
 
 #include <spdlog/spdlog.h>
 
-#include "base/exception.h"
-#include "base/utils.h"
-#include "frontend/impl/processor/simpleO3/core.h"
-#include "frontend/impl/processor/simpleO3/llc.h"
+#include "Ramulator2/base/exception.h"
+#include "Ramulator2/base/utils.h"
+#include "Ramulator2/frontend/impl/processor/simpleO3/core.h"
+#include "Ramulator2/frontend/impl/processor/simpleO3/llc.h"
 
 namespace Ramulator {
 

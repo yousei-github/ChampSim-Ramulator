@@ -1,5 +1,5 @@
-#include "dram_controller/controller.h"
-#include "memory_system/memory_system.h"
+#include "Ramulator2/dram_controller/controller.h"
+#include "Ramulator2/memory_system/memory_system.h"
 
 namespace Ramulator {
 

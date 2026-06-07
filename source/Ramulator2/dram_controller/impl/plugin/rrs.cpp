@@ -3,10 +3,10 @@
 #include <limits>
 #include <random>
 
-#include "base/base.h"
-#include "dram_controller/controller.h"
-#include "dram_controller/plugin.h"
-#include "addr_mapper/impl/rit.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/dram_controller/controller.h"
+#include "Ramulator2/dram_controller/plugin.h"
+#include "Ramulator2/addr_mapper/impl/rit.h"
 
 namespace Ramulator {
 

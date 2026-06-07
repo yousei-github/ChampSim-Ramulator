@@ -1,4 +1,4 @@
-#include "test/test_ifce.h"
+#include "Ramulator2/test/test_ifce.h"
 
 namespace Ramulator {
 

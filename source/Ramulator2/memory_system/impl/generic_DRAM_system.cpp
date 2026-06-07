@@ -1,10 +1,10 @@
 #include <algorithm>
 
-#include "memory_system/memory_system.h"
-#include "translation/translation.h"
-#include "dram_controller/controller.h"
-#include "addr_mapper/addr_mapper.h"
-#include "dram/dram.h"
+#include "Ramulator2/memory_system/memory_system.h"
+#include "Ramulator2/translation/translation.h"
+#include "Ramulator2/dram_controller/controller.h"
+#include "Ramulator2/addr_mapper/addr_mapper.h"
+#include "Ramulator2/dram/dram.h"
 
 namespace Ramulator {
 

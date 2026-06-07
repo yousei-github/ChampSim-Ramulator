@@ -1,7 +1,7 @@
 #ifndef RAMULATOR_PLUGIN_BLOCKHAMMER_THROTTLER_
 #define RAMULATOR_PLUGIN_BLOCKHAMMER_THROTTLER_
 
-#include "frontend/impl/processor/bhO3/bhllc.h"
+#include "Ramulator2/frontend/impl/processor/bhO3/bhllc.h"
 
 namespace Ramulator {
 class AttackThrottler {

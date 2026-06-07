@@ -5,8 +5,8 @@
 #include <string>
 #include <functional>
 
-#include "base/base.h"
-#include "memory_system/memory_system.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/memory_system/memory_system.h"
 
 
 namespace Ramulator {

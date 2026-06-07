@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "ProjectConfiguration.h" // User file
-#include "base/base.h"
+#include "Ramulator2/base/base.h"
 
 #if (USER_CODES == ENABLE)
 #include <array>

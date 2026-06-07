@@ -5,9 +5,9 @@
 #include <filesystem>
 #include <fstream>
 
-#include "base/base.h"
-#include "dram_controller/controller.h"
-#include "dram_controller/plugin.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/dram_controller/controller.h"
+#include "Ramulator2/dram_controller/plugin.h"
 
 namespace Ramulator {
 

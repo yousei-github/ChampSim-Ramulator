@@ -1,7 +1,7 @@
 #ifndef RAMULATOR_PLUGIN_PRAC_H_
 #define RAMULATOR_PLUGIN_PRAC_H_
 
-#include "dram/dram.h"
+#include "Ramulator2/dram/dram.h"
 
 #include <unordered_map>
 

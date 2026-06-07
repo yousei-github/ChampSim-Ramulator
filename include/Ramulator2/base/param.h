@@ -10,7 +10,7 @@
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
-#include "base/exception.h"
+#include "Ramulator2/base/exception.h"
 
 
 namespace Ramulator {

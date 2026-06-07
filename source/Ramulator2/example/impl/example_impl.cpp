@@ -5,8 +5,8 @@
 #include <map>
 #include <list>
 
-#include "example/example_ifce.h"
-#include "base/serialization.h"
+#include "Ramulator2/example/example_ifce.h"
+#include "Ramulator2/base/serialization.h"
 
 namespace Ramulator {
 

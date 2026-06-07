@@ -1,11 +1,11 @@
-#include "base/base.h"
-#include "frontend/frontend.h"
-#include "translation/translation.h"
-#include "addr_mapper/addr_mapper.h"
-#include "dram_controller/controller.h"
-#include "dram_controller/plugin.h"
-#include "frontend/impl/processor/bhO3/bhllc.h"
-#include "frontend/impl/processor/bhO3/bhO3.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/frontend/frontend.h"
+#include "Ramulator2/translation/translation.h"
+#include "Ramulator2/addr_mapper/addr_mapper.h"
+#include "Ramulator2/dram_controller/controller.h"
+#include "Ramulator2/dram_controller/plugin.h"
+#include "Ramulator2/frontend/impl/processor/bhO3/bhllc.h"
+#include "Ramulator2/frontend/impl/processor/bhO3/bhO3.h"
 
 #include <queue>
 #include <unordered_map>
@@ -15,9 +15,9 @@
 #include <vector>
 #include <utility>
 
-#include "dram_controller/impl/plugin/blockhammer/blockhammer.h"
-#include "dram_controller/impl/plugin/blockhammer/blockhammer_util.h"
-#include "dram_controller/impl/plugin/blockhammer/blockhammer_throttler.h"
+#include "Ramulator2/dram_controller/impl/plugin/blockhammer/blockhammer.h"
+#include "Ramulator2/dram_controller/impl/plugin/blockhammer/blockhammer_util.h"
+#include "Ramulator2/dram_controller/impl/plugin/blockhammer/blockhammer_throttler.h"
 
 namespace Ramulator {
 

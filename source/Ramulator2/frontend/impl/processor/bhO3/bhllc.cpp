@@ -1,6 +1,6 @@
 #include <iostream>
-#include "frontend/impl/processor/bhO3/bhllc.h"
-#include "dram/dram.h"
+#include "Ramulator2/frontend/impl/processor/bhO3/bhllc.h"
+#include "Ramulator2/dram/dram.h"
 
 namespace Ramulator {
 

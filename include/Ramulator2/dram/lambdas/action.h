@@ -3,7 +3,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "dram/node.h"
+#include "Ramulator2/dram/node.h"
 
 namespace Ramulator {
 namespace Lambdas {

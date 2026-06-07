@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 
-#include "base/exception.h"
+#include "Ramulator2/base/exception.h"
 
 // TODO: Better Logging interface. Put logging methods into Implementation base class?
 namespace Ramulator {

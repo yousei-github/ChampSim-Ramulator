@@ -1,8 +1,8 @@
-#include "base/base.h"
-#include "dram_controller/controller.h"
-#include "dram_controller/plugin.h"
-#include "dram_controller/impl/plugin/prac/prac.h"
-#include "dram_controller/impl/plugin/device_config/device_config.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/dram_controller/controller.h"
+#include "Ramulator2/dram_controller/plugin.h"
+#include "Ramulator2/dram_controller/impl/plugin/prac/prac.h"
+#include "Ramulator2/dram_controller/impl/plugin/device_config/device_config.h"
 
 #include <limits>
 #include <vector>

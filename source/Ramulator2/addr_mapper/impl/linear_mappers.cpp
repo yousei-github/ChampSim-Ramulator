@@ -1,9 +1,9 @@
 #include <vector>
 
-#include "base/base.h"
-#include "dram/dram.h"
-#include "addr_mapper/addr_mapper.h"
-#include "memory_system/memory_system.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/dram/dram.h"
+#include "Ramulator2/addr_mapper/addr_mapper.h"
+#include "Ramulator2/memory_system/memory_system.h"
 
 namespace Ramulator {
 

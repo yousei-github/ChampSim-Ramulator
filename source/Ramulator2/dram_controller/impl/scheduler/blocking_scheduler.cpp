@@ -1,9 +1,9 @@
 #include <vector>
 
-#include "base/base.h"
-#include "dram_controller/bh_controller.h"
-#include "dram_controller/bh_scheduler.h"
-#include "dram_controller/impl/plugin/blockhammer/blockhammer.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/dram_controller/bh_controller.h"
+#include "Ramulator2/dram_controller/bh_scheduler.h"
+#include "Ramulator2/dram_controller/impl/plugin/blockhammer/blockhammer.h"
 
 namespace Ramulator {
 

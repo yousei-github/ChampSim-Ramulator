@@ -3,8 +3,8 @@
 #include <map>
 #include <list>
 
-#include "example/example_ifce.h"
-#include "example/impl/complicated_impl.h"
+#include "Ramulator2/example/example_ifce.h"
+#include "Ramulator2/example/impl/complicated_impl.h"
 
 namespace Ramulator {
 

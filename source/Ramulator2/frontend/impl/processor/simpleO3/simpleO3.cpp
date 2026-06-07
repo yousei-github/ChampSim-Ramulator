@@ -1,10 +1,10 @@
 #include <functional>
 
-#include "base/utils.h"
-#include "frontend/frontend.h"
-#include "translation/translation.h"
-#include "frontend/impl/processor/simpleO3/core.h"
-#include "frontend/impl/processor/simpleO3/llc.h"
+#include "Ramulator2/base/utils.h"
+#include "Ramulator2/frontend/frontend.h"
+#include "Ramulator2/translation/translation.h"
+#include "Ramulator2/frontend/impl/processor/simpleO3/core.h"
+#include "Ramulator2/frontend/impl/processor/simpleO3/llc.h"
 
 
 namespace Ramulator {

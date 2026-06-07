@@ -1,4 +1,4 @@
-#include "addr_mapper/impl/rit.h"
+#include "Ramulator2/addr_mapper/impl/rit.h"
 
 namespace Ramulator {
 

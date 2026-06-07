@@ -5,12 +5,12 @@
 #include <iomanip>
 #include <random>
 
-#include "base/base.h"
-#include "frontend/frontend.h"
-#include "translation/translation.h"
-#include "addr_mapper/addr_mapper.h"
-#include "dram_controller/controller.h"
-#include "dram_controller/plugin.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/frontend/frontend.h"
+#include "Ramulator2/translation/translation.h"
+#include "Ramulator2/addr_mapper/addr_mapper.h"
+#include "Ramulator2/dram_controller/controller.h"
+#include "Ramulator2/dram_controller/plugin.h"
 
 namespace Ramulator {
 

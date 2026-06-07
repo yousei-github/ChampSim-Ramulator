@@ -5,9 +5,9 @@
 #include <string>
 #include <functional>
 
-#include "base/type.h"
-#include "base/request.h"
-#include "translation/translation.h"
+#include "Ramulator2/base/type.h"
+#include "Ramulator2/base/request.h"
+#include "Ramulator2/translation/translation.h"
 
 namespace Ramulator {
 

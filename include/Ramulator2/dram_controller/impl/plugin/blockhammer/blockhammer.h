@@ -1,7 +1,7 @@
 #ifndef RAMULATOR_CONTROLLER_IBLOCKHAMMER_H
 #define RAMULATOR_CONTROLLER_IBLOCKHAMMER_H
 
-#include "base/base.h"
+#include "Ramulator2/base/base.h"
 
 namespace Ramulator {
 

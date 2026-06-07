@@ -7,11 +7,11 @@
 #include <iostream>
 #include <fstream>
 
-#include "base/clocked.h"
-#include "base/debug.h"
-#include "base/type.h"
-#include "base/request.h"
-#include "memory_system/bh_memory_system.h"
+#include "Ramulator2/base/clocked.h"
+#include "Ramulator2/base/debug.h"
+#include "Ramulator2/base/type.h"
+#include "Ramulator2/base/request.h"
+#include "Ramulator2/memory_system/bh_memory_system.h"
 
 // BH Changes Begin
 #include <unordered_set>

@@ -3,9 +3,9 @@
 #include <vector>
 #include <random>
 
-#include "base/base.h"
-#include "translation/translation.h"
-#include "frontend/frontend.h"
+#include "Ramulator2/base/base.h"
+#include "Ramulator2/translation/translation.h"
+#include "Ramulator2/frontend/frontend.h"
 
 
 namespace Ramulator {
