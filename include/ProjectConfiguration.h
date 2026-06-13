@@ -15,7 +15,7 @@
 #define USE_OPENMP                 (ENABLE)  // Whether use OpenMP to speedup the simulation
 #define USE_VCPKG                  (ENABLE)  // Whether use Vcpkg (Not work currently)
 #define RAMULATOR                  (DISABLE) // Whether use Ramulator 1.0 (legacy, templated). Mutually exclusive with RAMULATOR2.
-#define RAMULATOR2                 (ENABLE)  // Whether use Ramulator 2.0 (modular, YAML-driven). Mutually exclusive with RAMULATOR. Phase 1: single memory only.
+#define RAMULATOR2                 (ENABLE)  // Whether use Ramulator 2.0 (modular, YAML-driven). Mutually exclusive with RAMULATOR. Supports single and hybrid memory.
 #define MEMORY_USE_HYBRID          (DISABLE) // Whether use hybrid memory system instead of single memory systems
 #define CPU_USE_MULTIPLE_CORES     (DISABLE) // Whether CPU uses multiple cores to run simulation (go to include/ChampSim/champsim_constants.h to check related parameters)
 #define PRINT_STATISTICS_INTO_FILE (ENABLE)  // Whether print simulation statistics into files
@@ -24,10 +24,6 @@
 // Check
 #if ((RAMULATOR == ENABLE) && (RAMULATOR2 == ENABLE))
 #error "RAMULATOR and RAMULATOR2 cannot both be ENABLE. Pick one."
-#endif
-
-#if ((RAMULATOR2 == ENABLE) && (MEMORY_USE_HYBRID == ENABLE))
-#error "RAMULATOR2 hybrid memory (P2) is not implemented yet. Set MEMORY_USE_HYBRID to DISABLE."
 #endif
 
 // Functionalities related to hybrid memory system

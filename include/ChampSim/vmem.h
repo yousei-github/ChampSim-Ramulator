@@ -37,12 +37,22 @@ using pte_entry = champsim::data::size<long long, std::ratio<8> >;
 class VirtualMemory
 {
 private:
+    /**
+     * @brief Virtual page to physical page mapping
+     * @details
+     * Each application (here is CPU #) has its own virtual address space
+     * {(CPU #, virtual page #) -> physical page #}
+     * 
+     * @todo
+     * Performance improvement (vector)
+     */
     std::map<std::pair<uint32_t, champsim::page_number>, champsim::page_number> vpage_to_ppage_map;
     std::map<std::tuple<uint32_t, uint32_t, champsim::address_slice<champsim::dynamic_extent> >, champsim::address> page_table;
     std::optional<uint64_t> randomization_seed;
     champsim::data::bytes memory_size;
 
 public:
+    /** @todo if we want to integrate SSD simulator, proper page fault penalty must be considered */
     const champsim::chrono::clock::duration minor_fault_penalty;
     const std::size_t pt_levels;
     const pte_entry pte_page_size; // Size of a PTE page

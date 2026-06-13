@@ -81,8 +81,13 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 #endif /* MEMORY_USE_HYBRID */
 
 #elif (RAMULATOR2 == ENABLE)
-/** Ramulator 2.0 dispatch: YAML-configured, single memory (P1). */
+#if (MEMORY_USE_HYBRID == ENABLE)
+/** Ramulator 2.0 dispatch: YAML-configured, hybrid (fast + slow) memory. */
+void start_run_simulation_r2(const std::string& yaml_path, const std::string& yaml_path2, simulator_input_parameter& input_parameter);
+#else
+/** Ramulator 2.0 dispatch: YAML-configured, single memory. */
 void start_run_simulation_r2(const std::string& yaml_path, simulator_input_parameter& input_parameter);
+#endif /* MEMORY_USE_HYBRID */
 
 #else
 void run_simulation(simulator_input_parameter& input_parameter);
@@ -194,10 +199,17 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
             argv[0], argv[0]);
 #endif /* MEMORY_USE_HYBRID */
 #elif (RAMULATOR2 == ENABLE)
+#if (MEMORY_USE_HYBRID == ENABLE)
+        std::printf(
+            "Usage: %s --warmup-instructions <warmup-instructions> --simulation-instructions <simulation-instructions> <ramulator2-yaml-config> <ramulator2-yaml-config2> <trace-filename1>\n"
+            "Example: %s --warmup-instructions 1000000 --simulation-instructions 2000000 configs/r2/HBM.yaml configs/r2/DDR4.yaml cpu_trace.xz\n",
+            argv[0], argv[0]);
+#else
         std::printf(
             "Usage: %s --warmup-instructions <warmup-instructions> --simulation-instructions <simulation-instructions> <ramulator2-yaml-config> <trace-filename1>\n"
             "Example: %s --warmup-instructions 1000000 --simulation-instructions 2000000 configs/r2/DDR4.yaml cpu_trace.xz\n",
             argv[0], argv[0]);
+#endif /* MEMORY_USE_HYBRID */
 #else
         std::printf(
             "Usage: %s --warmup-instructions <warmup-instructions> --simulation-instructions <simulation-instructions> <trace-filename1>\n"
@@ -494,9 +506,16 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
     std::printf("Simulation done. Statistics written to %s\n", stats_out.c_str());
 #elif (RAMULATOR2 == ENABLE)
     {
+#if (MEMORY_USE_HYBRID == ENABLE)
+        const std::string yaml_path  = argv[start_position_of_configs];     // Fast memory
+        const std::string yaml_path2 = argv[start_position_of_configs + 1]; // Slow memory
+        start_run_simulation_r2(yaml_path, yaml_path2, input_parameter);
+        std::printf("Simulation done. YAML configs: %s, %s\n", yaml_path.c_str(), yaml_path2.c_str());
+#else
         const std::string yaml_path = argv[start_position_of_configs];
         start_run_simulation_r2(yaml_path, input_parameter);
         std::printf("Simulation done. YAML config: %s\n", yaml_path.c_str());
+#endif /* MEMORY_USE_HYBRID */
     }
 #else
     run_simulation(input_parameter);
@@ -1042,11 +1061,19 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
 #endif /* MEMORY_USE_HYBRID */
 
 #elif (RAMULATOR2 == ENABLE)
+#if (MEMORY_USE_HYBRID == ENABLE)
+void start_run_simulation_r2(const std::string& yaml_path, const std::string& yaml_path2, simulator_input_parameter& input_parameter)
+#else
 void start_run_simulation_r2(const std::string& yaml_path, simulator_input_parameter& input_parameter)
+#endif /* MEMORY_USE_HYBRID */
 {
     /* Prepare the hardware modules. The Ramulator 2.0 stack (frontend +
-     * memory system) is built inside MEMORY_CONTROLLER from the YAML config. */
+     * memory system) is built inside MEMORY_CONTROLLER from the YAML config(s). */
+#if (MEMORY_USE_HYBRID == ENABLE)
+    configured_environment gen_environment {yaml_path, yaml_path2};
+#else
     configured_environment gen_environment {yaml_path};
+#endif /* MEMORY_USE_HYBRID */
 
     if (input_parameter.hide_heartbeat)
     {

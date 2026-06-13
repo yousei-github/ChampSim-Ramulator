@@ -156,7 +156,11 @@ public:
     generated_environment(ramulator::Memory<MEMORY_TYPE, ramulator::Controller>& memory);
 #endif /* MEMORY_USE_HYBRID */
 #elif (RAMULATOR2 == ENABLE)
+#if (MEMORY_USE_HYBRID == ENABLE)
+    generated_environment(std::string configs, std::string configs2);
+#else
     generated_environment(std::string configs);
+#endif /* MEMORY_USE_HYBRID */
 #else
     generated_environment();
 #endif /* RAMULATOR */
@@ -184,7 +188,11 @@ champsim::configured::generated_environment<ID, MEMORY_TYPE>::generated_environm
 #endif /* MEMORY_USE_HYBRID */
 #elif (RAMULATOR2 == ENABLE)
 template<unsigned long long ID>
+#if (MEMORY_USE_HYBRID == ENABLE)
+champsim::configured::generated_environment<ID>::generated_environment(std::string configs, std::string configs2)
+#else
 champsim::configured::generated_environment<ID>::generated_environment(std::string configs)
+#endif /* MEMORY_USE_HYBRID */
 #else
 template<unsigned long long ID>
 champsim::configured::generated_environment<ID>::generated_environment()
@@ -259,8 +267,13 @@ champsim::configured::generated_environment<ID>::generated_environment()
   memory_controller {champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}, memory.spec->speed_entry.freq, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, memory},
 #endif /* MEMORY_USE_HYBRID */
 #elif (RAMULATOR2 == ENABLE)
+#if (MEMORY_USE_HYBRID == ENABLE)
+  /* Memory's initialization */
+  memory_controller {champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, std::move(configs), std::move(configs2)},
+#else
   /* Memory's initialization */
   memory_controller {champsim::chrono::picoseconds {CPU_CLOCK_PERIOD}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, std::move(configs)},
+#endif /* MEMORY_USE_HYBRID */
 #else
   /* Memory's initialization */
   DRAM {champsim::chrono::picoseconds {DRAM_DATA_TRANSFER_PERIOD}, champsim::chrono::picoseconds {DRAM_IO_CLOCK_PERIOD}, std::size_t {24}, std::size_t {24}, std::size_t {24}, std::size_t {52}, champsim::chrono::microseconds {32000}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, DRAM_RQ_SIZE, DRAM_WQ_SIZE, DRAM_CHANNELS, champsim::data::bytes {DRAM_CHANNEL_WIDTH}, DRAM_ROWS, DRAM_COLUMNS, DRAM_RANKS, DRAM_BANK_GROUPS, DRAM_BANKS, 8192},

@@ -9,8 +9,10 @@ Request::Request(Addr_t addr, int type): addr(addr), type_id(type) {};
 
 Request::Request(AddrVec_t addr_vec, int type): addr_vec(addr_vec), type_id(type) {};
 
-Request::Request(Addr_t addr, int type, int source_id, std::function<void(Request&)> callback):
-addr(addr), type_id(type), source_id(source_id), callback(callback) {};
+Request::Request(Addr_t addr, int type, int source_id, std::function<void(Request&)> callback): addr(addr), type_id(type), source_id(source_id), callback(callback) {};
+
+Request::Request(Addr_t addr, int type, int source_id, std::function<void(Request&)> callback, uint8_t memory_id)
+: addr(addr), type_id(type), source_id(source_id), callback(callback), memory_id(memory_id) {};
 
 #if (RAMULATOR2 == ENABLE)
 
@@ -26,8 +28,7 @@ Request::Request(Addr_t addr, int type): addr(addr), type_id(type) {};
 
 Request::Request(AddrVec_t addr_vec, int type): addr_vec(addr_vec), type_id(type) {};
 
-Request::Request(Addr_t addr, int type, int source_id, std::function<void(Request&)> callback):
-addr(addr), type_id(type), source_id(source_id), callback(callback) {};
+Request::Request(Addr_t addr, int type, int source_id, std::function<void(Request&)> callback): addr(addr), type_id(type), source_id(source_id), callback(callback) {};
 
 #endif /* USER_CODES */
 
