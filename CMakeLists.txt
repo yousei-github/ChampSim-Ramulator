@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.21)
 # and sets the variables PROJECT_VERSION, PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK.
 project(champsim_plus_ramulator LANGUAGES CXX)
 
-# Customizable executable name (override with -DEXECUTABLE_NAME=<name> at configure time)
+# Customizable executable name (CMake Cache, string variable, override with -D EXECUTABLE_NAME=<name> at configure time)
 set(EXECUTABLE_NAME "champsim_plus_ramulator" CACHE STRING "Name of the output executable")
 message(STATUS "EXECUTABLE_NAME: ${EXECUTABLE_NAME}")
 

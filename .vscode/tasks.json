@@ -360,7 +360,7 @@
 			"args": [
 				"--preset", // Reads CMakePresets.json (and CMakeUserPresets.json) and applies the named configure preset.
 				"${input:cmakePreset}",
-				"-DEXECUTABLE_NAME=${input:variable1}" // Pass executable name to CMake
+				"-D EXECUTABLE_NAME=${input:variable1}" // Pass executable name to CMake
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
