@@ -148,6 +148,10 @@ MEMORY_CONTROLLER::~MEMORY_CONTROLLER()
     output_statistics.write_request_in_memory  = write_request_in_memory;
     output_statistics.write_request_in_memory2 = write_request_in_memory2;
 
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+    delete os_transparent_management;
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
+
     // Finalize the simulation. Recursively print all statistics from all components.
     if (frontend != nullptr)
     {
@@ -165,10 +169,6 @@ MEMORY_CONTROLLER::~MEMORY_CONTROLLER()
     {
         memory_system2->finalize();
     }
-
-#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    delete os_transparent_management;
-#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 }
 
 void MEMORY_CONTROLLER::initialize()
@@ -504,9 +504,9 @@ void MEMORY_CONTROLLER::initiate_requests()
 
 bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
 {
-    const static int type                          = Ramulator::Request::Type::Read; // It means the input request is read request (Ramulator 2.0 id).
+    const static int type                                              = Ramulator::Request::Type::Read;                     // It means the input request is read request (Ramulator 2.0 id).
     const static OS_TRANSPARENT_MANAGEMENT::MemoryRequestType ost_type = OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read; // The matching id for OS-transparent management.
-    const static RequestType queue_type            = RequestType::Read;              // The matching id for queue queries.
+    const static RequestType queue_type                                = RequestType::Read;                                  // The matching id for queue queries.
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     access_type type_origin = packet.type_origin;
@@ -675,9 +675,9 @@ bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
 
 bool MEMORY_CONTROLLER::add_wq(request_type& packet)
 {
-    const static int type                          = Ramulator::Request::Type::Write; // It means the input request is write request (Ramulator 2.0 id).
+    const static int type                                              = Ramulator::Request::Type::Write;                     // It means the input request is write request (Ramulator 2.0 id).
     const static OS_TRANSPARENT_MANAGEMENT::MemoryRequestType ost_type = OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write; // The matching id for OS-transparent management.
-    const static RequestType queue_type            = RequestType::Write;              // The matching id for queue queries.
+    const static RequestType queue_type                                = RequestType::Write;                                  // The matching id for queue queries.
 
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -1355,6 +1355,8 @@ MEMORY_CONTROLLER::MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period, st
     frontend->connect_memory_system(memory_system);
     memory_system->connect_frontend(frontend);
 
+    max_address             = memory_system->get_capacity();
+
     read_request_in_memory  = 0;
     write_request_in_memory = 0;
 }
@@ -1483,7 +1485,7 @@ void MEMORY_CONTROLLER::print_deadlock()
 
 champsim::data::bytes MEMORY_CONTROLLER::size() const
 {
-    return champsim::data::bytes {static_cast<long long>(memory_system->get_capacity())};
+    return champsim::data::bytes {static_cast<long long>(max_address)};
 }
 
 void MEMORY_CONTROLLER::initiate_requests()
@@ -1522,10 +1524,9 @@ bool MEMORY_CONTROLLER::add_rq(const request_type& packet, champsim::channel* ul
         rq_it.to_return = {&ul->returned}; // Store the response queue to communicate with the LLC
 
     /* Send memory request below */
-    bool stall                 = true;
+    bool stall             = true;
 
-    const uint64_t max_address = this->size().count();
-    const uint64_t address     = packet.address.to<uint64_t>();
+    const uint64_t address = packet.address.to<uint64_t>();
 
     // Assign the request to the right memory.
     if (address < max_address)
@@ -1567,7 +1568,6 @@ bool MEMORY_CONTROLLER::add_wq(const request_type& packet)
     /* Send memory request below */
     bool stall                       = true;
 
-    const uint64_t max_address       = this->size().count();
     const uint64_t address           = packet.address.to<uint64_t>();
 
     // Assign the request to the right memory.
@@ -1601,8 +1601,6 @@ bool MEMORY_CONTROLLER::add_wq(const request_type& packet)
 
 size_t MEMORY_CONTROLLER::get_occupancy(RequestType queue_type, uint64_t address)
 {
-    const uint64_t max_address = this->size().count();
-
     // Assign the request to the right memory.
     if (address < max_address)
     {
@@ -1621,8 +1619,6 @@ size_t MEMORY_CONTROLLER::get_occupancy(RequestType queue_type, uint64_t address
 
 size_t MEMORY_CONTROLLER::get_queue_size(RequestType queue_type, uint64_t address)
 {
-    const uint64_t max_address = this->size().count();
-
     // Assign the request to the right memory.
     if (address < max_address)
     {

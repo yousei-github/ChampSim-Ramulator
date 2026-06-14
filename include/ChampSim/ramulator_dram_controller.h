@@ -54,6 +54,10 @@ class MEMORY_CONTROLLER : public champsim::operable
     double io_freq_scale  = {};
     double io_freq_scale2 = {};
 
+    // Memory capacities [Byte]
+    uint64_t max_address  = 0;
+    uint64_t max_address2 = 0;
+
     using channel_type    = champsim::channel;
     using request_type    = typename channel_type::request_type;
     using response_type   = typename channel_type::response_type;
@@ -72,7 +76,7 @@ public:
     const uint8_t memory2_id = MEMORY_NUMBER_TWO;
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    OS_TRANSPARENT_MANAGEMENT& os_transparent_management;
+    OS_TRANSPARENT_MANAGEMENT* os_transparent_management = nullptr;
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -148,7 +152,7 @@ public:
      * The address is physical address.
      */
     uint32_t get_queue_size(ramulator::Request::Type queue_type, uint64_t address);
-    
+
     /**
      * @brief Return responses (like data) to LLC when the request is completed by memory system
      * @note Write requests don't return responses to LLC
@@ -181,16 +185,17 @@ private:
 
 template<typename T, typename T2>
 MEMORY_CONTROLLER<T, T2>::MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period, double io_freq, double io_freq2, std::vector<channel_type*>&& ul, ramulator::Memory<T, ramulator::Controller>& memory, ramulator::Memory<T2, ramulator::Controller>& memory2)
-#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-: champsim::operable(mc_period), io_freq_scale((ONE_SECOND_IN_MICROSECOND / io_freq) / mc_period.count()), io_freq_scale2((ONE_SECOND_IN_MICROSECOND / io_freq2) / mc_period.count()),
-  queues(std::move(ul)), memory(memory), memory2(memory2),
-  os_transparent_management(*(new OS_TRANSPARENT_MANAGEMENT(memory.max_address + memory2.max_address, memory.max_address)))
-#else
 : champsim::operable(mc_period), io_freq_scale((ONE_SECOND_IN_MICROSECOND / io_freq) / mc_period.count()), io_freq_scale2((ONE_SECOND_IN_MICROSECOND / io_freq2) / mc_period.count()),
   queues(std::move(ul)), memory(memory), memory2(memory2)
-#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 {
     std::printf("Memory IO frequency: %f MH/z, memory IO frequency 2: %f MH/z (Ramulator 1.0 backend).\n", io_freq, io_freq2);
+
+    max_address  = memory.max_address;
+    max_address2 = memory2.max_address;
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+    os_transparent_management = new OS_TRANSPARENT_MANAGEMENT(max_address + max_address2, max_address);
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     swapping_count = swapping_traffic_in_bytes = 0;
@@ -238,7 +243,7 @@ MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
     output_statistics.write_request_in_memory2 = write_request_in_memory2;
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    delete &os_transparent_management;
+    delete os_transparent_management;
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 }
 
@@ -303,14 +308,14 @@ long MEMORY_CONTROLLER<T, T2>::operate()
 
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    os_transparent_management.cold_data_detection();
+    os_transparent_management->cold_data_detection();
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
-    for (size_t i = 0; i < os_transparent_management.incomplete_read_request_queue.size(); i++)
+    for (size_t i = 0; i < os_transparent_management->incomplete_read_request_queue.size(); i++)
     {
-        if (os_transparent_management.incomplete_read_request_queue[i].fm_access_finish) // This read request is ready to access slow memory
+        if (os_transparent_management->incomplete_read_request_queue[i].fm_access_finish) // This read request is ready to access slow memory
         {
-            request_type packet              = os_transparent_management.incomplete_read_request_queue[i].packet;
+            request_type packet              = os_transparent_management->incomplete_read_request_queue[i].packet;
 
             DRAM_CHANNEL::request_type rq_it = DRAM_CHANNEL::request_type {packet};
             rq_it.forward_checked            = false;
@@ -322,16 +327,16 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             bool stall       = true;
 
             uint64_t address = packet.h_address;
-            if ((memory.max_address <= address) && (address < memory.max_address + memory2.max_address))
+            if ((max_address <= address) && (address < max_address + max_address2))
             {
                 // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-                ramulator::Request request(address - memory.max_address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory2_id);
+                ramulator::Request request(address - max_address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory2_id);
                 stall = ! memory2.send(request);
 
                 if (stall == false)
                 {
                     read_request_in_memory2++;
-                    os_transparent_management.incomplete_read_request_queue.erase(os_transparent_management.incomplete_read_request_queue.begin() + i);
+                    os_transparent_management->incomplete_read_request_queue.erase(os_transparent_management->incomplete_read_request_queue.begin() + i);
                 }
             }
             else
@@ -341,11 +346,11 @@ long MEMORY_CONTROLLER<T, T2>::operate()
         }
     }
 
-    for (size_t i = 0; i < os_transparent_management.incomplete_write_request_queue.size(); i++)
+    for (size_t i = 0; i < os_transparent_management->incomplete_write_request_queue.size(); i++)
     {
-        if (os_transparent_management.incomplete_write_request_queue[i].fm_access_finish) // This write request is ready to write memory (fast or slow)
+        if (os_transparent_management->incomplete_write_request_queue[i].fm_access_finish) // This write request is ready to write memory (fast or slow)
         {
-            request_type packet              = os_transparent_management.incomplete_write_request_queue[i].packet;
+            request_type packet              = os_transparent_management->incomplete_write_request_queue[i].packet;
 
             DRAM_CHANNEL::request_type wq_it = DRAM_CHANNEL::request_type {packet};
             wq_it.forward_checked            = false;
@@ -357,7 +362,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
             uint64_t address                 = packet.h_address;
 
             // Assign the request to the right memory.
-            if (address < memory.max_address)
+            if (address < max_address)
             {
                 ramulator::Request request(address, ramulator::Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory_id);
                 stall = ! memory.send(request);
@@ -365,19 +370,19 @@ long MEMORY_CONTROLLER<T, T2>::operate()
                 if (stall == false)
                 {
                     write_request_in_memory++;
-                    os_transparent_management.incomplete_write_request_queue.erase(os_transparent_management.incomplete_write_request_queue.begin() + i);
+                    os_transparent_management->incomplete_write_request_queue.erase(os_transparent_management->incomplete_write_request_queue.begin() + i);
                 }
             }
-            else if (address < memory.max_address + memory2.max_address)
+            else if (address < max_address + max_address2)
             {
                 // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-                ramulator::Request request(address - memory.max_address, ramulator::Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory2_id);
+                ramulator::Request request(address - max_address, ramulator::Request::Type::WRITE, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory2_id);
                 stall = ! memory2.send(request);
 
                 if (stall == false)
                 {
                     write_request_in_memory2++;
-                    os_transparent_management.incomplete_write_request_queue.erase(os_transparent_management.incomplete_write_request_queue.begin() + i);
+                    os_transparent_management->incomplete_write_request_queue.erase(os_transparent_management->incomplete_write_request_queue.begin() + i);
                 }
             }
             else
@@ -398,7 +403,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
     {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
         OS_TRANSPARENT_MANAGEMENT::RemappingRequest remapping_request;
-        bool issue = os_transparent_management.issue_remapping_request(remapping_request);
+        bool issue = os_transparent_management->issue_remapping_request(remapping_request);
         if (issue == true) // Get a new remapping request.
         {
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_VARIABLE_GRANULARITY == ENABLE)
@@ -414,7 +419,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
     {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
         OS_TRANSPARENT_MANAGEMENT::RemappingRequest remapping_request;
-        bool issue = os_transparent_management.issue_remapping_request(remapping_request);
+        bool issue = os_transparent_management->issue_remapping_request(remapping_request);
         if (issue == true) // Get a remapping request.
         {
             // In case the swapping segments are updated
@@ -437,7 +442,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
         bool is_updated = false;
         OS_TRANSPARENT_MANAGEMENT::RemappingRequest remapping_request;
-        bool issue = os_transparent_management.issue_remapping_request(remapping_request);
+        bool issue = os_transparent_management->issue_remapping_request(remapping_request);
         if (issue == true) // Get a remapping request.
         {
             // In case the swapping segments are updated
@@ -455,7 +460,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
 
         if (is_updated == false)
         {
-            os_transparent_management.finish_remapping_request();
+            os_transparent_management->finish_remapping_request();
             initialize_swapping();
         }
 #else
@@ -472,17 +477,17 @@ long MEMORY_CONTROLLER<T, T2>::operate()
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     // Since we don't consider data swapping overhead here, the data swapping is finished immediately
     OS_TRANSPARENT_MANAGEMENT::RemappingRequest remapping_request;
-    bool issue = os_transparent_management.issue_remapping_request(remapping_request);
+    bool issue = os_transparent_management->issue_remapping_request(remapping_request);
     if (issue == true) // Get a new remapping request.
     {
-        os_transparent_management.finish_remapping_request();
+        os_transparent_management->finish_remapping_request();
     }
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 #endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 #if (IDEAL_SINGLE_MEMPOD == ENABLE)
-    os_transparent_management.check_interval_swap(swapping_states, warmup);
+    os_transparent_management->check_interval_swap(swapping_states, warmup);
 #endif /* IDEAL_SINGLE_MEMPOD */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -555,7 +560,7 @@ void MEMORY_CONTROLLER<T, T2>::print_deadlock()
 template<typename T, typename T2>
 champsim::data::bytes MEMORY_CONTROLLER<T, T2>::size() const
 {
-    return champsim::data::bytes {static_cast<long long>(memory.max_address + memory2.max_address)};
+    return champsim::data::bytes {static_cast<long long>(max_address + max_address2)};
 }
 
 template<typename T, typename T2>
@@ -585,7 +590,8 @@ void MEMORY_CONTROLLER<T, T2>::initiate_requests()
 template<typename T, typename T2>
 bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* ul)
 {
-    const static ramulator::Request::Type type = ramulator::Request::Type::READ; // It means the input request is read request.
+    const static ramulator::Request::Type type                         = ramulator::Request::Type::READ;                     // It means the input request is read request.
+    const static OS_TRANSPARENT_MANAGEMENT::MemoryRequestType ost_type = OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read; // The matching id for OS-transparent management.
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     access_type type_origin = packet.type_origin;
@@ -593,11 +599,11 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    os_transparent_management.physical_to_hardware_address(packet);
+    os_transparent_management->physical_to_hardware_address(packet);
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-    os_transparent_management.memory_activity_tracking(packet.address.to<uint64_t>(), type, packet.type_origin, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), ost_type, packet.type_origin, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
 #else
-    os_transparent_management.memory_activity_tracking(packet.address.to<uint64_t>(), type, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), ost_type, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
 #endif /* TRACKING_LOAD_STORE_STATISTICS */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -646,19 +652,19 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
     address = rq_it.h_address = packet.h_address;
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     bool is_sm_request = false; // Whether this request is mapped in slow memory according to the LLT.
-    if (memory.max_address <= address)
+    if (max_address <= address)
     {
         is_sm_request = true;
         address = rq_it.h_address_fm = packet.h_address_fm; // Pretend to access the Location Entry and Data (LEAD) in fast memory
 
-        if (memory.max_address <= address)
+        if (max_address <= address)
         {
             std::cout << __func__ << ": co_located LLT error, h_address_fm is uncorrect." << std::endl;
             abort();
         }
 
         // Check incomplete_read_request_queue's size
-        if (os_transparent_management.incomplete_read_request_queue.size() >= INCOMPLETE_READ_REQUEST_QUEUE_LENGTH)
+        if (os_transparent_management->incomplete_read_request_queue.size() >= INCOMPLETE_READ_REQUEST_QUEUE_LENGTH)
         {
             return false;
         }
@@ -670,7 +676,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
-    if (address < memory.max_address)
+    if (address < max_address)
     {
         ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory_id);
         stall = ! memory.send(request);
@@ -703,15 +709,15 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
                 read_request.packet           = packet;
                 read_request.fm_access_finish = false;
 
-                os_transparent_management.incomplete_read_request_queue.push_back(read_request);
+                os_transparent_management->incomplete_read_request_queue.push_back(read_request);
             }
 #endif /* COLOCATED_LINE_LOCATION_TABLE */
         }
     }
-    else if (address < memory.max_address + memory2.max_address)
+    else if (address < max_address + max_address2)
     {
         // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-        ramulator::Request request(address - memory.max_address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory2_id);
+        ramulator::Request request(address - max_address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory2_id);
         stall = ! memory2.send(request);
 
         if (stall == false)
@@ -755,15 +761,16 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 template<typename T, typename T2>
 bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
 {
-    const static ramulator::Request::Type type = ramulator::Request::Type::WRITE; // It means the input request is write request.
+    const static ramulator::Request::Type type                         = ramulator::Request::Type::WRITE;                     // It means the input request is write request.
+    const static OS_TRANSPARENT_MANAGEMENT::MemoryRequestType ost_type = OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write; // The matching id for OS-transparent management.
 
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    os_transparent_management.physical_to_hardware_address(packet);
+    os_transparent_management->physical_to_hardware_address(packet);
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-    os_transparent_management.memory_activity_tracking(packet.address.to<uint64_t>(), type, packet.type_origin, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), ost_type, packet.type_origin, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
 #else
-    os_transparent_management.memory_activity_tracking(packet.address.to<uint64_t>(), type, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), ost_type, float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
 #endif /* TRACKING_LOAD_STORE_STATISTICS */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -802,7 +809,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
     address = wq_it.h_address = packet.h_address;
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     // Check incomplete_write_request_queue's size
-    if (os_transparent_management.incomplete_write_request_queue.size() >= INCOMPLETE_WRITE_REQUEST_QUEUE_LENGTH)
+    if (os_transparent_management->incomplete_write_request_queue.size() >= INCOMPLETE_WRITE_REQUEST_QUEUE_LENGTH)
     {
         return false;
     }
@@ -818,7 +825,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
         write_request.packet           = packet;
         write_request.fm_access_finish = false;
 
-        os_transparent_management.incomplete_write_request_queue.push_back(write_request);
+        os_transparent_management->incomplete_write_request_queue.push_back(write_request);
 
         return true;
     }
@@ -833,7 +840,7 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
-    if (address < memory.max_address)
+    if (address < max_address)
     {
         ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory_id);
         stall = ! memory.send(request);
@@ -843,10 +850,10 @@ bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
             write_request_in_memory++;
         }
     }
-    else if (address < memory.max_address + memory2.max_address)
+    else if (address < max_address + max_address2)
     {
         // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-        ramulator::Request request(address - memory.max_address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory2_id);
+        ramulator::Request request(address - max_address, type, std::bind(&MEMORY_CONTROLLER<T, T2>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory2_id);
         stall = ! memory2.send(request);
 
         if (stall == false)
@@ -876,19 +883,19 @@ template<class T, class T2>
 uint32_t MEMORY_CONTROLLER<T, T2>::get_occupancy(ramulator::Request::Type queue_type, uint64_t address)
 {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    os_transparent_management.physical_to_hardware_address(address);
+    os_transparent_management->physical_to_hardware_address(address);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
-    if (address < memory.max_address)
+    if (address < max_address)
     {
         ramulator::Request request(address, queue_type);
         return memory.get_queue_occupancy(request);
     }
-    else if (address < memory.max_address + memory2.max_address)
+    else if (address < max_address + max_address2)
     {
         // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-        ramulator::Request request(address - memory.max_address, queue_type);
+        ramulator::Request request(address - max_address, queue_type);
         return memory2.get_queue_occupancy(request);
     }
     else
@@ -903,19 +910,19 @@ template<class T, class T2>
 uint32_t MEMORY_CONTROLLER<T, T2>::get_queue_size(ramulator::Request::Type queue_type, uint64_t address)
 {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    os_transparent_management.physical_to_hardware_address(address);
+    os_transparent_management->physical_to_hardware_address(address);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Assign the request to the right memory.
-    if (address < memory.max_address)
+    if (address < max_address)
     {
         ramulator::Request request(address, queue_type);
         return memory.get_queue_size(request);
     }
-    else if (address < memory.max_address + memory2.max_address)
+    else if (address < max_address + max_address2)
     {
         // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-        ramulator::Request request(address - memory.max_address, queue_type);
+        ramulator::Request request(address - max_address, queue_type);
         return memory2.get_queue_size(request);
     }
     else
@@ -936,7 +943,7 @@ void MEMORY_CONTROLLER<T, T2>::return_data(ramulator::Request& request)
         // Nothing to do
         break;
     case MEMORY_NUMBER_TWO:
-        request.addr += memory.max_address;
+        request.addr += max_address;
         break;
     default:
     {
@@ -949,10 +956,10 @@ void MEMORY_CONTROLLER<T, T2>::return_data(ramulator::Request& request)
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE) && (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     bool finish_return_data = false;
 
-    if (uint64_t(request.addr) < memory.max_address)
+    if (uint64_t(request.addr) < max_address)
     {
         // This could be an uncomplete write request
-        bool finish = os_transparent_management.finish_fm_access_in_incomplete_write_request_queue(request.packet.h_address);
+        bool finish = os_transparent_management->finish_fm_access_in_incomplete_write_request_queue(request.packet.h_address);
         if (finish)
         {
             finish_return_data = true;
@@ -960,10 +967,10 @@ void MEMORY_CONTROLLER<T, T2>::return_data(ramulator::Request& request)
         }
     }
 
-    if ((uint64_t(request.addr) < memory.max_address) && (memory.max_address <= request.packet.h_address))
+    if ((uint64_t(request.addr) < max_address) && (max_address <= request.packet.h_address))
     {
         // This could be an uncomplete read request
-        bool finish = os_transparent_management.finish_fm_access_in_incomplete_read_request_queue(request.packet.h_address);
+        bool finish = os_transparent_management->finish_fm_access_in_incomplete_read_request_queue(request.packet.h_address);
 
         if (finish)
         {
@@ -1103,15 +1110,15 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
                         uint64_t address = (base_address[j] + i) << LOG2_BLOCK_SIZE;
 
                         // Assign the request to the right memory.
-                        if (address < memory.max_address)
+                        if (address < max_address)
                         {
                             ramulator::Request request(address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, std::placeholders::_1), coreid, memory_id);
                             stall = ! memory.send(request);
                         }
-                        else if (address < memory.max_address + memory2.max_address)
+                        else if (address < max_address + max_address2)
                         {
                             // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-                            ramulator::Request request(address - memory.max_address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, std::placeholders::_1), coreid, memory2_id);
+                            ramulator::Request request(address - max_address, ramulator::Request::Type::READ, std::bind(&MEMORY_CONTROLLER<T, T2>::return_swapping_data, this, std::placeholders::_1), coreid, memory2_id);
                             stall = ! memory2.send(request);
                         }
                         else
@@ -1152,17 +1159,17 @@ uint8_t MEMORY_CONTROLLER<T, T2>::operate_swapping()
                             uint64_t address = (base_address[j] + i) << LOG2_BLOCK_SIZE;
 
                             // Assign the request to the right memory.
-                            if (address < memory.max_address)
+                            if (address < max_address)
                             {
                                 ramulator::Request request(address, ramulator::Request::Type::WRITE, NULL, coreid, memory_id);
                                 // Get data from buffer
                                 request.data = buffer[i].data[j];
                                 stall        = ! memory.send(request);
                             }
-                            else if (address < memory.max_address + memory2.max_address)
+                            else if (address < max_address + max_address2)
                             {
                                 // The memory itself doesn't know other memories' space, so we manage the overall mapping.
-                                ramulator::Request request(address - memory.max_address, ramulator::Request::Type::WRITE, NULL, coreid, memory2_id);
+                                ramulator::Request request(address - max_address, ramulator::Request::Type::WRITE, NULL, coreid, memory2_id);
                                 // Get data from buffer
                                 request.data = buffer[i].data[j];
                                 stall        = ! memory2.send(request);
@@ -1245,7 +1252,7 @@ void MEMORY_CONTROLLER<T, T2>::return_swapping_data(ramulator::Request& request)
         // Nothing to do
         break;
     case MEMORY_NUMBER_TWO:
-        request.addr += memory.max_address;
+        request.addr += max_address;
         break;
     default:
     {
@@ -1360,7 +1367,7 @@ template<class T, class T2>
 uint8_t MEMORY_CONTROLLER<T, T2>::check_address(uint64_t address, uint8_t type)
 {
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    os_transparent_management.physical_to_hardware_address(address);
+    os_transparent_management->physical_to_hardware_address(address);
 #else
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -1415,6 +1422,9 @@ template<typename T>
 class MEMORY_CONTROLLER : public champsim::operable
 {
     double io_freq_scale = {};
+
+    // Memory capacity [Byte].
+    uint64_t max_address = 0;
 
     using channel_type   = champsim::channel;
     using request_type   = typename channel_type::request_type;
@@ -1479,6 +1489,8 @@ MEMORY_CONTROLLER<T>::MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period,
   queues(std::move(ul)), memory(memory)
 {
     std::printf("Memory IO frequency: %f MH/z (Ramulator 1.0 backend).\n", io_freq);
+
+    max_address             = memory.max_address;
 
     read_request_in_memory  = 0;
     write_request_in_memory = 0;
@@ -1603,7 +1615,7 @@ void MEMORY_CONTROLLER<T>::print_deadlock()
 template<typename T>
 champsim::data::bytes MEMORY_CONTROLLER<T>::size() const
 {
-    return champsim::data::bytes {static_cast<long long>(memory.max_address)};
+    return champsim::data::bytes {static_cast<long long>(max_address)};
 }
 
 template<typename T>
@@ -1649,7 +1661,7 @@ bool MEMORY_CONTROLLER<T>::add_rq(const request_type& packet, champsim::channel*
     const uint64_t address = packet.address.to<uint64_t>();
 
     // Assign the request to the right memory.
-    if (address < memory.max_address)
+    if (address < max_address)
     {
         ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T>::return_data, this, std::placeholders::_1), rq_it, packet.cpu, memory_id);
         stall = ! memory.send(request);
@@ -1693,7 +1705,7 @@ bool MEMORY_CONTROLLER<T>::add_wq(const request_type& packet)
     uint64_t address                           = packet.address.to<uint64_t>();
 
     // Assign the request to the right memory.
-    if (address < memory.max_address)
+    if (address < max_address)
     {
         ramulator::Request request(address, type, std::bind(&MEMORY_CONTROLLER<T>::return_data, this, std::placeholders::_1), wq_it, packet.cpu, memory_id);
         stall = ! memory.send(request);
@@ -1725,7 +1737,7 @@ template<class T>
 uint32_t MEMORY_CONTROLLER<T>::get_occupancy(ramulator::Request::Type queue_type, uint64_t address)
 {
     // Assign the request to the right memory.
-    if (address < memory.max_address)
+    if (address < max_address)
     {
         ramulator::Request request(address, queue_type);
         return memory.get_queue_occupancy(request);
@@ -1742,7 +1754,7 @@ template<class T>
 uint32_t MEMORY_CONTROLLER<T>::get_queue_size(ramulator::Request::Type queue_type, uint64_t address)
 {
     // Assign the request to the right memory.
-    if (address < memory.max_address)
+    if (address < max_address)
     {
         ramulator::Request request(address, queue_type);
         return memory.get_queue_size(request);

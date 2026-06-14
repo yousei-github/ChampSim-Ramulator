@@ -21,11 +21,10 @@
 #include "ChampSim/dram_stats.h"
 #include "ChampSim/operable.h"
 #include "Ramulator2/base/request.h"
+#include "os_transparent_management.h"
 
 #if (MEMORY_USE_HYBRID == ENABLE)
 #include <array>
-
-#include "os_transparent_management.h"
 #endif /* MEMORY_USE_HYBRID */
 
 /* Macro */
@@ -59,11 +58,9 @@ class MEMORY_CONTROLLER : public champsim::operable
     double io_freq_scale                     = {};
     double io_freq_scale2                    = {};
 
-    /** @todo add similar code in include/ChampSim/ramulator_dram_controller.h */
-
-    // Cached capacities [Byte]. memory.max_address in the Ramulator 1.0 controller.
-    uint64_t max_address  = 0; // Fast memory capacity
-    uint64_t max_address2 = 0; // Slow memory capacity
+    // Memory capacities [Byte]
+    uint64_t max_address                     = 0; // Fast memory capacity
+    uint64_t max_address2                    = 0; // Slow memory capacity
 
     /** @brief Memory request type */
     enum class RequestType : int
@@ -82,8 +79,6 @@ public:
     const uint8_t memory2_id = MEMORY_NUMBER_TWO;
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    /** @todo add similar code in include/ChampSim/ramulator_dram_controller.h */
-
     // Built in the constructor body once both memory systems exist (capacities
     // are unknown until the YAML configs are parsed), so a pointer rather than a
     // reference like the Ramulator 1.0 controller.
@@ -109,9 +104,11 @@ public:
     uint8_t finish_number;
 
     // Scoped enumerations
-    enum class SwappingState : uint8_t {
+    enum class SwappingState : uint8_t
+    {
         Idle,
-        Swapping};
+        Swapping
+    };
     SwappingState states; // The state of swapping mechanism
 
     uint64_t swapping_count;
@@ -194,7 +191,7 @@ private:
 
     // This function is used by memory controller in add_rq() and add_wq().
     uint8_t check_request(request_type& packet, OS_TRANSPARENT_MANAGEMENT::MemoryRequestType type); // Packet needs to prepare its hardware address.
-    uint8_t check_address(uint64_t address, uint8_t type);                      // The address is physical address.
+    uint8_t check_address(uint64_t address, uint8_t type);                                          // The address is physical address.
 
 #endif /* MEMORY_USE_SWAPPING_UNIT */
 };
@@ -213,6 +210,9 @@ class MEMORY_CONTROLLER : public champsim::operable
     Ramulator::IFrontEnd* frontend          = nullptr;
     Ramulator::IMemorySystem* memory_system = nullptr;
     double io_freq_scale                    = {};
+
+    // Memory capacity [Byte].
+    uint64_t max_address                    = 0;
 
     /** @brief Memory request type */
     enum class RequestType : int
