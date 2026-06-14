@@ -505,8 +505,7 @@ void MEMORY_CONTROLLER::initiate_requests()
 bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
 {
     const static int type                          = Ramulator::Request::Type::Read; // It means the input request is read request (Ramulator 2.0 id).
-    /** @todo Create os_transparent_management's own request type */
-    const static ramulator::Request::Type ost_type = ramulator::Request::Type::READ; // The matching id for OS-transparent management.
+    const static OS_TRANSPARENT_MANAGEMENT::MemoryRequestType ost_type = OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read; // The matching id for OS-transparent management.
     const static RequestType queue_type            = RequestType::Read;              // The matching id for queue queries.
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
@@ -677,8 +676,7 @@ bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
 bool MEMORY_CONTROLLER::add_wq(request_type& packet)
 {
     const static int type                          = Ramulator::Request::Type::Write; // It means the input request is write request (Ramulator 2.0 id).
-    /** @todo Create os_transparent_management's own request type */
-    const static ramulator::Request::Type ost_type = ramulator::Request::Type::WRITE; // The matching id for OS-transparent management.
+    const static OS_TRANSPARENT_MANAGEMENT::MemoryRequestType ost_type = OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write; // The matching id for OS-transparent management.
     const static RequestType queue_type            = RequestType::Write;              // The matching id for queue queries.
 
     /* Operate research proposals below */
@@ -1209,8 +1207,7 @@ void MEMORY_CONTROLLER::return_swapping_data(Ramulator::Request& request)
     }
 };
 
-/** @todo use MEMORY_CONTROLLER's own request type */
-uint8_t MEMORY_CONTROLLER::check_request(request_type& packet, ramulator::Request::Type type)
+uint8_t MEMORY_CONTROLLER::check_request(request_type& packet, OS_TRANSPARENT_MANAGEMENT::MemoryRequestType type)
 {
     uint64_t address;
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -1238,7 +1235,7 @@ uint8_t MEMORY_CONTROLLER::check_request(request_type& packet, ramulator::Reques
         return 1; // This address is not under swapping.
     }
 
-    if (type == ramulator::Request::Type::READ) // For read request
+    if (type == OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read) // For read request
     {
         if ((buffer[entry_index].finish == true) || (buffer[entry_index].read[segment_index] == true) || (buffer[entry_index].write[segment_index] == true) || (buffer[entry_index].dirty[segment_index] == true))
         {
@@ -1248,7 +1245,7 @@ uint8_t MEMORY_CONTROLLER::check_request(request_type& packet, ramulator::Reques
             return 2; // Though this address is under swapping, we can service its request because the data is in the swapping buffer.
         }
     }
-    else if (type == ramulator::Request::Type::WRITE) // For write request
+    else if (type == OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write) // For write request
     {
         if ((buffer[entry_index].read[0] == true) && (buffer[entry_index].read[1] == true))
         {

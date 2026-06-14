@@ -12,7 +12,6 @@
 #include "ChampSim/channel.h"
 #include "ChampSim/util/bits.h"
 #include "ProjectConfiguration.h" // User file
-#include "Ramulator/Request.h"
 
 /** @note Abbreviation:
  *  FM -> Fast memory (e.g., HBM, DDR4)
@@ -59,6 +58,14 @@ class OS_TRANSPARENT_MANAGEMENT
     using request_type = typename channel_type::request_type;
 
 public:
+    /** @brief Memory request type */
+    enum class MemoryRequestType : int
+    {
+        Read = 0,
+        Write,
+        Max
+    };
+
     uint64_t cycle                  = 0;
     COUNTER_WIDTH hotness_threshold = 0;
     uint64_t total_capacity;       // Uint is byte
@@ -148,10 +155,10 @@ public:
     // Address is physical address and at byte granularity
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     // Address is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, access_type type_origin, float queue_busy_degree);
+    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree);
 #else
     // Address is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree);
+    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree);
 #endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     // Translate the physical address to hardware address

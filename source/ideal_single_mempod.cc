@@ -49,7 +49,7 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
 // Complete
-bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramulator::Request::Type type, access_type type_origin, float queue_busy_degree)
+bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
 #if (TRACKING_LOAD_ONLY)
     if (type_origin == access_type::RFO || type_origin == access_type::WRITE) // CPU Store Instruction and LLC Writeback is ignored
@@ -59,7 +59,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 #endif /* TRACKING_LOAD_ONLY */
 
 #if (TRACKING_READ_ONLY)
-    if (type == ramulator::Request::Type::WRITE) // Memory Write is ignored
+    if (type == MemoryRequestType::Write) // Memory Write is ignored
     {
         return true;
     }
@@ -76,7 +76,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     return true;
 };
 #else
-bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree)
+bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree)
 {
     if (address >= total_capacity)
     {

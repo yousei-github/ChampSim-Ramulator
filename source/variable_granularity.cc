@@ -105,7 +105,7 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
     delete &placement_table;
 };
 
-bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree)
+bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree)
 {
     if (address >= total_capacity)
     {
@@ -133,7 +133,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     cold_data_detection_in_group(address);
 #endif /* COLD_DATA_DETECTION_IN_GROUP */
 
-    if (type == ramulator::Request::Type::READ) // For read request
+    if (type == MemoryRequestType::Read) // For read request
     {
         if (counter_table.at(data_block_address) < COUNTER_MAX_VALUE)
         {
@@ -145,7 +145,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
             hotness_table.at(data_block_address) = true; // Mark hot data block
         }
     }
-    else if (type == ramulator::Request::Type::WRITE) // For write request
+    else if (type == MemoryRequestType::Write) // For write request
     {
         if (counter_table.at(data_block_address) < COUNTER_MAX_VALUE)
         {

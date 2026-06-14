@@ -193,7 +193,7 @@ private:
     void return_swapping_data(Ramulator::Request& request);
 
     // This function is used by memory controller in add_rq() and add_wq().
-    uint8_t check_request(request_type& packet, ramulator::Request::Type type); // Packet needs to prepare its hardware address.
+    uint8_t check_request(request_type& packet, OS_TRANSPARENT_MANAGEMENT::MemoryRequestType type); // Packet needs to prepare its hardware address.
     uint8_t check_address(uint64_t address, uint8_t type);                      // The address is physical address.
 
 #endif /* MEMORY_USE_SWAPPING_UNIT */

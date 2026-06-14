@@ -41,7 +41,7 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 };
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramulator::Request::Type type, access_type type_origin, float queue_busy_degree)
+bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
 #if (TRACKING_LOAD_ONLY)
     if (type_origin == access_type::RFO || type_origin == access_type::WRITE) // CPU Store Instruction and LLC Writeback is ignored
@@ -51,7 +51,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 #endif /* TRACKING_LOAD_ONLY */
 
 #if (TRACKING_READ_ONLY)
-    if (type == ramulator::Request::Type::WRITE) // Memory Write is ignored
+    if (type == MemoryRequestType::Write) // Memory Write is ignored
     {
         return true;
     }
@@ -82,7 +82,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
 #endif /* BITS_MANIPULATION */
 
-    if (type == ramulator::Request::Type::READ) // For read request
+    if (type == MemoryRequestType::Read) // For read request
     {
         if (counter_table.at(data_block_address) < COUNTER_MAX_VALUE)
         {
@@ -94,7 +94,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
             hotness_table.at(data_block_address) = true; // Mark hot data block
         }
     }
-    else if (type == ramulator::Request::Type::WRITE) // For write request
+    else if (type == MemoryRequestType::Write) // For write request
     {
         if (counter_table.at(data_block_address) < COUNTER_MAX_VALUE)
         {
@@ -185,7 +185,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
 };
 
 #else
-bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree)
+bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree)
 {
     if (address >= total_capacity)
     {
@@ -212,7 +212,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
     REMAPPING_LOCATION_WIDTH remapping_location = line_location_table.at(line_location_table_index).location[location];
 #endif /* BITS_MANIPULATION */
 
-    if (type == ramulator::Request::Type::READ) // For read request
+    if (type == MemoryRequestType::Read) // For read request
     {
         if (counter_table.at(data_block_address) < COUNTER_MAX_VALUE)
         {
@@ -224,7 +224,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, ramul
             hotness_table.at(data_block_address) = true; // Mark hot data block
         }
     }
-    else if (type == ramulator::Request::Type::WRITE) // For write request
+    else if (type == MemoryRequestType::Write) // For write request
     {
         if (counter_table.at(data_block_address) < COUNTER_MAX_VALUE)
         {

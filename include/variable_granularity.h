@@ -50,6 +50,14 @@ class OS_TRANSPARENT_MANAGEMENT
     using request_type = typename channel_type::request_type;
 
 public:
+    /** @brief Memory request type */
+    enum class MemoryRequestType : int
+    {
+        Read = 0,
+        Write,
+        Max
+    };
+
     uint64_t cycle                  = 0;
     COUNTER_WIDTH hotness_threshold = 0;
     uint64_t total_capacity;       // Uint is byte
@@ -181,7 +189,7 @@ public:
     ~OS_TRANSPARENT_MANAGEMENT();
 
     // Address is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, ramulator::Request::Type type, float queue_busy_degree);
+    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree);
 
     // Translate the physical address to hardware address
     void physical_to_hardware_address(request_type& packet);
