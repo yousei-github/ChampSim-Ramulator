@@ -1,6 +1,6 @@
 # dram_controller/impl/plugin/trr.cpp is omitted: it is wrapped in
 # #if (USER_CODES != ENABLE) and compiles to an empty translation unit.
-target_sources(champsim_plus_ramulator
+target_sources(${EXECUTABLE_NAME}
     PRIVATE
     impl/bh_dram_controller.cpp
     impl/dummy_controller.cpp

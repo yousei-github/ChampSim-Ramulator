@@ -359,7 +359,8 @@
 			"command": "cmake",
 			"args": [
 				"--preset", // Reads CMakePresets.json (and CMakeUserPresets.json) and applies the named configure preset.
-				"${input:cmakePreset}"
+				"${input:cmakePreset}",
+				"-DEXECUTABLE_NAME=${input:variable1}" // Pass executable name to CMake
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -418,7 +419,7 @@
 			],
 			"dependsOrder": "sequence",
 			"hide": false,
-			"detail": "Configure + build via CMake preset (default/debug/release/strict). Output: bin/champsim_plus_ramulator.",
+			"detail": "Configure + build via CMake preset (default/debug/release/strict). Output: bin/<executable name>.",
 		},
 		{
 			"type": "shell",

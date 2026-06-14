@@ -1,3 +1,3 @@
-target_sources(champsim_plus_ramulator
+target_sources(${EXECUTABLE_NAME}
     PRIVATE
     test_impl.cpp)

@@ -1,4 +1,4 @@
-target_sources(champsim_plus_ramulator
+target_sources(${EXECUTABLE_NAME}
     PRIVATE
     impl/bh_DRAM_system.cpp
     impl/dummy_memory_system.cpp

@@ -1,4 +1,4 @@
-target_sources(champsim_plus_ramulator
+target_sources(${EXECUTABLE_NAME}
     PRIVATE
     ip_stride/ip_stride.cc
     next_line/next_line.cc

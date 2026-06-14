@@ -1,4 +1,4 @@
-target_sources(champsim_plus_ramulator
+target_sources(${EXECUTABLE_NAME}
     PRIVATE
     impl/linear_mappers.cpp
     impl/rit.cpp)

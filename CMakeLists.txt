@@ -19,6 +19,10 @@ cmake_minimum_required(VERSION 3.21)
 # and sets the variables PROJECT_VERSION, PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR, PROJECT_VERSION_PATCH, PROJECT_VERSION_TWEAK.
 project(champsim_plus_ramulator LANGUAGES CXX)
 
+# Customizable executable name (override with -DEXECUTABLE_NAME=<name> at configure time)
+set(EXECUTABLE_NAME "champsim_plus_ramulator" CACHE STRING "Name of the output executable")
+message(STATUS "EXECUTABLE_NAME: ${EXECUTABLE_NAME}")
+
 # Build system options
 # Option provides a boolean option that the user can optionally select.
 option(ENABLE_ASSERT "Enable assertion" ON) # Assertion Configuration
@@ -60,7 +64,7 @@ endif()
 # These flags will be passed to all invocations of the compiler in the corresponding configuration.
 # This includes invocations that drive compiling and those that drive linking.
 set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g") # [-O0] achieves no optimization, maximum size & slowest speed
-set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -g")
+set(CMAKE_CXX_FLAGS_RELEASE        "-O3")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
 set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os") # [-Os] achieves balance of speed and small size
 
@@ -116,29 +120,29 @@ find_package(yaml-cpp CONFIG REQUIRED)
 find_package(spdlog   CONFIG REQUIRED)
 
 # Building an executable
-add_executable(champsim_plus_ramulator) # This command creates a target. In CMake lingo, a target is a name the developer gives to a collection of properties
+add_executable(${EXECUTABLE_NAME}) # This command creates a target. In CMake lingo, a target is a name the developer gives to a collection of properties
 
 # Specifies compile definitions to use when compiling a given target
 if(NOT ENABLE_ASSERT)
-    target_compile_definitions(champsim_plus_ramulator
+    target_compile_definitions(${EXECUTABLE_NAME}
         PRIVATE
         NDEBUG)
 endif()
 
 # Specifies include directories (map to the -I compiler flag) to use when compiling a given target
-target_include_directories(champsim_plus_ramulator
+target_include_directories(${EXECUTABLE_NAME}
     PRIVATE
     "${CMAKE_SOURCE_DIR}/include")
 
 # Adds options (compiler flags) to the COMPILE_OPTIONS or INTERFACE_COMPILE_OPTIONS target properties. These options are used when compiling the given target
-target_compile_options(champsim_plus_ramulator
+target_compile_options(${EXECUTABLE_NAME}
     PRIVATE
     ${WarningConfig}
     ${WarningErrorConfig}
     -fdiagnostics-color=always)
 
 # Specify libraries or flags to use when linking a given target and/or its dependents
-target_link_libraries(champsim_plus_ramulator
+target_link_libraries(${EXECUTABLE_NAME}
     PRIVATE
     fmt::fmt
     CLI11::CLI11
@@ -151,7 +155,7 @@ target_link_libraries(champsim_plus_ramulator
 
 # Sets properties on a given target:
 # RUNTIME_OUTPUT_DIRECTORY property specifies the directory into which runtime target files should be built
-set_target_properties(champsim_plus_ramulator
+set_target_properties(${EXECUTABLE_NAME}
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 

@@ -1,4 +1,4 @@
-target_sources(champsim_plus_ramulator
+target_sources(${EXECUTABLE_NAME}
     PRIVATE
     ALDRAM.cpp
     Cache.cpp

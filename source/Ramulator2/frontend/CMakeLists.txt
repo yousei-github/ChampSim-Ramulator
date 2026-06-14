@@ -1,4 +1,4 @@
-target_sources(champsim_plus_ramulator
+target_sources(${EXECUTABLE_NAME}
     PRIVATE
     impl/external_wrapper/champSim_frontend.cpp
     impl/external_wrapper/gem5_frontend.cpp

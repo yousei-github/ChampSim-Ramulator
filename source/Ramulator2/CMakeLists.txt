@@ -6,7 +6,7 @@
 #   #if (USER_CODES != ENABLE) ... #endif
 # so it compiles to an empty translation unit.
 
-target_sources(champsim_plus_ramulator
+target_sources(${EXECUTABLE_NAME}
     PRIVATE
     main.cpp)
 
