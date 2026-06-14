@@ -60,9 +60,8 @@ def project_configuration_path(repo_root: Path) -> Path:
     return repo_root / "include" / "ProjectConfiguration.h"
 
 
-def detect_mode(repo_root: Path) -> Mode:
-    """Parse ``ProjectConfiguration.h`` to learn how the binary was compiled."""
-    text = project_configuration_path(repo_root).read_text(encoding="utf-8", errors="replace")
+def detect_mode_from_text(text: str) -> Mode:
+    """Parse the contents of ``ProjectConfiguration.h`` into a ``Mode``."""
     values: dict[str, bool] = {}
     for key, pattern in _TOGGLE_RE.items():
         match = pattern.search(text)
@@ -75,6 +74,12 @@ def detect_mode(repo_root: Path) -> Mode:
         hybrid=values["hybrid"],
         multicore=values["multicore"],
     )
+
+
+def detect_mode(repo_root: Path) -> Mode:
+    """Parse ``ProjectConfiguration.h`` on disk to learn how the binary was compiled."""
+    text = project_configuration_path(repo_root).read_text(encoding="utf-8", errors="replace")
+    return detect_mode_from_text(text)
 
 
 def config_args_for_mode(mode: Mode, repo_root: Path) -> list[Path]:

@@ -12,7 +12,11 @@ from pathlib import Path
 
 import pytest
 
-from champsim_runner import Mode, detect_mode
+from champsim_runner import (
+    Mode,
+    detect_mode_from_text,
+    project_configuration_path,
+)
 
 # Default trace + instruction counts. Counts are deliberately tiny: a .champsimtrace.xz
 # is streamed, so even a multi-hundred-MB trace finishes quickly with small counts.
@@ -124,6 +128,25 @@ def trace(trace_dir: Path) -> Path:
     return candidates[0]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def original_config(repo_root: Path):
+    """Snapshot ProjectConfiguration.h at session start; restore it at session end.
+
+    autouse + session scope means this is set up before any test runs, so the
+    snapshot reflects the *real* compiled mode even when the --matrix tests later
+    rewrite the file. It also guarantees the working tree is restored if a matrix
+    test crashes mid-run.
+    """
+    config = project_configuration_path(repo_root)
+    snapshot = config.read_text(encoding="utf-8")
+    try:
+        yield snapshot
+    finally:
+        if config.read_text(encoding="utf-8") != snapshot:
+            config.write_text(snapshot, encoding="utf-8")
+
+
 @pytest.fixture(scope="session")
-def current_mode(repo_root: Path) -> Mode:
-    return detect_mode(repo_root)
+def current_mode(original_config: str) -> Mode:
+    # Detect from the session-start snapshot, never the live (matrix-mutated) file.
+    return detect_mode_from_text(original_config)

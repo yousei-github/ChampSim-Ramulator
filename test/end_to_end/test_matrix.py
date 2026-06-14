@@ -70,17 +70,23 @@ def _rewrite_toggles(text: str, mode: Mode) -> str:
     return text
 
 
-@pytest.fixture(scope="session")
-def _config_backup(request: pytest.FixtureRequest, repo_root: Path):
-    """Back up ProjectConfiguration.h and restore it after the matrix runs."""
+@pytest.fixture
+def _config_backup(request: pytest.FixtureRequest, repo_root: Path, original_config: str):
+    """Per-test guard for the matrix tests.
+
+    Function-scoped so ProjectConfiguration.h is restored to the session-start
+    snapshot after *each* mode, never left mutated for later tests (notably the
+    smoke suite, which auto-detects the mode from that same file). The
+    ``original_config`` session fixture provides the snapshot and a final safety-net
+    restore at session end.
+    """
     if not request.config.getoption("--matrix"):
         pytest.skip("matrix tests require --matrix")
     config = project_configuration_path(repo_root)
-    original = config.read_text(encoding="utf-8")
     try:
         yield config
     finally:
-        config.write_text(original, encoding="utf-8")
+        config.write_text(original_config, encoding="utf-8")
 
 
 def _build(repo_root: Path) -> Path:
