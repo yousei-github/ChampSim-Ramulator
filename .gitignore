@@ -3,7 +3,13 @@
 tracer/pin/obj-intel64/
 vcpkg_installed/
 /build/
+/build_e2e/
 /.ccache/
+/.virtualPythonEnvironment/
+
+# Python test suite (test/end_to_end) artifacts
+__pycache__/
+.pytest_cache/
 
 # ignore the specified type of files (.stats/.statistics/.trace/Dockerfile/.sh)
 /bin/*
