@@ -2,6 +2,8 @@
 # Matches: standard=HBM, channels=1, speed=HBM_2Gbps, org=HBM_4Gb.
 # HBM has no rank level (its org_presets encode bankgroup/bank directly).
 #
+# Source: source/Ramulator2/dram/impl/HBM.cpp
+#
 # The Frontend is the ChampSim external_wrapper (empty tick, passthrough send) —
 # ChampSim drives requests directly into the MemorySystem
 

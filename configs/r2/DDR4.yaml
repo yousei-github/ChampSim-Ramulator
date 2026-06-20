@@ -1,6 +1,8 @@
 # Ramulator 2.0 DDR4 configuration
 # Matches: standard=DDR4, channels=1, ranks=1, speed=DDR4_2400R, org=DDR4_4Gb_x8.
 #
+# Source: source/Ramulator2/dram/impl/DDR4.cpp
+#
 # The Frontend is the ChampSim external_wrapper (empty tick, passthrough send) —
 # ChampSim drives requests directly into the MemorySystem
 

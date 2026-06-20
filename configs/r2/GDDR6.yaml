@@ -2,6 +2,8 @@
 # Matches: standard=GDDR6, channels=1, speed=GDDR6_2000_1250mV_quad, org=GDDR6_16Gb_x16.
 # GDDR6 has no rank level (its org_presets encode bankgroup/bank directly).
 #
+# Source: source/Ramulator2/dram/impl/GDDR6.cpp
+#
 # The Frontend is the ChampSim external_wrapper (empty tick, passthrough send) —
 # ChampSim drives requests directly into the MemorySystem
 

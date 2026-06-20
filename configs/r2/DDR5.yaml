@@ -1,6 +1,8 @@
 # Ramulator 2.0 DDR5 configuration
 # Matches: standard=DDR5, channels=1, ranks=1, speed=DDR5_3200AN, org=DDR5_16Gb_x8.
 #
+# Source: source/Ramulator2/dram/impl/DDR5.cpp
+#
 # The Frontend is the ChampSim external_wrapper (empty tick, passthrough send) —
 # ChampSim drives requests directly into the MemorySystem
 

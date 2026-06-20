@@ -87,4 +87,13 @@
     "editor.formatOnSave": true, // To format when you save your file
     // Use https://marketplace.visualstudio.com/items?itemName=xaver.clang-format extension
     "clang-format.executable": "/usr/bin/clang-format", // The full path of the clang-format executable. For Linux: "/usr/bin/clang-format".
+    "[python]": {
+        "editor.formatOnSave": true, // Automatically format your Python files on save
+        "editor.defaultFormatter": "ms-python.autopep8", // Integrated formatting, this extension ships with a autopep8 binary
+    },
+    "autopep8.args": [
+        // Arguments passed to autopep8 to format Python files
+        "--max-line-length=256"
+        // "ignore=E266", // E266 - Fix too many leading '#' for block comments.
+    ]
 }

@@ -1,6 +1,8 @@
 # Ramulator 2.0 DDR3 configuration
 # Matches: standard=DDR3, channels=1, ranks=1, speed=DDR3_1600K, org=DDR3_4Gb_x8.
 #
+# Source: source/Ramulator2/dram/impl/DDR3.cpp
+#
 # The Frontend is the ChampSim external_wrapper (empty tick, passthrough send) —
 # ChampSim drives requests directly into the MemorySystem
 

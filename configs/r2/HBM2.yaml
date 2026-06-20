@@ -2,6 +2,8 @@
 # Matches: standard=HBM2, channels=1, speed=HBM2_2Gbps, org=HBM2_4Gb.
 # HBM2 has a pseudochannel level (set by the org preset) and no rank level.
 #
+# Source: source/Ramulator2/dram/impl/HBM2.cpp
+#
 # The Frontend is the ChampSim external_wrapper (empty tick, passthrough send) —
 # ChampSim drives requests directly into the MemorySystem
 
