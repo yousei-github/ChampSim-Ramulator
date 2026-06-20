@@ -170,7 +170,11 @@ class AQUA : public IControllerPlugin, public Implementation {
               std::cout << "  └  " << "row " << row_id << " not in HRT." << std::endl;
             }
             // if row is not in the table, check if the table is full 
+#if (USER_CODES == ENABLE)
+            if (m_aggressor_row_tracker[flat_bank_id].size() < static_cast<size_t>(m_num_art_entries)) {
+#else
             if (m_aggressor_row_tracker[flat_bank_id].size() < m_num_art_entries) {
+#endif
               if (m_is_debug) {
                 std::cout << "  └  " << "HRT is not full, inserting with count 1." << std::endl;
               }
@@ -302,7 +306,11 @@ class AQUA : public IControllerPlugin, public Implementation {
     void issue_migration(ReqBuffer::iterator& req_it, int src_row, int dst_row) {
       // load addr_vec
       std::vector<int> addr_vec;
+#if (USER_CODES == ENABLE)
+      for (size_t i = 0; i < req_it->addr_vec.size(); i++){
+#else
       for (int i = 0; i < req_it->addr_vec.size(); i++){
+#endif
         addr_vec.push_back(req_it->addr_vec[i]);
       }
 

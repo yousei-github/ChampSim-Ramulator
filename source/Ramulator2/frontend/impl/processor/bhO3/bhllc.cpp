@@ -123,7 +123,11 @@ bool BHO3LLC::send(Request& req) {
     
     // MSHR miss
     // Check if there is available MSHR entry
+#if (USER_CODES == ENABLE)
+    if (m_mshrs.size() == static_cast<size_t>(m_num_mshrs)) {
+#else
     if (m_mshrs.size() == m_num_mshrs) {
+#endif
       DEBUG_LOG(DBHO3LLC, m_logger,  "No MSHR entry available.", m_clk);
       s_llc_mshr_unavailable++;
       return false;
@@ -131,7 +135,11 @@ bool BHO3LLC::send(Request& req) {
 
     // Check if there is available cache line in the set
     bool line_available = false;
+#if (USER_CODES == ENABLE)
+    if (set.size() < static_cast<size_t>(m_associativity)) {
+#else
     if (set.size() < m_associativity) {
+#endif
       line_available = true;
     } else {
       for (const auto& line : set) {
@@ -223,7 +231,11 @@ bool BHO3LLC::need_eviction(const CacheSet_t& set, Addr_t addr) {
     return false;
   } 
   else {
+#if (USER_CODES == ENABLE)
+    if (set.size() < static_cast<size_t>(m_associativity)) {
+#else
     if (set.size() < m_associativity) {
+#endif
       return false;
     } else {
       return true;

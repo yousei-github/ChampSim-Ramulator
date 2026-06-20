@@ -7,6 +7,8 @@
 #include <functional>
 #include <concepts>
 
+#include "ProjectConfiguration.h" // User file
+
 #include "Ramulator2/base/type.h"
 #include "Ramulator2/dram/spec.h"
 
@@ -52,7 +54,11 @@ struct DRAMNodeBase {
     std::map<RowId_t, RowState_t> m_row_state;  // The state of the rows, if I am a bank-ish node
 
     DRAMNodeBase(T* spec, NodeType* parent, int level, int id):
+#if (USER_CODES == ENABLE)
+    m_parent_node(parent), m_spec(spec), m_level(level), m_node_id(id) {
+#else
     m_spec(spec), m_parent_node(parent), m_level(level), m_node_id(id) {
+#endif
       int num_cmds = T::m_commands.size();
       m_cmd_ready_clk.resize(num_cmds, -1);
       m_cmd_history.resize(num_cmds);

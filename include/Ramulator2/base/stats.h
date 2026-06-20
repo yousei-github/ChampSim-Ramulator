@@ -8,6 +8,8 @@
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
+#include "ProjectConfiguration.h" // User file
+
 #include "Ramulator2/base/type.h"
 #include "Ramulator2/base/exception.h"
 
@@ -82,7 +84,11 @@ class StatWrapper : public StatWrapperBase {
           emitter << YAML::Comment(_desc);
         }
         emitter << YAML::Value <<  YAML::BeginSeq;
+#if (USER_CODES == ENABLE)
+        for (const auto& _val : *(std::get<std::vector<T>*>(_ref))) {
+#else
         for (const auto _val : *(std::get<std::vector<T>*>(_ref))) {
+#endif
           emitter << _val;
         }
         emitter << YAML::EndSeq;

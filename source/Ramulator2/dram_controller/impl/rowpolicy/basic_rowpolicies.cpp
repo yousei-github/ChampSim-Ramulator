@@ -108,7 +108,11 @@ class ClosedRowPolicy : public IRowPolicy, public Implementation {
         
         m_col_accesses[flat_bank_id]++;
 
+#if (USER_CODES == ENABLE)
+        if (m_col_accesses[flat_bank_id] >= static_cast<uint64_t>(m_cap)) {
+#else
         if (m_col_accesses[flat_bank_id] >= m_cap) {
+#endif
           Request req(req_it->addr_vec, m_PRE_req_id);
           m_ctrl->priority_send(req);
           m_col_accesses[flat_bank_id] = 0;

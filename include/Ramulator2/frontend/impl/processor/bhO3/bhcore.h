@@ -7,6 +7,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include "ProjectConfiguration.h" // User file
+
 #include "Ramulator2/base/type.h"
 #include "Ramulator2/base/request.h"
 #include "Ramulator2/translation/translation.h"

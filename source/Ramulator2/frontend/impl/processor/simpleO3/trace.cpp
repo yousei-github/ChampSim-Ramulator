@@ -30,7 +30,11 @@ SimpleO3Trace::SimpleO3Trace(std::string file_path_str) {
     tokenize(tokens, line, " ");
 
     int num_tokens = tokens.size();
+#if (USER_CODES == ENABLE)
+    if ((num_tokens != 2) & (num_tokens != 3)) {
+#else
     if (num_tokens != 2 & num_tokens != 3) {
+#endif
       throw ConfigurationError("Trace {} format invalid!", file_path_str);
     }
     int bubble_count = std::stoi(tokens[0]);

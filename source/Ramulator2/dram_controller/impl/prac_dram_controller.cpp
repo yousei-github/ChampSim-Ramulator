@@ -293,7 +293,11 @@ private:
                 bool is_pre_rec = m_prac->get_state() == IPRAC::ABOState::PRE_RECOVERY;
                 bool early_issue = is_rfm && is_pre_rec; // Prevent controller from issuing RFMab before recovery starts
                 request_found = !early_issue && m_dram->check_ready(req_it->command, req_it->addr_vec);
+#if (USER_CODES == ENABLE)
+                if (!request_found & (m_prac_buffer.size() != 0)) {
+#else
                 if (!request_found & m_prac_buffer.size() != 0) {
+#endif
                     return false;
                 }
             }
@@ -306,7 +310,11 @@ private:
 
                 bool fits = m_clk + m_prac->min_cycles_with_preall(req_it) < next_recovery_clk;
                 request_found = fits && m_dram->check_ready(req_it->command, req_it->addr_vec);
+#if (USER_CODES == ENABLE)
+                if (!request_found & (m_priority_buffer.size() != 0)) {
+#else
                 if (!request_found & m_priority_buffer.size() != 0) {
+#endif
                     return false;
                 }
             }

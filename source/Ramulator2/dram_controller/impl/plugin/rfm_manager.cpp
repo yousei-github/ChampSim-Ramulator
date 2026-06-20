@@ -65,7 +65,11 @@ public:
         m_num_cls = m_dram->get_level_size("column") / 8;
         
         m_bank_ctrs.resize(m_num_ranks * m_num_banks_per_rank);
+#if (USER_CODES == ENABLE)
+        for (size_t i = 0; i < m_bank_ctrs.size(); i++) {
+#else
         for (int i = 0; i < m_bank_ctrs.size(); i++) {
+#endif
             m_bank_ctrs[i] = 0;
         }
         m_no_send = 0;
@@ -107,7 +111,11 @@ public:
             return;
         }
          
+#if (USER_CODES == ENABLE)
+        for (size_t i = 0; i < m_bank_ctrs.size(); i++) {
+#else
         for (int i = 0; i < m_bank_ctrs.size(); i++) {
+#endif
             m_bank_ctrs[i] = 0;
         }
 

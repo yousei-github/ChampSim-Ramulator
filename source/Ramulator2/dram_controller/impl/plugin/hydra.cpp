@@ -305,7 +305,11 @@ class Hydra : public IControllerPlugin, public Implementation {
           }
 
           // if the row is in the RCT rows, use RCT_count_table
+#if (USER_CODES == ENABLE)
+          if (row_id < static_cast<unsigned int>(m_total_rct_row_size)){
+#else
           if (row_id < m_total_rct_row_size){
+#endif
             // increment RCT_count_table
             if (rct_count_table[flat_bank_id].find(row_id) == rct_count_table[flat_bank_id].end()){
               rct_count_table[flat_bank_id][row_id] = 0;
@@ -369,7 +373,11 @@ class Hydra : public IControllerPlugin, public Implementation {
               // generate write request to DRAM for rct
               for (int i = 0; i < m_group_rct_cl_size; i++){
                 std::vector<int> rct_init_addr_vec;
+#if (USER_CODES == ENABLE)
+                for (size_t j = 0; j < req_it->addr_vec.size(); j++){
+#else
                 for (int j = 0; j < req_it->addr_vec.size(); j++){
+#endif
                   rct_init_addr_vec.push_back(req_it->addr_vec[j]);
                 }
                 std::pair<Addr_t, Addr_t> init_row_col_id = generate_row_col_id(row_group_start_row_id + i * m_rct_per_cl);
@@ -416,7 +424,11 @@ class Hydra : public IControllerPlugin, public Implementation {
                 }
                 // generate write request to DRAM for evicted entry
                 std::vector<int> evicted_entry_addr_vec;
+#if (USER_CODES == ENABLE)
+                for (size_t i = 0; i < req_it->addr_vec.size(); i++){
+#else
                 for (int i = 0; i < req_it->addr_vec.size(); i++){
+#endif
                   evicted_entry_addr_vec.push_back(req_it->addr_vec[i]);
                 }
                 int evicted_row_id = (tag_to_evict & ((1 << m_rcc_tag_row_bits) - 1)) << m_rcc_index_bits | rcc_index;
@@ -449,7 +461,11 @@ class Hydra : public IControllerPlugin, public Implementation {
               s_rct_check++;
               // copy addr_vec and update row_id
               AddrVec_t rct_read_addr_vec;
+#if (USER_CODES == ENABLE)
+              for (size_t i = 0; i < req_it->addr_vec.size(); i++){
+#else
               for (int i = 0; i < req_it->addr_vec.size(); i++){
+#endif
                 rct_read_addr_vec.push_back(req_it->addr_vec[i]);
               }
               std::pair<Addr_t, Addr_t> row_col_id = generate_row_col_id(rct_read_addr_vec[m_row_level]);

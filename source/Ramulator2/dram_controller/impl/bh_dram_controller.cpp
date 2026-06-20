@@ -245,7 +245,11 @@ class BHDRAMController final : public IBHDRAMController, public Implementation {
           req_it->command = m_dram->get_preq_command(req_it->final_command, req_it->addr_vec);
           
           request_found = m_dram->check_ready(req_it->command, req_it->addr_vec);
+#if (USER_CODES == ENABLE)
+          if (!request_found & (m_priority_buffer.size() != 0)) {
+#else
           if (!request_found & m_priority_buffer.size() != 0) {
+#endif
             return false;
           }
         }

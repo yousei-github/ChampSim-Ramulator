@@ -30,7 +30,11 @@ BHO3Core::Trace::Trace(std::string file_path_str) {
     tokenize(tokens, line, " ");
 
     int num_tokens = tokens.size();
+#if (USER_CODES == ENABLE)
+    if ((num_tokens != 2) & (num_tokens != 3)) {
+#else
     if (num_tokens != 2 & num_tokens != 3) {
+#endif
       throw ConfigurationError("Trace {} format invalid!", file_path_str);
     }
     int bubble_count = std::stoi(tokens[0]);
@@ -110,9 +114,15 @@ Clk_t BHO3Core::InstWindow::set_ready(Addr_t addr) {
 BHO3Core::BHO3Core(int id, int ipc, int depth, size_t num_expected_insts,
   uint64_t num_max_cycles, std::string trace_path, ITranslation* translation,
   BHO3LLC* llc, int lat_hist_sens, std::string& dump_path, bool is_attacker):
+#if (USER_CODES == ENABLE)
+m_id(id), m_trace(trace_path), m_window(ipc, depth),
+m_translation(translation), m_llc(llc), m_num_expected_insts(num_expected_insts),
+m_num_max_cycles(num_max_cycles), m_lat_hist_sens(lat_hist_sens), m_is_attacker(is_attacker) {
+#else
 m_id(id), m_window(ipc, depth), m_trace(trace_path),
 m_num_expected_insts(num_expected_insts), m_num_max_cycles(num_max_cycles), m_translation(translation),
 m_llc(llc), m_lat_hist_sens(lat_hist_sens), m_is_attacker(is_attacker) {
+#endif
   // Fetch the instructions and addresses for tick 0
   auto inst = m_trace.get_next_inst();
   m_num_bubbles = inst.bubble_count;
@@ -130,7 +140,11 @@ m_llc(llc), m_lat_hist_sens(lat_hist_sens), m_is_attacker(is_attacker) {
 }
 
 void BHO3Core::tick() {
+#if (USER_CODES == ENABLE)
+  [[maybe_unused]] static int retire_log = 1;
+#else
   static int retire_log = 1;
+#endif
   m_clk++;
 
   s_insts_retired += m_window.retire();
@@ -138,7 +152,11 @@ void BHO3Core::tick() {
   if (!reached_expected_num_insts) {
     s_cycles_recorded = m_clk;
     s_insts_recorded = s_insts_retired;
+#if (USER_CODES == ENABLE)
+    if ((s_insts_retired >= m_num_expected_insts) || (static_cast<uint64_t>(m_clk) >= m_num_max_cycles)) {
+#else
     if (s_insts_retired >= m_num_expected_insts || m_clk >= m_num_max_cycles) {
+#endif
       dump_latency_histogram();
       reached_expected_num_insts = true;
     }

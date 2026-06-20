@@ -3,6 +3,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "ProjectConfiguration.h" // User file
+
 namespace Ramulator {
 namespace Lambdas {
 namespace Power {
@@ -260,7 +262,11 @@ namespace Rank {
     Rank::debug<T>(node, "------RFMsb_end------", clk);
     auto& cur_power_stats = node->m_spec->m_power_stats[Rank::get_flat_rank_id<T>(node)];
     size_t num_bankgroups = node->m_child_nodes.size();
+#if (USER_CODES == ENABLE)
+    bool is_rank_going_idle = get_open_bank_count<T>(node) == 0 && static_cast<size_t>(get_refreshing_bank_count<T>(node)) == num_bankgroups;
+#else
     bool is_rank_going_idle = get_open_bank_count<T>(node) == 0 && get_refreshing_bank_count<T>(node) == num_bankgroups;
+#endif
 
     if (is_rank_going_idle) {
       cur_power_stats.active_cycles += clk - cur_power_stats.active_start_cycle;
@@ -292,7 +298,11 @@ namespace Rank {
     Rank::debug<T>(node, "------RRFMsb_end------", clk);
     auto& cur_power_stats = node->m_spec->m_power_stats[Rank::get_flat_rank_id<T>(node)];
     size_t num_bankgroups = node->m_child_nodes.size();
+#if (USER_CODES == ENABLE)
+    bool is_rank_going_idle = get_open_bank_count<T>(node) == 0 && static_cast<size_t>(get_refreshing_bank_count<T>(node)) == num_bankgroups;
+#else
     bool is_rank_going_idle = get_open_bank_count<T>(node) == 0 && get_refreshing_bank_count<T>(node) == num_bankgroups;
+#endif
 
     if (is_rank_going_idle) {
       cur_power_stats.active_cycles += clk - cur_power_stats.active_start_cycle;

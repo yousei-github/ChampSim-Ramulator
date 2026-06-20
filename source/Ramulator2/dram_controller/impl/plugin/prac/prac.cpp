@@ -77,8 +77,13 @@ public:
         }
 
         auto& req = *req_it;
+#if (USER_CODES == ENABLE)
+        [[maybe_unused]] auto& req_meta = m_cfg.m_dram->m_command_meta(req.command);
+        [[maybe_unused]] auto& req_scope = m_cfg.m_dram->m_command_scopes(req.command);
+#else
         auto& req_meta = m_cfg.m_dram->m_command_meta(req.command);
         auto& req_scope = m_cfg.m_dram->m_command_scopes(req.command);
+#endif
 
         bool has_bank_wildcard = req.addr_vec[m_cfg.m_bank_level] == -1;
         bool has_bankgroup_wildcard = req.addr_vec[m_cfg.m_bankgroup_level] == -1;
@@ -189,8 +194,13 @@ private:
     class PerBankCounters {
     public: 
         PerBankCounters(int bank_id, DeviceConfig& cfg, bool& is_abo_needed, int alert_thresh, bool debug)
+#if (USER_CODES == ENABLE)
+        : m_cfg(cfg), m_is_abo_needed(is_abo_needed), m_alert_thresh(alert_thresh),
+        m_debug(debug), m_bank_id(bank_id) {
+#else
         : m_bank_id(bank_id), m_cfg(cfg), m_is_abo_needed(is_abo_needed),
         m_alert_thresh(alert_thresh), m_debug(debug) {
+#endif
             init_dram_params(m_cfg.m_dram);
             reset();
         }
@@ -257,7 +267,11 @@ private:
                 std::printf("[PRAC] [%d] [ACT] Row: %d Act: %u\n",
                     m_bank_id, row_addr, m_counters[row_addr]);
             }
+#if (USER_CODES == ENABLE)
+            if (m_counters[row_addr] >= static_cast<uint32_t>(m_alert_thresh)) {
+#else
             if (m_counters[row_addr] >= m_alert_thresh) {
+#endif
                 m_critical_rows[row_addr] = m_counters[row_addr];
                 m_is_abo_needed = true;
             }

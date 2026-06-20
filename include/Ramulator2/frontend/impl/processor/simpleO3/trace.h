@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "ProjectConfiguration.h" // User file
+
 #include "Ramulator2/base/type.h"
 
 namespace Ramulator {

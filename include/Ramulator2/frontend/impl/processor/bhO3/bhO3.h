@@ -1,6 +1,8 @@
 #include <functional>
 #include <limits>
 
+#include "ProjectConfiguration.h" // User file
+
 #include "Ramulator2/base/utils.h"
 #include "Ramulator2/frontend/frontend.h"
 #include "Ramulator2/translation/translation.h"

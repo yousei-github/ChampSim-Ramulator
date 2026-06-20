@@ -284,7 +284,11 @@ class DDR4 : public IDRAM, public Implementation {
         m_organization.dq = *dq;
       }
 
+#if (USER_CODES == ENABLE)
+      for (size_t i = 0; i < m_levels.size(); i++){
+#else
       for (int i = 0; i < m_levels.size(); i++){
+#endif
         auto level_name = m_levels(i);
         if (auto sz = param_group("org").param<int>(level_name).optional()) {
           m_organization.count[i] = *sz;
@@ -302,7 +306,11 @@ class DDR4 : public IDRAM, public Implementation {
                         size_t(m_organization.count[m_levels["column"]]) *
                         size_t(m_organization.dq);
       _density >>= 20;
+#if (USER_CODES == ENABLE)
+      if (static_cast<size_t>(m_organization.density) != _density) {
+#else
       if (m_organization.density != _density) {
+#endif
         throw ConfigurationError(
             "Calculated {} chip density {} Mb does not equal the provided density {} Mb!", 
             get_name(),
@@ -412,7 +420,11 @@ class DDR4 : public IDRAM, public Implementation {
 
       // Overwrite timing parameters with any user-provided value
       // Rate and tCK should not be overwritten
+#if (USER_CODES == ENABLE)
+      for (size_t i = 1; i < m_timings.size() - 1; i++) {
+#else
       for (int i = 1; i < m_timings.size() - 1; i++) {
+#endif
         auto timing_name = std::string(m_timings(i));
 
         if (auto provided_timing = param_group("timing").param<int>(timing_name).optional()) {
@@ -425,7 +437,11 @@ class DDR4 : public IDRAM, public Implementation {
       }
 
       // Check if there is any uninitialized timings
+#if (USER_CODES == ENABLE)
+      for (size_t i = 0; i < m_timing_vals.size(); i++) {
+#else
       for (int i = 0; i < m_timing_vals.size(); i++) {
+#endif
         if (m_timing_vals(i) == -1) {
           throw ConfigurationError("In \"{}\", timing {} is not specified!", get_name(), m_timings(i));
         }

@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "ProjectConfiguration.h" // User file
+
 #include "Ramulator2/base/clocked.h"
 #include "Ramulator2/base/debug.h"
 #include "Ramulator2/base/type.h"

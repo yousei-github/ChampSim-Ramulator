@@ -80,7 +80,11 @@ class LoadStoreTrace : public IFrontEnd, public Implementation {
         }
 
         Addr_t addr = -1;
+#if (USER_CODES == ENABLE)
+        if ((tokens[1].compare(0, 2, "0x") == 0) | (tokens[1].compare(0, 2, "0X") == 0)) {
+#else
         if (tokens[1].compare(0, 2, "0x") == 0 | tokens[1].compare(0, 2, "0X") == 0) {
+#endif
           addr = std::stoll(tokens[1].substr(2), nullptr, 16);
         } else {
           addr = std::stoll(tokens[1]);

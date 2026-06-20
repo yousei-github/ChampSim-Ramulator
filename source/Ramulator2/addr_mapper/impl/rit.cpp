@@ -1,3 +1,4 @@
+#include "ProjectConfiguration.h" // User file
 #include "Ramulator2/addr_mapper/impl/rit.h"
 
 namespace Ramulator {
@@ -54,7 +55,11 @@ int LinearMapperBase_with_rit::check_rit(int flat_bank_id, int src_row){
 
 // check if the RIT is full
 bool LinearMapperBase_with_rit::is_rit_full(int flat_bank_id){
+#if (USER_CODES == ENABLE)
+  return m_row_indirection_table[flat_bank_id].size() >= static_cast<size_t>(m_num_rit_entries);
+#else
   return m_row_indirection_table[flat_bank_id].size() >= m_num_rit_entries;
+#endif
 }
 
 // check if the entry is locked
@@ -108,7 +113,11 @@ void LinearMapperBase_with_rit::rit_insert_entry(int flat_bank_id, int src_row, 
   entry1.lock = true;
   m_row_indirection_table[flat_bank_id][dst_row] = entry1;
 
+#if (USER_CODES == ENABLE)
+  if(m_row_indirection_table[flat_bank_id].size() > static_cast<size_t>(m_num_rit_entries)){
+#else
   if(m_row_indirection_table[flat_bank_id].size() > m_num_rit_entries){
+#endif
     std::cerr << "RIT is full!!!!!!!!!! Check before insertion." << std::endl;
     exit(1);
   }

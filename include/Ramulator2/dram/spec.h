@@ -11,6 +11,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "ProjectConfiguration.h" // User file
+
 namespace Ramulator {
 
 using Level_t = int;
@@ -116,7 +118,11 @@ class SpecDef : public std::vector<std::string_view> {
     SpecDef() = default;
     template <int N> constexpr SpecDef(const ImplDef<N>& spec):
     std::vector<std::string_view>(spec.begin(), spec.end()) {
+#if (USER_CODES == ENABLE)
+      for (size_t i = 0; i < spec.size(); i++) {
+#else
       for (int i = 0; i < spec.size(); i++) {
+#endif
         m_str2int_map[spec.std::template array<std::string_view, N>::operator[](i)] = i;
       }
     }
@@ -134,7 +140,11 @@ class SpecDef : public std::vector<std::string_view> {
 
   private:
     std::string_view operator[](int i) const {
+#if (USER_CODES == ENABLE)
+      if (i >= 0 && static_cast<size_t>(i) < size()) {
+#else
       if (i < size()) {
+#endif
         return std::vector<std::string_view>::operator[](i);
       } else {
         throw std::out_of_range("");
@@ -221,7 +231,11 @@ class SpecLUT : public std::vector<V> {
     }
 
     V& operator[](int id) {
+#if (USER_CODES == ENABLE)
+      if (static_cast<size_t>(id) < m_key_def->size()) {
+#else
       if (id < m_key_def->size()) {
+#endif
         return std::vector<V>::operator[](id);
       } else {
         throw std::out_of_range("SpecLUT out of range");

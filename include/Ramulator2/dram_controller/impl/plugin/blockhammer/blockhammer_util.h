@@ -4,6 +4,8 @@
 #include <functional>
 #include <cstdint>
 
+#include "ProjectConfiguration.h" // User file
+
 namespace Ramulator {
 
 typedef std::function<uint32_t(uint32_t)> bloom_hash_fn;
@@ -40,7 +42,11 @@ public:
   }
 
   virtual void insert(elem_t elem) override {
+#if (USER_CODES == ENABLE)
+    for (size_t i = 0; i < m_hash_functions.size(); i++) {
+#else
     for (int i = 0; i < m_hash_functions.size(); i++) {
+#endif
       uint32_t idx = m_hash_functions[i](elem) % m_num_counters;
       if (!m_saturate || m_counters[idx] < m_ctr_thresh) {
         m_counters[idx]++;
@@ -50,7 +56,11 @@ public:
 
   virtual bool test(elem_t elem) override {
     bool pass = true;
+#if (USER_CODES == ENABLE)
+    for (size_t i = 0; i < m_hash_functions.size(); i++) {
+#else
     for (int i = 0; i < m_hash_functions.size(); i++) {
+#endif
       uint32_t idx = m_hash_functions[i](elem) % m_num_counters;
       pass &= m_counters[idx] >= m_ctr_thresh;
     }
@@ -86,7 +96,11 @@ public:
 
   void update() {
     m_tick++;
+#if (USER_CODES == ENABLE)
+    if (m_tick >= static_cast<uint64_t>(m_len_epoch)) {
+#else
     if (m_tick >= m_len_epoch) {
+#endif
       m_tick = 0;
       m_filters[m_test_idx]->reset();
       m_test_idx = (m_test_idx + 1) % m_filters.size();

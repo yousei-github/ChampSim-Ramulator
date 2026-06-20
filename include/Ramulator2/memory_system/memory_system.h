@@ -6,6 +6,8 @@
 #include <string>
 #include <functional>
 
+#include "ProjectConfiguration.h" // User file
+
 #include "Ramulator2/base/base.h"
 #include "Ramulator2/frontend/frontend.h"
 

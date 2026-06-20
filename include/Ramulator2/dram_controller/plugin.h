@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include "ProjectConfiguration.h" // User file
+
 #include "Ramulator2/base/base.h"
 
 

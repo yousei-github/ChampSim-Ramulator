@@ -54,7 +54,11 @@ public:
         m_clk++;
 
         if (m_clk % m_unblacklist_cycles == 0) {
+#if (USER_CODES == ENABLE)
+            for (size_t i = 0; i < m_blacklist_info.size(); i++) {
+#else
             for (int i = 0; i < m_blacklist_info.size(); i++) {
+#endif
                 m_blacklist_info[i] = false;
             }
         }

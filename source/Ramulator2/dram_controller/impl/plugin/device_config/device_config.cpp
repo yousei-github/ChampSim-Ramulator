@@ -32,7 +32,11 @@ void DeviceConfig::set_device(IDRAMController* ctrl) {
 }
 
 int DeviceConfig::get_flat_bank_id(const Request& req) {
+#if (USER_CODES == ENABLE)
+    [[maybe_unused]] auto rank_id = req.addr_vec[m_rank_level];
+#else
     auto rank_id = req.addr_vec[m_rank_level];
+#endif
     auto flat_bank_id = req.addr_vec[m_bank_level];
     auto accumulated_dimension = 1;
     for (int i = m_bank_level - 1; i >= m_rank_level; i--) {

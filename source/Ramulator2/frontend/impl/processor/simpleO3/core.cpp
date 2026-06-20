@@ -30,7 +30,11 @@ SimpleO3Core::Trace::Trace(std::string file_path_str) {
     tokenize(tokens, line, " ");
 
     int num_tokens = tokens.size();
+#if (USER_CODES == ENABLE)
+    if ((num_tokens != 2) & (num_tokens != 3)) {
+#else
     if (num_tokens != 2 & num_tokens != 3) {
+#endif
       throw ConfigurationError("Trace {} format invalid!", file_path_str);
     }
     int bubble_count = std::stoi(tokens[0]);
@@ -103,7 +107,11 @@ void SimpleO3Core::InstWindow::set_ready(Addr_t addr) {
 }
 
 SimpleO3Core::SimpleO3Core(int id, int ipc, int depth, size_t num_expected_insts, std::string trace_path, ITranslation* translation, SimpleO3LLC* llc):
+#if (USER_CODES == ENABLE)
+m_id(id), m_trace(trace_path), m_window(ipc, depth), m_translation(translation), m_llc(llc), m_num_expected_insts(num_expected_insts) {
+#else
 m_id(id), m_window(ipc, depth), m_trace(trace_path), m_num_expected_insts(num_expected_insts), m_translation(translation), m_llc(llc) {
+#endif
   // Fetch the instructions and addresses for tick 0
   auto inst = m_trace.get_next_inst();
   m_num_bubbles = inst.bubble_count;
