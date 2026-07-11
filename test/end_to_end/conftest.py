@@ -12,11 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from champsim_runner import (
-    Mode,
-    detect_mode_from_text,
-    project_configuration_path,
-)
+from champsim_runner import Mode, detect_mode
 
 # Default trace + instruction counts. Counts are deliberately tiny: a .champsimtrace.xz
 # is streamed, so even a multi-hundred-MB trace finishes quickly with small counts.
@@ -26,13 +22,6 @@ DEFAULT_SIMULATION = 50_000
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    parser.addoption(
-        "--matrix",
-        action="store_true",
-        default=False,
-        help="Run the opt-in mode matrix: rewrite ProjectConfiguration.h, rebuild "
-        "the binary for each mode, and run it (slow; many full recompiles).",
-    )
     parser.addoption(
         "--warmup",
         type=int,
@@ -47,12 +36,6 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line(
-        "markers", "matrix: opt-in test that rebuilds the binary for each mode (slow)."
-    )
-
-
 @pytest.fixture(scope="session")
 def repo_root() -> Path:
     """The ChampSim-Ramulator/ directory (two levels up from this file)."""
@@ -61,6 +44,15 @@ def repo_root() -> Path:
 
 @pytest.fixture(scope="session")
 def binary_path(repo_root: Path) -> Path:
+    """The simulator executable to test.
+
+    Set CHAMPSIM_BINARY to a full path to test a specific binary (bin/ can hold
+    several, built with different modes); otherwise default to the conventional
+    bin/champsim_plus_ramulator produced by the VS Code / CMake build.
+    """
+    override = os.environ.get("CHAMPSIM_BINARY")
+    if override:
+        return Path(override)
     name = "champsim_plus_ramulator" + (".exe" if os.name == "nt" else "")
     return repo_root / "bin" / name
 
@@ -128,25 +120,11 @@ def trace(trace_dir: Path) -> Path:
     return candidates[0]
 
 
-@pytest.fixture(scope="session", autouse=True)
-def original_config(repo_root: Path):
-    """Snapshot ProjectConfiguration.h at session start; restore it at session end.
-
-    autouse + session scope means this is set up before any test runs, so the
-    snapshot reflects the *real* compiled mode even when the --matrix tests later
-    rewrite the file. It also guarantees the working tree is restored if a matrix
-    test crashes mid-run.
-    """
-    config = project_configuration_path(repo_root)
-    snapshot = config.read_text(encoding="utf-8")
-    try:
-        yield snapshot
-    finally:
-        if config.read_text(encoding="utf-8") != snapshot:
-            config.write_text(snapshot, encoding="utf-8")
-
-
 @pytest.fixture(scope="session")
-def current_mode(original_config: str) -> Mode:
-    # Detect from the session-start snapshot, never the live (matrix-mutated) file.
-    return detect_mode_from_text(original_config)
+def current_mode(repo_root: Path) -> Mode:
+    """The compile-time mode the binary was built with, read from ProjectConfiguration.h.
+
+    The suite never modifies the header, so reading it live is safe and tells us
+    which config-file arguments the binary expects.
+    """
+    return detect_mode(repo_root)

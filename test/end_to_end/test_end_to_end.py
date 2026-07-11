@@ -1,8 +1,10 @@
-"""Smoke + sanity end-to-end tests against the currently-built binary.
+"""End-to-end tests: run the currently-built binary on a real trace and check it.
 
-These replace the manual `execution*.sh` workflow: build the binary, then run
+Build the binary first (the VS Code build task, or
+`cmake --preset default && cmake --build --preset default`), then run
 `python -m pytest test/end_to_end`. The mode is auto-detected from
-ProjectConfiguration.h, so the correct config arguments are supplied automatically.
+ProjectConfiguration.h, so the correct config-file arguments are supplied
+automatically.
 
 All runs use a tmp_path working directory, so no .statistics/.trace files are left
 in the repository.
@@ -10,6 +12,7 @@ in the repository.
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 import pytest
@@ -24,12 +27,22 @@ from champsim_runner import (
 
 
 @pytest.fixture(scope="session")
-def binary(binary_path: Path) -> Path:
+def binary(binary_path: Path, repo_root: Path) -> Path:
     if not binary_path.is_file():
         pytest.skip(
-            f"Binary not built: {binary_path}. Build first, e.g.\n"
-            "  cmake --build build -j\n"
-            "or use the VS Code 'CMake: Build (preset)' task."
+            f"Binary not built: {binary_path}. Build it first — e.g.\n"
+            "  cmake --preset default && cmake --build --preset default\n"
+            "or the VS Code 'CMake: Build (preset)' task — or set CHAMPSIM_BINARY "
+            "to an existing binary."
+        )
+    # We test whatever was already built; warn (don't fail) if the header changed
+    # since, since the auto-detected mode would then not match the binary.
+    header = repo_root / "include" / "ProjectConfiguration.h"
+    if header.is_file() and header.stat().st_mtime > binary_path.stat().st_mtime:
+        warnings.warn(
+            f"{binary_path.name} is older than {header.name}; it may be stale — "
+            "rebuild so the tested binary matches the detected mode.",
+            stacklevel=2,
         )
     return binary_path
 
@@ -46,6 +59,7 @@ def run_result(
 ) -> RunResult:
     """Run the simulator once for the whole module and share the result."""
     config_files = config_args_for_mode(current_mode, repo_root)
+    # Multi-core builds need one trace per core; single-core needs just one.
     traces = [trace] * (2 if current_mode.multicore else 1)
     workdir = tmp_path_factory.mktemp("e2e_run")
     result = run_simulation(
@@ -62,7 +76,8 @@ def run_result(
 def test_mode_detected(current_mode: Mode) -> None:
     # Surfaces the detected mode in -v output for quick diagnosis.
     print(f"\nDetected build mode: {current_mode.name}")
-    assert current_mode.ramulator1 + current_mode.ramulator2 <= 1, (
+    # ProjectConfiguration.h forbids enabling both DRAM backends at once.
+    assert not (current_mode.ramulator1 and current_mode.ramulator2), (
         "RAMULATOR and RAMULATOR2 cannot both be enabled"
     )
 
@@ -85,7 +100,7 @@ def test_statistics_file_written(run_result: RunResult) -> None:
     )
 
 
-def test_metrics_sane(run_result: RunResult, simulation: int) -> None:
+def test_metrics_sane(run_result: RunResult) -> None:
     text = run_result.statistics_path.read_text(encoding="utf-8", errors="replace")
     stats = parse_statistics(text)
 
