@@ -18,17 +18,21 @@ from pathlib import Path
 
 import pytest
 
-from champsim_runner import Mode, detect_mode
-
-# Default trace + instruction counts. Counts are deliberately tiny: a .champsimtrace.xz
-# is streamed, so even a multi-hundred-MB trace finishes quickly with small counts.
-DEFAULT_TRACE_NAME = "603.bwaves_s-3699B.champsimtrace.xz"
+from simulator_runner import Mode, detect_mode
 
 # Options
+BINARY_OPTIONS = "--binary"
 WARMUP_OPTIONS = "--warmup"
-SIMULATION_OPTIONS = "--sim"
-DEFAULT_WARMUP_VALUE = 50_000
-DEFAULT_SIMULATION_VALUE = 50_000
+SIMULATION_OPTIONS = "--simulation"
+TRACE_DIRECTORY_OPTIONS = "--trace-directory"
+TRACE_FILE_OPTIONS = "--trace-file"
+
+# Option default values
+DEFAULT_BINARY_PATH = "bin/champsim_plus_ramulator" + (".exe" if os.name == "nt" else "")  # Binary path option default
+DEFAULT_WARMUP_VALUE = 50_000  # Default warmup instruction counts
+DEFAULT_SIMULATION_VALUE = 50_000  # Default simulation instruction counts
+DEFAULT_TRACE_DIRECTORY = "../../dpc3_traces"  # Trace directory path option default
+DEFAULT_TRACE_NAME = "603.bwaves_s-3699B.champsimtrace.xz"  # Trace file path option default
 
 
 # Hook: add options
@@ -58,6 +62,21 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         type=int,
         default=DEFAULT_SIMULATION_VALUE,
         help=f"Simulation instructions per run (default: {DEFAULT_SIMULATION_VALUE}).",
+    )
+    parser.addoption(
+        BINARY_OPTIONS,
+        default=DEFAULT_BINARY_PATH,
+        help=f"Simulator binary to test (default: {DEFAULT_BINARY_PATH}).",
+    )
+    parser.addoption(
+        TRACE_FILE_OPTIONS,
+        default=DEFAULT_TRACE_NAME,
+        help=f"Trace to run; relative to the trace directory (default: {DEFAULT_TRACE_NAME}).",
+    )
+    parser.addoption(
+        TRACE_DIRECTORY_OPTIONS,
+        default=DEFAULT_TRACE_DIRECTORY,
+        help=f"Directory holding .champsimtrace.xz files (default: {DEFAULT_TRACE_DIRECTORY}).",
     )
 
 # Fixtures
@@ -92,83 +111,67 @@ def get_repository_root() -> Path:
 
 
 @pytest.fixture(scope="session")
-def find_binary_path(get_repository_root: Path) -> Path:
-    """The simulator executable to test.
+def find_binary_path(request: pytest.FixtureRequest, get_repository_root: Path) -> Path:
+    """The simulator executable to test (default: DEFAULT_BINARY_PATH).
 
-    Set CHAMPSIM_BINARY to a full path to test a specific binary (bin/ can hold
-    several, built with different modes); otherwise default to the conventional
-    bin/champsim_plus_ramulator produced by the VS Code / CMake build.
+    Pass --binary to test a specific binary (bin/ can hold several, built with
+    different modes); a relative path is resolved against the ChampSim-Ramulator/ directory.
     """
-    binary_path = os.environ.get("CHAMPSIM_BINARY")
-    if binary_path:
-        # binary path is overrode by user
-        # Todo: Pass different values to a test function, depending on command line options
-        binary_path = Path(binary_path)
-    else:
-        name = "champsim_plus_ramulator" + (".exe" if os.name == "nt" else "")
-        binary_path = get_repository_root / "bin" / name
+    binary_path = Path(request.config.getoption(BINARY_OPTIONS))
+    if not binary_path.is_absolute():
+        binary_path = get_repository_root / binary_path
+    if not binary_path.is_file():
+        pytest.skip(
+            f"Executable not found: {binary_path}. Pass --binary "
+            "to point at an executable file."
+        )
 
     print(f"\nUse binary: {binary_path}")
     return binary_path
 
 
 @pytest.fixture(scope="session")
-def find_trace_directory(get_repository_root: Path) -> Path:
-    """Directory holding .champsimtrace.xz files. Override with CHAMPSIM_TRACE_DIR.
+def find_trace_directory(request: pytest.FixtureRequest, get_repository_root: Path) -> Path:
+    """Directory holding .champsimtrace.xz files (default: DEFAULT_TRACE_DIRECTORY).
 
-    By default, search the conventional `dpc3_traces` locations relative to the
-    repository (a sibling of ChampSim-Ramulator/, or one level further up). Returns the
-    first that exists; falls back to the sibling location for the skip message.
+    Pass --trace-directory to override; a relative path (including the default) is
+    resolved against the ChampSim-Ramulator/ directory.
     """
-    env = os.environ.get("CHAMPSIM_TRACE_DIR")
-    if env:
-        return Path(env)
-
-    candidates = [
-        get_repository_root.parent / "dpc3_traces",        # CLAUDE.md's documented ../dpc3_traces
-        get_repository_root.parent.parent / "dpc3_traces",  # actual location in this checkout
-    ]
-    for candidate in candidates:
-        if candidate.is_dir():
-            return candidate.resolve()
-
-    return candidates[0].resolve()
-
-
-@pytest.fixture(scope="session")
-def trace(find_trace_directory: Path) -> Path:
-    """Resolve a trace to run against, skipping the suite if none is available.
-
-    Resolution order:
-      1. CHAMPSIM_TRACE (explicit full path to a trace),
-      2. <trace_dir>/<DEFAULT_TRACE_NAME>,
-      3. the first *.champsimtrace.xz found in <trace_dir>.
-    """
-    explicit = os.environ.get("CHAMPSIM_TRACE")
-    if explicit:
-        path = Path(explicit)
-        if not path.is_file():
-            pytest.skip(f"CHAMPSIM_TRACE points at a missing file: {path}")
-        return path
-
-    if not find_trace_directory.is_dir():
+    trace_directory_path = Path(request.config.getoption(TRACE_DIRECTORY_OPTIONS))
+    if not trace_directory_path.is_absolute():
+        trace_directory_path = get_repository_root / trace_directory_path
+    if not trace_directory_path.is_dir():
         pytest.skip(
-            f"Trace directory not found: {find_trace_directory}. Set CHAMPSIM_TRACE_DIR or "
-            "CHAMPSIM_TRACE to point at a .champsimtrace.xz file."
+            f"Trace directory not found: {trace_directory_path}. Pass --trace-directory "
+            "to point at a directory."
         )
 
-    default = find_trace_directory / DEFAULT_TRACE_NAME
-    if default.is_file():
-        return default
-
-    candidates = sorted(find_trace_directory.glob("*.champsimtrace.xz"))
-    if not candidates:
-        pytest.skip(f"No *.champsimtrace.xz files found in {find_trace_directory}.")
-    return candidates[0]
+    print(f"\nUse trace directory: {trace_directory_path}")
+    return trace_directory_path.resolve()
 
 
 @pytest.fixture(scope="session")
-def current_mode(get_repository_root: Path) -> Mode:
+def find_trace(request: pytest.FixtureRequest, find_trace_directory: Path) -> Path:
+    """The trace to run against, skipping the suite if it is missing.
+
+    Pass --trace-file to override; a relative path (including the default) is
+    resolved against the trace directory, an absolute path is used as-is.
+    """
+    trace_file_path = Path(request.config.getoption(TRACE_FILE_OPTIONS))
+    if not trace_file_path.is_absolute():
+        trace_file_path = find_trace_directory / trace_file_path
+    if not trace_file_path.is_file():
+        pytest.skip(
+            f"Trace not found: {trace_file_path}. Pass --trace-file / --trace-directory "
+            "to point at a .champsimtrace.xz file."
+        )
+
+    print(f"\nUse trace: {trace_file_path}")
+    return trace_file_path
+
+
+@pytest.fixture(scope="session")
+def get_current_mode(get_repository_root: Path) -> Mode:
     """The compile-time mode the binary was built with, read from ProjectConfiguration.h.
 
     The suite never modifies the header, so reading it live is safe and tells us

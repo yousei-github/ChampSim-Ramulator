@@ -728,6 +728,17 @@
 				"pytest",
 				"-vv", // Increase verbosity: show one test per line
 				"${workspaceFolder}/test/end_to_end/", // Run tests in a directory
+				// Customized test options:
+				"--binary",
+				"bin/${input:variable1}",
+				"--warmup",
+				"${input:variable2}",
+				"--simulation",
+				"${input:variable3}",
+				"--trace-directory",
+				"${input:variable4}",
+				"--trace-file",
+				"${input:variable5}",
 			],
 			"options": {
 				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}

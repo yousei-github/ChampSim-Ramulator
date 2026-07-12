@@ -19,14 +19,17 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-# Marker the binary prints to stdout once every CPU has finished its phases.
+# Marker that the binary prints to stdout once every CPU has finished its phases.
 COMPLETION_MARKER = "ChampSim completed all CPUs"
 
+# Mode detection
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True)  # [frozen=True] makes instances of a data class immutable after they are created
 class Mode:
     """Describes the compile-time configuration the binary was built with."""
 
+    # Data Attributes of data class
     ramulator1: bool       # RAMULATOR  == ENABLE
     ramulator2: bool       # RAMULATOR2 == ENABLE
     hybrid: bool           # MEMORY_USE_HYBRID == ENABLE
@@ -34,17 +37,21 @@ class Mode:
 
     @property
     def name(self) -> str:
+        ORIGINAL_BACKEND = "champsimOnly"
+
         if self.ramulator1:
             backend = "ramulator1"
         elif self.ramulator2:
             backend = "ramulator2"
         else:
-            backend = "champsim_only"
-        memory = "hybrid" if self.hybrid else "single"
-        cores = "_multicore" if self.multicore else ""
-        if backend == "champsim_only":
-            return f"{backend}{cores}"
-        return f"{backend}_{memory}{cores}"
+            backend = ORIGINAL_BACKEND
+
+        memory = "hybridMemory" if self.hybrid else "singleMemory"
+        cores = "multicore_" if self.multicore else "singleCore"
+        if backend == ORIGINAL_BACKEND:
+            return f"{cores}_{backend}"
+
+        return f"{cores}_{backend}_{memory}"
 
 
 # Toggle macros we care about, matched as e.g. ``#define RAMULATOR2 (ENABLE)``.
@@ -56,18 +63,21 @@ _TOGGLE_RE = {
 }
 
 
-def project_configuration_path(repo_root: Path) -> Path:
+def get_project_configuration_path(repo_root: Path) -> Path:
     return repo_root / "include" / "ProjectConfiguration.h"
 
 
 def detect_mode_from_text(text: str) -> Mode:
     """Parse the contents of ``ProjectConfiguration.h`` into a ``Mode``."""
     values: dict[str, bool] = {}
+
     for key, pattern in _TOGGLE_RE.items():
         match = pattern.search(text)
         if match is None:
             raise ValueError(f"Could not find toggle for {key} in ProjectConfiguration.h")
-        values[key] = match.group(1) == "ENABLE"
+
+        values[key] = (match.group(1) == "ENABLE")
+
     return Mode(
         ramulator1=values["ramulator1"],
         ramulator2=values["ramulator2"],
@@ -78,30 +88,36 @@ def detect_mode_from_text(text: str) -> Mode:
 
 def detect_mode(repo_root: Path) -> Mode:
     """Parse ``ProjectConfiguration.h`` on disk to learn how the binary was compiled."""
-    text = project_configuration_path(repo_root).read_text(encoding="utf-8", errors="replace")
+    text = get_project_configuration_path(repo_root).read_text(encoding="utf-8", errors="replace")
+
     return detect_mode_from_text(text)
 
 
 def config_args_for_mode(mode: Mode, repo_root: Path) -> list[Path]:
     """Absolute config-file arguments required by ``mode``.
 
-    Mirrors the documented run commands in CLAUDE.md:
+    Mirrors the documented run commands in ../../README.md:
       * ChampSim-only      -> no config file
       * Ramulator 1.0      -> configs/*.cfg   (1 single / 2 hybrid: fast then slow)
       * Ramulator 2.0      -> configs/r2/*.yaml (1 single / 2 hybrid: fast then slow)
     """
     configs = repo_root / "configs"
+
     if mode.ramulator1:
         fast, slow = configs / "HBM-config.cfg", configs / "DDR4-config.cfg"
         return [fast, slow] if mode.hybrid else [slow]
     if mode.ramulator2:
         fast, slow = configs / "r2" / "HBM.yaml", configs / "r2" / "DDR4.yaml"
         return [fast, slow] if mode.hybrid else [slow]
+
     return []  # ChampSim-only
+
+# Simulator execution
 
 
 @dataclass
-class RunResult:
+class Execution:
+    # Data Attributes of data class
     returncode: int
     stdout: str
     stderr: str
@@ -110,7 +126,7 @@ class RunResult:
 
     @property
     def completed(self) -> bool:
-        return COMPLETION_MARKER in self.stdout
+        return (COMPLETION_MARKER in self.stdout)
 
     @property
     def statistics_written(self) -> bool:
@@ -130,8 +146,8 @@ def run_simulation(
     warmup: int,
     simulation: int,
     workdir: Path,
-    timeout: float = 1800.0,
-) -> RunResult:
+    timeout: float = 259200.0,  # In seconds (3 day = 72 hour = 259200 s)
+) -> Execution:
     """Run the simulator with absolute paths, capturing stdout/stderr.
 
     ``workdir`` becomes the process CWD so the ``.statistics`` / ``.trace`` output
@@ -145,6 +161,7 @@ def run_simulation(
         *[os.fspath(c.resolve()) for c in config_files],
         *[os.fspath(t.resolve()) for t in traces],
     ]
+
     workdir.mkdir(parents=True, exist_ok=True)
     proc = subprocess.run(
         argv,
@@ -153,15 +170,19 @@ def run_simulation(
         text=True,
         timeout=timeout,
     )
+
     # The stats file is named after the first trace's basename.
     statistics_path = workdir / statistics_filename_for(traces[0])
-    return RunResult(
+
+    return Execution(
         returncode=proc.returncode,
         stdout=proc.stdout,
         stderr=proc.stderr,
         statistics_path=statistics_path,
         argv=argv,
     )
+
+# Simulation result check
 
 
 _IPC_RE = re.compile(r"cumulative IPC:\s*([0-9]*\.?[0-9]+)")
@@ -170,6 +191,7 @@ _L1D_RE = re.compile(r"cpu0->cpu0_L1D TOTAL\s+ACCESS:\s*([0-9]+)")
 
 @dataclass
 class ParsedStatistics:
+    # Data Attributes of data class
     completed: bool
     last_cumulative_ipc: float | None
     l1d_total_access: int | None
@@ -178,11 +200,13 @@ class ParsedStatistics:
 
 def parse_statistics(text: str) -> ParsedStatistics:
     """Pull a handful of sanity signals out of stdout or a ``.statistics`` file."""
+
     ipc_matches = _IPC_RE.findall(text)
     l1d_match = _L1D_RE.search(text)
+
     return ParsedStatistics(
         completed=COMPLETION_MARKER in text,
         last_cumulative_ipc=float(ipc_matches[-1]) if ipc_matches else None,
         l1d_total_access=int(l1d_match.group(1)) if l1d_match else None,
-        has_dram_section="DRAM Statistics" in text,
+        has_dram_section=("DRAM Statistics" in text),
     )
