@@ -12,7 +12,11 @@ passed automatically.
 ## Requirements
 
 ```sh
+cd ChampSim-Ramulator
+python -m venv .virtualPythonEnvironment          # create a virtual environment (.virtualPythonEnvironment)
+source .virtualPythonEnvironment/bin/activate     # activate created virtual environment
 pip install -r test/end_to_end/requirements.txt   # just pytest
+deactivate                                        # deactivate the virtual environment
 ```
 
 You also need a built binary and at least one trace (see below).
@@ -22,7 +26,9 @@ You also need a built binary and at least one trace (see below).
 ```sh
 cd ChampSim-Ramulator
 cmake --preset default && cmake --build --preset default   # -> bin/champsim_plus_ramulator
-python -m pytest test/end_to_end -v
+source .virtualPythonEnvironment/bin/activate              # activate created virtual environment
+python -m pytest -vv test/end_to_end
+deactivate                                                 # deactivate the virtual environment
 ```
 
 Or build with the VS Code **CMake: Build (preset)** task (or **Build by specified
@@ -41,7 +47,7 @@ By default the suite runs `bin/champsim_plus_ramulator`. `bin/` may hold several
 binaries; set `CHAMPSIM_BINARY` to a full path to test a specific one:
 
 ```sh
-CHAMPSIM_BINARY=$PWD/bin/champsim_plus_ramulator2 python -m pytest test/end_to_end -v
+CHAMPSIM_BINARY=$PWD/bin/champsim_plus_ramulator2 python -m pytest -vv test/end_to_end
 ```
 
 If `ProjectConfiguration.h` is newer than the binary, the suite warns that the
@@ -59,7 +65,7 @@ Traces are large and not committed. Resolution order:
 If no trace is found, the tests **skip** (they do not fail).
 
 ```sh
-CHAMPSIM_TRACE=/path/to/some.champsimtrace.xz python -m pytest test/end_to_end -v
+CHAMPSIM_TRACE=/path/to/some.champsimtrace.xz python -m pytest -vv test/end_to_end
 ```
 
 ## Instruction counts

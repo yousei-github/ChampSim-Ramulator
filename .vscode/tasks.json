@@ -718,6 +718,53 @@
 			"hide": false,
 			"detail": "For champsim + ramulator with hybrid memory, e.g., '$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] --stats [FILENAME] [CFG1] [CFG2] [TRACE]'",
 		},
+		{
+			"type": "shell",
+			// Uses the project virtual environment (venv) interpreter (see test/end_to_end/README.md)
+			"label": "Python: Run end-to-end pytest",
+			"command": "${workspaceFolder}/.virtualPythonEnvironment/bin/python",
+			"args": [
+				"-m",
+				"pytest",
+				"-vv", // Increase verbosity: show one test per line
+				"${workspaceFolder}/test/end_to_end/", // Run tests in a directory
+			],
+			"options": {
+				"cwd": "${workspaceFolder}" // define the cwd command, such as ${fileDirname}
+			},
+			"problemMatcher": [],
+			"windows": {
+				"command": "${workspaceFolder}\\.virtualPythonEnvironment\\Scripts\\python.exe",
+				"args": [
+					"-m",
+					"pytest",
+					"-vv",
+					"${workspaceFolder}\\test\\end_to_end\\", // Run tests in a directory
+				],
+				"options": {
+					"cwd": "${workspaceFolder}"
+				},
+				"problemMatcher": []
+			},
+			// Defines to which group the task belongs
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			// Defines how the task output is handled in the user interface
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front.
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": false, // Don't show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
+			"hide": false,
+			"detail": "Run pytest on test/end_to_end/. The task assumes the venv exists at /.virtualEnvironment. It does in this environment. If a user hasn't created it, they'll need python3 -m venv .virtualEnvironment && pip install -r test/end_to_end/requirements.txt first."
+		},
 	],
 	/**
 	 * Input variables is a mechanism to configure the command being run for a specific use case.

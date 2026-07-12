@@ -27,38 +27,40 @@ from champsim_runner import (
 
 
 @pytest.fixture(scope="session")
-def binary(binary_path: Path, repo_root: Path) -> Path:
-    if not binary_path.is_file():
+def binary(find_binary_path: Path, get_repository_root: Path) -> Path:
+    if not find_binary_path.is_file():
         pytest.skip(
-            f"Binary not built: {binary_path}. Build it first — e.g.\n"
+            f"Binary not built: {find_binary_path}. Build it first — e.g.\n"
             "  cmake --preset default && cmake --build --preset default\n"
             "or the VS Code 'CMake: Build (preset)' task — or set CHAMPSIM_BINARY "
             "to an existing binary."
         )
+
     # We test whatever was already built; warn (don't fail) if the header changed
-    # since, since the auto-detected mode would then not match the binary.
-    header = repo_root / "include" / "ProjectConfiguration.h"
-    if header.is_file() and header.stat().st_mtime > binary_path.stat().st_mtime:
+    # since the auto-detected mode would then not match the binary.
+    header = get_repository_root / "include" / "ProjectConfiguration.h"
+
+    if header.is_file() and header.stat().st_mtime > find_binary_path.stat().st_mtime:
         warnings.warn(
-            f"{binary_path.name} is older than {header.name}; it may be stale — "
+            f"{find_binary_path.name} is older than {header.name}; it may be stale — "
             "rebuild so the tested binary matches the detected mode.",
             stacklevel=2,
         )
-    return binary_path
+    return find_binary_path
 
 
 @pytest.fixture(scope="session")
 def run_result(
     binary: Path,
     current_mode: Mode,
-    repo_root: Path,
+    get_repository_root: Path,
     trace: Path,
-    warmup: int,
-    simulation: int,
+    get_warmup: int,
+    get_simulation: int,
     tmp_path_factory: pytest.TempPathFactory,
 ) -> RunResult:
     """Run the simulator once for the whole module and share the result."""
-    config_files = config_args_for_mode(current_mode, repo_root)
+    config_files = config_args_for_mode(current_mode, get_repository_root)
     # Multi-core builds need one trace per core; single-core needs just one.
     traces = [trace] * (2 if current_mode.multicore else 1)
     workdir = tmp_path_factory.mktemp("e2e_run")
@@ -66,8 +68,8 @@ def run_result(
         binary=binary,
         config_files=config_files,
         traces=traces,
-        warmup=warmup,
-        simulation=simulation,
+        warmup=get_warmup,
+        simulation=get_simulation,
         workdir=workdir,
     )
     return result
