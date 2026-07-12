@@ -231,6 +231,11 @@ Example tracing utilities are provided in the `tracer/` directory.
 ChampSim measures IPC (Instructions Per Cycle) as a performance metric. <br>
 Some other useful metrics are printed at the end of the simulation. <br>
 
+# Test
+
+## End-to-end tests
+End-to-end testing is implemented in [test/end_to_end/](test/end_to_end/). For details, please read [test/end_to_end/README.md](test/end_to_end/README.md).
+
 # Miscellaneous
 
 If IntelliSense still doesn't work properly, it might be because of the version of the C++ language standard used. To solve this problem, you need to open Visual Studio Code, click `View` -> `Command Palette`, and in the center where a terminal is popped out, input or select `C/C++: Edit Configurations (UI)`. A new file called `c_cpp_properties.json` should be created, and its UI is opened. After you modify `C++ standard` to `c++20` (or higher) in that file. IntelliSense should work properly now.
