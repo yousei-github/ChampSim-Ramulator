@@ -31,7 +31,7 @@ TRACE_FILE_OPTIONS = "--trace-file"
 DEFAULT_BINARY_PATH = "bin/champsim_plus_ramulator" + (".exe" if os.name == "nt" else "")  # Binary path option default
 DEFAULT_WARMUP_VALUE = 50_000  # Default warmup instruction counts
 DEFAULT_SIMULATION_VALUE = 50_000  # Default simulation instruction counts
-DEFAULT_TRACE_DIRECTORY = "../../dpc3_traces"  # Trace directory path option default
+DEFAULT_TRACE_DIRECTORY = "dpc3_traces"  # Trace directory path option default
 DEFAULT_TRACE_NAME = "603.bwaves_s-3699B.champsimtrace.xz"  # Trace file path option default
 
 

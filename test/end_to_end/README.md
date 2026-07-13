@@ -57,7 +57,7 @@ Traces are large and not committed. Two options select the trace:
 
 1. `--trace-file` — the trace to run (default `603.bwaves_s-3699B.champsimtrace.xz`).
    A relative path is resolved against the trace directory; an absolute path is used as-is.
-2. `--trace-directory` — where relative trace files live (default `../../dpc3_traces`,
+2. `--trace-directory` — where relative trace files live (default `dpc3_traces`,
    resolved against `ChampSim-Ramulator/`).
 
 If the resolved trace is missing, the tests **skip** (they do not fail).

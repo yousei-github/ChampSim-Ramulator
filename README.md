@@ -27,10 +27,6 @@ Because ChampSim is the result of academic research, if you use this software in
 
 If you use ChampSim in your work, you may submit a pull request modifying [`PUBLICATIONS_USING_CHAMPSIM.bib`](https://github.com/ChampSim/ChampSim/blob/master/PUBLICATIONS_USING_CHAMPSIM.bib) to have it featured in [the documentation](https://champsim.github.io/ChampSim/master/Publications-using-champsim.html).
 
-Traces for the 3rd Data Prefetching Championship (DPC-3) can be found from here (https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/). A set of traces used for the 2nd Cache Replacement Championship (CRC-2) can be found from this link. (http://bit.ly/2t2nkUj)
-
-Storage for these traces is kindly provided by Daniel Jimenez (Texas A&M University) and Mike Ferdman (Stony Brook University). If you frequently use ChampSim, it is highly encouraged that you maintain your own repository of traces in case the links ever break.
-
 ## Ramulator: A DRAM Simulator
 [Ramulator](https://github.com/CMU-SAFARI/ramulator) is a fast and cycle-accurate DRAM simulator \[1, 2\] that supports a wide array of commercial, as well as academic, DRAM standards:
 
@@ -100,11 +96,17 @@ $ ./external/vcpkg/vcpkg install
 
 # Download DPC-3 trace
 
-Professor Daniel Jimenez at Texas A&M University kindly provided traces for DPC-3. Use the following script to download these traces (~20GB in size and max simpoint only).
+Traces used for the 3rd Data Prefetching Championship (DPC-3) can be found here. (https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/) A set of traces used for the 2nd Cache Replacement Championship (CRC-2) can be found from this link. (http://bit.ly/2t2nkUj)
+
+Storage for these traces is kindly provided by Daniel Jimenez (Texas A&M University) and Mike Ferdman (Stony Brook University). If you find yourself frequently using ChampSim, it is highly encouraged that you maintain your own repository of traces, in case the links ever break.
+
+You can use the helper script to download DPC-3 traces (the default `dpc3_max_simpoint.txt` set is ~20GB, max simpoint only):
 ```sh
 $ cd scripts
-$ ./download_dpc3_traces.sh
+$ ./download_dpc3_traces.sh                          # default: dpc3_max_simpoint.txt
+$ ./download_dpc3_traces.sh dpc3_max_simpoint2.txt   # or pass any trace-list file
 ```
+The script reads a list of trace filenames (one per line), defaults to `dpc3_max_simpoint.txt`, and downloads any missing traces (via `wget -c`) into the `dpc3_traces/` directory inside `ChampSim-Ramulator/`.
 
 # Build and debug
 

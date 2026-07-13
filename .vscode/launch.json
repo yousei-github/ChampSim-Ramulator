@@ -21,7 +21,7 @@
                 "619.lbm_s-4268B.champsimtrace.xz.HBM_DDR4.stats",
                 "configs/HBM-config.cfg",
                 "configs/DDR4-config.cfg",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
@@ -58,14 +58,14 @@
                 "619.lbm_s-4268B.champsimtrace.xz.HBM_DDR4.stats",
                 "configs/HBM-config.cfg",
                 "configs/DDR4-config.cfg",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
-                "../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz",
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
@@ -101,7 +101,7 @@
                 "--json",
                 "test.json",
                 "configs/r2/DDR4.yaml",
-                "../../dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
+                "dpc3_traces/619.lbm_s-4268B.champsimtrace.xz"
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",
@@ -138,7 +138,7 @@
                 "test.json",
                 "--stats",
                 "605.mcf_s-665B.champsimtrace.xz.DDR4.stats",
-                "../dpc3_traces/605.mcf_s-665B.champsimtrace.xz",
+                "dpc3_traces/605.mcf_s-665B.champsimtrace.xz",
             ],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}",

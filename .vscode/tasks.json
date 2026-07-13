@@ -850,7 +850,7 @@
 			"type": "promptString",
 			"id": "variable4",
 			"description": "Specify path of trace root directory",
-			"default": "../dpc3_traces",
+			"default": "dpc3_traces",
 		},
 		{
 			/* Trace name */

@@ -6,6 +6,7 @@ vcpkg_installed/
 /build_e2e/
 /.ccache/
 /.virtualPythonEnvironment/
+/dpc3_traces/
 
 # Python test suite (test/end_to_end) artifacts
 __pycache__/
