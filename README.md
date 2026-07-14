@@ -3,18 +3,19 @@
 </p>
 
 # About This Project
-This project is based on the [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: [06de8d3](https://github.com/ChampSim/ChampSim/commit/06de8d3d03d9ba39b4726166aa6364881812365f)), [Ramulator](https://github.com/yousei-github/ramulator) (Commit: [743b940](https://github.com/CMU-SAFARI/ramulator/commit/743b940b70a8e18bcffb14eec22d2ed731059540)), [Ramulator2](https://github.com/CMU-SAFARI/ramulator2) (Commit: [be93be7](https://github.com/yousei-github/ramulator2/commit/be93be78055d922aa1d4d33e15bcc8f2b0c61a9d)), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the `./include/ProjectConfiguration.h` file and recompile this project to try different functionalities. For example,
-- Set the preprocessor `RAMULATOR` to `ENABLE` for enabling Ramulator 1.0 (legacy, `.cfg`-configured) or to `DISABLE` for just using ChampSim.
-- Set the preprocessor `RAMULATOR2` to `ENABLE` for enabling Ramulator 2.0 (modular, YAML-configured). It is mutually exclusive with `RAMULATOR` (enabling both raises a compile-time `#error`) and currently supports single memory systems only (no hybrid yet).
-- Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` for enabling hybrid memory systems or to `DISABLE` for enabling single memory systems.
-- Set the preprocessor `CPU_USE_MULTIPLE_CORES` to `ENABLE` for enabling multiple cores to run the simulation. Note that you also need to add multiple trace paths to run this simulator.
+This project is based on the [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: [06de8d3](https://github.com/ChampSim/ChampSim/commit/06de8d3d03d9ba39b4726166aa6364881812365f)), [Ramulator](https://github.com/yousei-github/ramulator) (Commit: [743b940](https://github.com/CMU-SAFARI/ramulator/commit/743b940b70a8e18bcffb14eec22d2ed731059540)), [Ramulator2](https://github.com/CMU-SAFARI/ramulator2) (Commit: [be93be7](https://github.com/yousei-github/ramulator2/commit/be93be78055d922aa1d4d33e15bcc8f2b0c61a9d)), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the [./include/ProjectConfiguration.h](include/ProjectConfiguration.h) file and recompile this project to try different functionalities. For example,
+- Set the preprocessor `RAMULATOR` to `ENABLE` to enable Ramulator 1.0 (legacy, `.cfg`-configured) or to `DISABLE` for just using ChampSim.
+- Set the preprocessor `RAMULATOR2` to `ENABLE` to enable Ramulator 2.0 (modular, YAML-configured). It is mutually exclusive with `RAMULATOR`.
+- Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` to enable hybrid memory systems or to `DISABLE` to enable single memory systems.
+- Set the preprocessor `CPU_USE_MULTIPLE_CORES` to `ENABLE` to enable multiple cores to run the simulation. Note that you also need to add multiple trace paths to run this simulator.
 - Set the preprocessor `PRINT_STATISTICS_INTO_FILE` to `ENABLE` for printing statistics into the `.statistics` file.
-- Set the preprocessor `PRINT_MEMORY_TRACE` to `ENABLE` for printing memory trace into the `.trace` file. Each line in the trace file represents a memory request, with the hexadecimal address followed by 'R' or 'W' for read or write.
-- Set the preprocessor `MEMORY_USE_SWAPPING_UNIT` to `ENABLE` for enabling the data swapping function in the memory controller (Currently only supports hybrid memory systems).
+- Set the preprocessor `PRINT_MEMORY_TRACE` to `ENABLE` for printing the memory trace into the `.trace` file. Each line in the trace file represents a memory request, with the hexadecimal address followed by 'R' or 'W' for read or write.
+- Set the preprocessor `MEMORY_USE_SWAPPING_UNIT` to `ENABLE` to enable the data swapping function in the memory controller (Currently only supports hybrid memory systems).
 - Set the preprocessor `MEMORY_USE_OS_TRANSPARENT_MANAGEMENT` to `ENABLE` for enabling os transparent data management of hybrid memory systems (Currently part of paper [CAMEO](https://doi.org/10.1109/MICRO.2014.63), [MemPod](https://doi.org/10.1109/HPCA.2017.39), variable granularity, TROM (Tracking Read Only Method), and TLTOM (Tracking Load and Translation Only Method) are implemented).
-- Set the preprocessor `BRANCH_PREDICTOR` to `BRANCH_USE_BIMODAL` for using the bimodal branch predictor. Similarly, there are gshare, hashed_perceptron, and perceptron branch predictors. Following this logic, you can also modify other preprocessors, such as `INSTRUCTION_PREFETCHER`, `LLC_REPLACEMENT_POLICY`, `LLC_PREFETCHER`, and so on.
 
-The CPU's parameters are defined in the `./include/ChampSim/champsim_constants.h` file.
+You can also modify the preprocessors in the [./include/ChampSim/champsim_constants.h](include/ChampSim/champsim_constants.h) file to try different CPU configurations. For example,
+- Set the preprocessor `CPU_BRANCH_PREDICTOR` to `BRANCH_USE_BIMODAL` to use the bimodal branch predictor. The other available branch predictors are `BRANCH_USE_GSHARE`, `BRANCH_USE_HASHED_PERCEPTRON`, and `BRANCH_USE_PERCEPTRON`.
+- Following the same pattern, select the branch target buffer with `CPU_BRANCH_TARGET_BUFFER`; the cache prefetchers with `CPU_L1I_PREFETCHER` / `CPU_L1D_PREFETCHER` / `CPU_L2C_PREFETCHER` / `LLC_PREFETCHER`; and the cache replacement policies with `LLC_REPLACEMENT_POLICY` / `CPU_L1D_REPLACEMENT_POLICY` / `CPU_L2C_REPLACEMENT_POLICY`.
 
 For a detailed explanation of how ChampSim and Ramulator are integrated — including the templated `MEMORY_CONTROLLER`, the runtime DRAM type resolution, address partitioning for hybrid memory, and the OS-transparent management layer — see [integration_architecture.md](integration_architecture.md).
 
@@ -110,7 +111,7 @@ The script reads a list of trace filenames (one per line), defaults to `dpc3_max
 
 # Build and debug
 
-Before starting to build or debug this project, you might need to be familiar with [Visual Studio Code tutorial](https://code.visualstudio.com/docs/cpp/config-linux). Also, a C++20 compiler is required for compilation (Ramulator 2.0 uses C++20 features such as `concept`, `consteval`, and `.contains()`).
+Before starting to build or debug this project, you might need to be familiar with the [Visual Studio Code tutorial](https://code.visualstudio.com/docs/cpp/config-linux). Also, a C++20 compiler is required for compilation (Ramulator 2.0 uses C++20 features such as `concept`, `consteval`, and `.contains()`).
 
 ## Build
 Build methods are explained below.
@@ -197,20 +198,33 @@ Simulation done. Statistics written to my_output.txt
 # NOTE: optional --stats flag changes the statistics output filename
 ```
 
-## 3. ChampSim + Ramulator 2.0 with single memory systems
+## 3. ChampSim + Ramulator 2.0 with hybrid memory systems
+If the preprocessor `RAMULATOR2` is `ENABLE` and `MEMORY_USE_HYBRID` is `ENABLE`, execute the binary as follows,
+```
+$ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] [YAML1] [YAML2] [TRACE]
+```
+where [EXECUTION] is the executable file's name, such as ./bin/champsim_plus_ramulator, [N_WARM] is the number of instructions for warmup (1 million), [N_SIM] is the number of instructions for detailed simulation (10 million),
+[YAML1] and [YAML2] are the Ramulator 2.0 configuration files' names for the fast tier and the slow tier respectively (configs/r2/HBM.yaml configs/r2/DDR4.yaml), and [TRACE] is the trace name (619.lbm_s-4268B.champsimtrace.xz). The first YAML configures the fast memory (`MEMORY_NUMBER_ONE`) and the second configures the slow memory (`MEMORY_NUMBER_TWO`); the two tiers share a single global address space. Enabling `MEMORY_USE_HYBRID` automatically enables the data-swapping unit (`MEMORY_USE_SWAPPING_UNIT`) and the OS-transparent management layer (`MEMORY_USE_OS_TRANSPARENT_MANAGEMENT`). For example,
+```
+$ ./bin/champsim_plus_ramulator --warmup-instructions 1000000 --simulation-instructions 2000000 configs/r2/HBM.yaml configs/r2/DDR4.yaml path_to_traces/619.lbm_s-4268B.champsimtrace.xz
+Simulation done. YAML configs: configs/r2/HBM.yaml, configs/r2/DDR4.yaml
+```
+Any two of the Ramulator 2.0 device configs under `configs/r2/` (DDR3, DDR4, DDR5, GDDR6, HBM, HBM2, HBM3, LPDDR5) can be paired; there are no dedicated fast/slow config files, so pass a smaller/faster device first and a larger/slower device second.
+
+## 4. ChampSim + Ramulator 2.0 with single memory systems
 If the preprocessor `RAMULATOR2` is `ENABLE` (and `MEMORY_USE_HYBRID` is `DISABLE`), execute the binary as follows,
 ```
 $ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] [YAML] [TRACE]
 ```
 where [EXECUTION] is the executable file's name, such as ./bin/champsim_plus_ramulator, [N_WARM] is the number of instructions for warmup (1 million), [N_SIM] is the number of instructions for detailed simulation (10 million),
-[YAML] is the Ramulator 2.0 configuration file's name (configs/r2/DDR4.yaml), and [TRACE] is the trace name (619.lbm_s-4268B.champsimtrace.xz). Unlike Ramulator 1.0, Ramulator 2.0 takes a single YAML config (single memory only — hybrid is not yet supported) and does not use the `--stats` flag; when `PRINT_STATISTICS_INTO_FILE` is `ENABLE`, statistics are written to a `.statistics` file named after the trace. For example,
+[YAML] is the Ramulator 2.0 configuration file's name (configs/r2/DDR4.yaml), and [TRACE] is the trace name (619.lbm_s-4268B.champsimtrace.xz). For example,
 ```
 $ ./bin/champsim_plus_ramulator --warmup-instructions 1000000 --simulation-instructions 2000000 configs/r2/DDR4.yaml path_to_traces/619.lbm_s-4268B.champsimtrace.xz
 Simulation done. YAML config: configs/r2/DDR4.yaml
 ```
 Ramulator 2.0 YAML configs are provided for DDR3, DDR4, DDR5, GDDR6, HBM, HBM2, HBM3, and LPDDR5 under `configs/r2/`.
 
-## 4. ChampSim with single memory systems
+## 5. ChampSim with single memory systems
 If the preprocessor `RAMULATOR` is `DISABLE`, `RAMULATOR2` is `DISABLE`, and `MEMORY_USE_HYBRID` is `DISABLE`, execute the binary as follows,
 ```
 $ [EXECUTION] --warmup-instructions [N_WARM] --simulation-instructions [N_SIM] [TRACE]
