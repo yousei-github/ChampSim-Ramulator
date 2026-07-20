@@ -45,7 +45,7 @@ struct environment
 
 #if (RAMULATOR == ENABLE)
 #else
-    // v2 MEMORY_CONTROLLER is non-templated, so it fits the same surface as
+    // Ramulator v2 MEMORY_CONTROLLER is non-templated, so it fits the same surface as
     // the ChampSim built-in DRAM controller.
     virtual MEMORY_CONTROLLER& dram_view() = 0;
 #endif /* RAMULATOR */
@@ -75,8 +75,9 @@ struct generated_environment;
 template<typename R, typename... PTWs>
 auto build(PTWs... builders)
 {
-    std::forward_list<R> retval {};
-    (..., retval.emplace_front(builders));
+    std::vector<R> retval {};
+    retval.reserve(sizeof...(builders));
+    (..., retval.emplace_back(builders));
     return retval;
 }
 
@@ -103,6 +104,16 @@ namespace configured
 {
 template<unsigned long long ID>
 struct generated_environment;
+
+template<typename R, typename... PTWs>
+auto build(PTWs... builders)
+{
+    std::vector<R> retval {};
+    retval.reserve(sizeof...(builders));
+    (..., retval.emplace_back(builders));
+    return retval;
+}
+
 } // namespace configured
 
 } // namespace champsim

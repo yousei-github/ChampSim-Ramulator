@@ -92,7 +92,7 @@ class CACHE : public champsim::operable
     };
 
 public:
-    struct mshr_type
+    struct fill_type
     {
         champsim::address address;
         champsim::address v_address;
@@ -118,13 +118,13 @@ public:
         std::vector<uint64_t> instr_depend_on_me {};
         std::vector<std::deque<response_type>*> to_return {};
 
-        mshr_type(const tag_lookup_type& req, champsim::chrono::clock::time_point _time_enqueued);
-        static mshr_type merge(mshr_type predecessor, mshr_type successor);
+        fill_type(const tag_lookup_type& req, champsim::chrono::clock::time_point _time_enqueued);
+        static fill_type merge(fill_type predecessor, fill_type successor);
     };
 
 private:
     bool try_hit(const tag_lookup_type& handle_pkt);
-    bool handle_fill(const mshr_type& fill_mshr);
+    bool handle_fill(const fill_type& fill);
     bool handle_miss(const tag_lookup_type& handle_pkt);
     bool handle_write(const tag_lookup_type& handle_pkt);
     void finish_packet(const response_type& packet);
@@ -136,7 +136,7 @@ public:
     using BLOCK = champsim::cache_block;
 
 private:
-    static BLOCK fill_block(mshr_type mshr, uint32_t metadata);
+    static BLOCK fill_block(fill_type fill, uint32_t metadata);
 
     using set_type = std::vector<BLOCK>;
 
@@ -154,7 +154,7 @@ private:
     champsim::address module_address(const T& element) const;
 
     auto matches_address(champsim::address address) const;
-    std::pair<mshr_type, request_type> mshr_and_forward_packet(const tag_lookup_type& handle_pkt);
+    std::pair<fill_type, request_type> mshr_and_forward_packet(const tag_lookup_type& handle_pkt);
 
     std::deque<tag_lookup_type> internal_PQ {};
     std::deque<tag_lookup_type> inflight_tag_check {};
@@ -191,8 +191,8 @@ public:
      * one or more subentries to handle multiple misses to the same cache line. (from google by "cache mshr is")
     */
 #endif
-    std::deque<mshr_type> MSHR;
-    std::deque<mshr_type> inflight_writes;
+    std::deque<fill_type> MSHR;
+    std::deque<fill_type> inflight_fills;
 
     long operate() final;
     void initialize() final;
@@ -566,124 +566,6 @@ void CACHE::replacement_module_model<Rs...>::impl_replacement_final_stats()
 }
 
 #if (USER_CODES == ENABLE)
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// void CACHE::module_model<P_FLAG, R_FLAG>::impl_prefetcher_initialize()
-// {
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDip_stride) != 0) intern_->pref_prefetcherDip_stride_prefetcher_initialize();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line) != 0) intern_->pref_prefetcherDnext_line_prefetcher_initialize();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line_instr) != 0) intern_->ipref_prefetcherDnext_line_instr_prefetcher_initialize();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno) != 0) intern_->pref_prefetcherDno_prefetcher_initialize();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno_instr) != 0) intern_->ipref_prefetcherDno_instr_prefetcher_initialize();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDspp_dev) != 0) intern_->pref_prefetcherDspp_dev_prefetcher_initialize();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDva_ampm_lite) != 0) intern_->pref_prefetcherDva_ampm_lite_prefetcher_initialize();
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// uint32_t CACHE::module_model<P_FLAG, R_FLAG>::impl_prefetcher_cache_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, bool useful_prefetch, uint8_t type, uint32_t metadata_in)
-// {
-//     uint32_t result {};
-//     std::bit_xor<decltype(result)> joiner {};
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDip_stride) != 0) result = joiner(result, intern_->pref_prefetcherDip_stride_prefetcher_cache_operate(addr, ip, cache_hit, useful_prefetch, type, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line) != 0) result = joiner(result, intern_->pref_prefetcherDnext_line_prefetcher_cache_operate(addr, ip, cache_hit, useful_prefetch, type, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line_instr) != 0) result = joiner(result, intern_->ipref_prefetcherDnext_line_instr_prefetcher_cache_operate(addr, ip, cache_hit, useful_prefetch, type, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno) != 0) result = joiner(result, intern_->pref_prefetcherDno_prefetcher_cache_operate(addr, ip, cache_hit, useful_prefetch, type, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno_instr) != 0) result = joiner(result, intern_->ipref_prefetcherDno_instr_prefetcher_cache_operate(addr, ip, cache_hit, useful_prefetch, type, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDspp_dev) != 0) result = joiner(result, intern_->pref_prefetcherDspp_dev_prefetcher_cache_operate(addr, ip, cache_hit, useful_prefetch, type, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDva_ampm_lite) != 0) result = joiner(result, intern_->pref_prefetcherDva_ampm_lite_prefetcher_cache_operate(addr, ip, cache_hit, useful_prefetch, type, metadata_in));
-//     return result;
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// uint32_t CACHE::module_model<P_FLAG, R_FLAG>::impl_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
-// {
-//     uint32_t result {};
-//     std::bit_xor<decltype(result)> joiner {};
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDip_stride) != 0) result = joiner(result, intern_->pref_prefetcherDip_stride_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line) != 0) result = joiner(result, intern_->pref_prefetcherDnext_line_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line_instr) != 0) result = joiner(result, intern_->ipref_prefetcherDnext_line_instr_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno) != 0) result = joiner(result, intern_->pref_prefetcherDno_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno_instr) != 0) result = joiner(result, intern_->ipref_prefetcherDno_instr_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDspp_dev) != 0) result = joiner(result, intern_->pref_prefetcherDspp_dev_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in));
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDva_ampm_lite) != 0) result = joiner(result, intern_->pref_prefetcherDva_ampm_lite_prefetcher_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in));
-//     return result;
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// void CACHE::module_model<P_FLAG, R_FLAG>::impl_prefetcher_cycle_operate()
-// {
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDip_stride) != 0) intern_->pref_prefetcherDip_stride_prefetcher_cycle_operate();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line) != 0) intern_->pref_prefetcherDnext_line_prefetcher_cycle_operate();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line_instr) != 0) intern_->ipref_prefetcherDnext_line_instr_prefetcher_cycle_operate();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno) != 0) intern_->pref_prefetcherDno_prefetcher_cycle_operate();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno_instr) != 0) intern_->ipref_prefetcherDno_instr_prefetcher_cycle_operate();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDspp_dev) != 0) intern_->pref_prefetcherDspp_dev_prefetcher_cycle_operate();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDva_ampm_lite) != 0) intern_->pref_prefetcherDva_ampm_lite_prefetcher_cycle_operate();
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// void CACHE::module_model<P_FLAG, R_FLAG>::impl_prefetcher_final_stats()
-// {
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDip_stride) != 0) intern_->pref_prefetcherDip_stride_prefetcher_final_stats();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line) != 0) intern_->pref_prefetcherDnext_line_prefetcher_final_stats();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line_instr) != 0) intern_->ipref_prefetcherDnext_line_instr_prefetcher_final_stats();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno) != 0) intern_->pref_prefetcherDno_prefetcher_final_stats();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno_instr) != 0) intern_->ipref_prefetcherDno_instr_prefetcher_final_stats();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDspp_dev) != 0) intern_->pref_prefetcherDspp_dev_prefetcher_final_stats();
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDva_ampm_lite) != 0) intern_->pref_prefetcherDva_ampm_lite_prefetcher_final_stats();
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// void CACHE::module_model<P_FLAG, R_FLAG>::impl_prefetcher_branch_operate(uint64_t ip, uint8_t branch_type, uint64_t branch_target)
-// {
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDip_stride) != 0) intern_->pref_prefetcherDip_stride_prefetcher_branch_operate(ip, branch_type, branch_target);
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line) != 0) intern_->pref_prefetcherDnext_line_prefetcher_branch_operate(ip, branch_type, branch_target);
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDnext_line_instr) != 0) intern_->ipref_prefetcherDnext_line_instr_prefetcher_branch_operate(ip, branch_type, branch_target);
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno) != 0) intern_->pref_prefetcherDno_prefetcher_branch_operate(ip, branch_type, branch_target);
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDno_instr) != 0) intern_->ipref_prefetcherDno_instr_prefetcher_branch_operate(ip, branch_type, branch_target);
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDspp_dev) != 0) intern_->pref_prefetcherDspp_dev_prefetcher_branch_operate(ip, branch_type, branch_target);
-//     if constexpr ((P_FLAG & CACHE::pprefetcherDva_ampm_lite) != 0) intern_->pref_prefetcherDva_ampm_lite_prefetcher_branch_operate(ip, branch_type, branch_target);
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// void CACHE::module_model<P_FLAG, R_FLAG>::impl_initialize_replacement()
-// {
-//     if constexpr ((R_FLAG & CACHE::rreplacementDdrrip) != 0) intern_->repl_replacementDdrrip_initialize_replacement();
-//     if constexpr ((R_FLAG & CACHE::rreplacementDlru) != 0) intern_->repl_replacementDlru_initialize_replacement();
-//     if constexpr ((R_FLAG & CACHE::rreplacementDship) != 0) intern_->repl_replacementDship_initialize_replacement();
-//     if constexpr ((R_FLAG & CACHE::rreplacementDsrrip) != 0) intern_->repl_replacementDsrrip_initialize_replacement();
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// uint32_t CACHE::module_model<P_FLAG, R_FLAG>::impl_find_victim(uint32_t triggering_cpu, uint64_t instr_id, uint32_t set, const BLOCK* current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
-// {
-//     uint32_t result {};
-//     champsim::detail::take_last<decltype(result)> joiner {};
-//     if constexpr ((R_FLAG & CACHE::rreplacementDdrrip) != 0) result = joiner(result, intern_->repl_replacementDdrrip_find_victim(triggering_cpu, instr_id, set, current_set, ip, full_addr, type));
-//     if constexpr ((R_FLAG & CACHE::rreplacementDlru) != 0) result = joiner(result, intern_->repl_replacementDlru_find_victim(triggering_cpu, instr_id, set, current_set, ip, full_addr, type));
-//     if constexpr ((R_FLAG & CACHE::rreplacementDship) != 0) result = joiner(result, intern_->repl_replacementDship_find_victim(triggering_cpu, instr_id, set, current_set, ip, full_addr, type));
-//     if constexpr ((R_FLAG & CACHE::rreplacementDsrrip) != 0) result = joiner(result, intern_->repl_replacementDsrrip_find_victim(triggering_cpu, instr_id, set, current_set, ip, full_addr, type));
-//     return result;
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// void CACHE::module_model<P_FLAG, R_FLAG>::impl_update_replacement_state(uint32_t triggering_cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type, uint8_t hit)
-// {
-//     if constexpr ((R_FLAG & CACHE::rreplacementDdrrip) != 0) intern_->repl_replacementDdrrip_update_replacement_state(triggering_cpu, set, way, full_addr, ip, victim_addr, type, hit);
-//     if constexpr ((R_FLAG & CACHE::rreplacementDlru) != 0) intern_->repl_replacementDlru_update_replacement_state(triggering_cpu, set, way, full_addr, ip, victim_addr, type, hit);
-//     if constexpr ((R_FLAG & CACHE::rreplacementDship) != 0) intern_->repl_replacementDship_update_replacement_state(triggering_cpu, set, way, full_addr, ip, victim_addr, type, hit);
-//     if constexpr ((R_FLAG & CACHE::rreplacementDsrrip) != 0) intern_->repl_replacementDsrrip_update_replacement_state(triggering_cpu, set, way, full_addr, ip, victim_addr, type, hit);
-// }
-
-// template<unsigned long long P_FLAG, unsigned long long R_FLAG>
-// void CACHE::module_model<P_FLAG, R_FLAG>::impl_replacement_final_stats()
-// {
-//     if constexpr ((R_FLAG & CACHE::rreplacementDdrrip) != 0) intern_->repl_replacementDdrrip_replacement_final_stats();
-//     if constexpr ((R_FLAG & CACHE::rreplacementDlru) != 0) intern_->repl_replacementDlru_replacement_final_stats();
-//     if constexpr ((R_FLAG & CACHE::rreplacementDship) != 0) intern_->repl_replacementDship_replacement_final_stats();
-//     if constexpr ((R_FLAG & CACHE::rreplacementDsrrip) != 0) intern_->repl_replacementDsrrip_replacement_final_stats();
-// }
-
 #else
 #ifdef SET_ASIDE_CHAMPSIM_MODULE
 #undef SET_ASIDE_CHAMPSIM_MODULE

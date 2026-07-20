@@ -3,7 +3,7 @@
 </p>
 
 # About This Project
-This project is based on the [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: [06de8d3](https://github.com/ChampSim/ChampSim/commit/06de8d3d03d9ba39b4726166aa6364881812365f)), [Ramulator](https://github.com/yousei-github/ramulator) (Commit: [743b940](https://github.com/CMU-SAFARI/ramulator/commit/743b940b70a8e18bcffb14eec22d2ed731059540)), [Ramulator2](https://github.com/CMU-SAFARI/ramulator2) (Commit: [be93be7](https://github.com/yousei-github/ramulator2/commit/be93be78055d922aa1d4d33e15bcc8f2b0c61a9d)), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the [./include/ProjectConfiguration.h](include/ProjectConfiguration.h) file and recompile this project to try different functionalities. For example,
+This project is based on the [ChampSim](https://github.com/yousei-github/ChampSim) (Commit: [51588e1d](https://github.com/ChampSim/ChampSim/commit/51588e1d6f97875fe8de1a3621d28668bff83fcf)), [Ramulator](https://github.com/yousei-github/ramulator) (Commit: [743b940](https://github.com/CMU-SAFARI/ramulator/commit/743b940b70a8e18bcffb14eec22d2ed731059540)), [Ramulator2](https://github.com/CMU-SAFARI/ramulator2) (Commit: [be93be7](https://github.com/yousei-github/ramulator2/commit/be93be78055d922aa1d4d33e15bcc8f2b0c61a9d)), and it can be modified to simulate hybrid memory systems. You can modify the preprocessors in the [./include/ProjectConfiguration.h](include/ProjectConfiguration.h) file and recompile this project to try different functionalities. For example,
 - Set the preprocessor `RAMULATOR` to `ENABLE` to enable Ramulator 1.0 (legacy, `.cfg`-configured) or to `DISABLE` for just using ChampSim.
 - Set the preprocessor `RAMULATOR2` to `ENABLE` to enable Ramulator 2.0 (modular, YAML-configured). It is mutually exclusive with `RAMULATOR`.
 - Set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` to enable hybrid memory systems or to `DISABLE` to enable single memory systems.
@@ -165,7 +165,24 @@ By referring to the contents of [launch.json](.vscode/launch.json) file in the `
 ```
 
 # Run simulation
-According to the setting in the `ProjectConfiguration.h` file, the input parameters vary. There are four types of input patterns.
+According to the setting in the `ProjectConfiguration.h` file, the input parameters vary. There are five types of input patterns.
+
+## Common command-line options
+The following options are accepted in every mode. **All options must be given before the positional arguments** (the configuration files and the trace files), because the parser treats the first argument after the last option as the start of the positional list.
+
+| Option | Description |
+|---|---|
+| `--warmup-instructions <N>`, `-w <N>` | Number of instructions to run in the warmup phase. |
+| `--simulation-instructions <N>`, `-i <N>` | Number of instructions to run in the detailed simulation phase. |
+| `--listeners <Name>` | Attach an event listener by name. May be repeated to attach several. The name is matched exactly and is case sensitive (`Heartbeat`, not `heartbeat`); an unknown name only prints a warning and is otherwise ignored. |
+| `--stats <filename>` | Override the statistics output filename. **Ramulator 1.0 modes only** — the Ramulator 2.0 path ignores it and instead writes a `.statistics` file named after the trace when `PRINT_STATISTICS_INTO_FILE` is enabled. |
+
+Event listeners are a ChampSim feature that reports simulation events (a phase beginning, instructions retiring) to pluggable observers. The only listener currently built in is `Heartbeat`, which prints a progress line every 10 million retired instructions:
+```
+Heartbeat CPU 0 instructions: 10000000 cycles: 5863919 heartbeat IPC: 1.705 cumulative IPC: 1.697 (Simulation time: 00 hr 00 min 24 sec)
+```
+`Heartbeat` is always enabled, so passing `--listeners Heartbeat` is not required to get these lines; the progress lines also go into the `.statistics` file when `PRINT_STATISTICS_INTO_FILE` is enabled.
+
 ## 1. ChampSim + Ramulator 1.0 with hybrid memory systems
 If the preprocessor `RAMULATOR` is `ENABLE` and `MEMORY_USE_HYBRID` is `ENABLE`, execute the binary as follows,
 ```
@@ -242,10 +259,25 @@ The number of warmup and simulation instructions given will be the number of ins
 Program traces are available in various locations; however, many ChampSim users prefer to trace their own programs for research purposes.
 Example tracing utilities are provided in the `tracer/` directory.
 
+The Intel PIN tracer can select the traced region either by instruction count (`-s` to skip, `-t` to trace) or by symbol name: `-start_symbol <function>` and `-stop_symbol <function>` capture only the instructions executed between two named functions, which avoids having to locate a region of interest by counting instructions (`-s` is ignored when `-start_symbol` is given). See [tracer/pin/README.md](tracer/pin/README.md) for the build instructions and the full option list, and [tracer/pin/symbol_trace_example.cpp](tracer/pin/symbol_trace_example.cpp) for a worked example.
+
 # Evaluate Simulation
 
 ChampSim measures IPC (Instructions Per Cycle) as a performance metric. <br>
 Some other useful metrics are printed at the end of the simulation. <br>
+
+## Statistics format changes
+
+Updating ChampSim to `51588e1d` changed the per-cache statistics that are printed at the end of a run. **Scripts that parse the simulation output or the `.statistics` file need to be updated accordingly.**
+
+- The per-cache hit/miss lines now end with `MISS_MERGE` instead of `MSHR_MERGE`:
+  ```
+  cpu0->cpu0_DTLB TOTAL        ACCESS:    6644169 HIT:    6634770 MISS:       9399 MISS_MERGE:       8566
+  ```
+- The queue merge and forward counters `RQ_MERGED`, `PQ_MERGED`, `WQ_MERGED`, and `WQ_FORWARD` are no longer reported, because caches no longer merge or forward requests inside the queues.
+- In the JSON output, the key `mshr_merge` is renamed `miss_merge` and `mshr_return` is renamed `fill`.
+
+Cycle-level results also shift relative to earlier versions of this project, because of the request forwarding change above and the reworked `ship` / `drrip` replacement policies. This is expected behavior, not a regression.
 
 # Test
 

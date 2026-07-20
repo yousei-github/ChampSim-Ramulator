@@ -36,6 +36,7 @@ struct simulator_input_parameter
 
     bool json_given {false};
     std::string json_file_name;
+    std::vector<std::string> requested_listeners;
     std::vector<std::string> trace_names;
 
     std::vector<champsim::phase_info> phases;
@@ -232,7 +233,7 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
 #if (RAMULATOR == ENABLE)
     string stats_out;
     bool stats_flag {false};
-    argc_type start_position_of_stats   = 0;
+    argc_type start_position_of_stats = 0;
     bool mapping_flag {false};
     argc_type start_position_of_mapping = 0;
 #endif /* RAMULATOR */
@@ -329,6 +330,27 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
             }
         }
 
+        /** A list of the listeners to be attached to the run */
+        if (strcmp(argv[i], "--listeners") == 0)
+        {
+            if (i + 1 < argc)
+            {
+                input_parameter.requested_listeners.push_back(argv[++i]);
+
+#if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
+                start_position_of_configs = i + 1;
+                start_position_of_traces  = start_position_of_configs + NUMBER_OF_MEMORIES;
+#else
+                start_position_of_traces = i + 1;
+#endif /* RAMULATOR || RAMULATOR2 */
+            }
+            else
+            {
+                std::cout << __func__ << ": Need parameter behind --listeners." << std::endl;
+                abort_flag++;
+            }
+        }
+
 #if (RAMULATOR == ENABLE)
         if (strcmp(argv[i], "--stats") == 0)
         {
@@ -398,6 +420,10 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
 #endif /* PRINT_STATISTICS_INTO_FILE */
 
     /** Prepare the ChampSim framework */
+
+    // Enable event listeners before running any phase
+    init_event_listeners(input_parameter.requested_listeners);
+
     if (input_parameter.simulation_given && ! input_parameter.warmup_given)
     {
         // Warmup is 20% by default
@@ -1189,6 +1215,7 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
     long long warmup_instructions     = 0;
     long long simulation_instructions = std::numeric_limits<long long>::max();
     std::string json_file_name;
+    std::vector<std::string> requested_listeners;
     std::vector<std::string> trace_names;
 
     auto set_heartbeat_callback = [&](auto)
@@ -1208,9 +1235,13 @@ int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
 
     auto* json_option                = app.add_option("--json", json_file_name, "The name of the file to receive JSON output. If no name is specified, stdout will be used")->expected(0, 1);
 
+    app.add_option("--listeners", requested_listeners, "A list of the listeners to be attached to the run");
+
     app.add_option("traces", trace_names, "The paths to the traces")->required()->expected(NUM_CPUS)->check(CLI::ExistingFile);
 
     CLI11_PARSE(app, argc, argv);
+
+    init_event_listeners(requested_listeners);
 
     const bool warmup_given     = (warmup_instr_option->count() > 0) || (deprec_warmup_instr_option->count() > 0);
     const bool simulation_given = (sim_instr_option->count() > 0) || (deprec_sim_instr_option->count() > 0);

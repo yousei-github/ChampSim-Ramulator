@@ -9,8 +9,7 @@
 #include "ChampSim/msl/lru_table.h"
 #include "ProjectConfiguration.h" // User file
 
-#if (USER_CODES == ENABLE)
-#else
+#if (USER_CODES == DISABLE)
 #include "ChampSim/champsim.h"
 #endif /* USER_CODES */
 
