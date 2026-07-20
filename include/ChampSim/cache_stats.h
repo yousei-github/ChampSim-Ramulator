@@ -18,16 +18,16 @@ struct cache_stats
 {
     std::string name;
     // prefetch stats
-    uint64_t pf_requested                                                                                    = 0;
-    uint64_t pf_issued                                                                                       = 0;
-    uint64_t pf_useful                                                                                       = 0;
-    uint64_t pf_useless                                                                                      = 0;
-    uint64_t pf_fill                                                                                         = 0;
+    uint64_t pf_requested                                                                                   = 0;
+    uint64_t pf_issued                                                                                      = 0;
+    uint64_t pf_useful                                                                                      = 0;
+    uint64_t pf_useless                                                                                     = 0;
+    uint64_t pf_fill                                                                                        = 0;
 
-    champsim::stats::event_counter<std::pair<access_type, std::remove_cv_t<decltype(NUM_CPUS)>>> hits        = {};
-    champsim::stats::event_counter<std::pair<access_type, std::remove_cv_t<decltype(NUM_CPUS)>>> misses      = {};
-    champsim::stats::event_counter<std::pair<access_type, std::remove_cv_t<decltype(NUM_CPUS)>>> mshr_merge  = {};
-    champsim::stats::event_counter<std::pair<access_type, std::remove_cv_t<decltype(NUM_CPUS)>>> mshr_return = {};
+    champsim::stats::event_counter<std::pair<access_type, std::remove_cv_t<decltype(NUM_CPUS)>>> hits       = {};
+    champsim::stats::event_counter<std::pair<access_type, std::remove_cv_t<decltype(NUM_CPUS)>>> misses     = {};
+    champsim::stats::event_counter<std::pair<access_type, std::remove_cv_t<decltype(NUM_CPUS)>>> miss_merge = {};
+    champsim::stats::event_counter<std::pair<access_type, std::remove_cv_t<decltype(NUM_CPUS)>>> fill       = {};
 
     long total_miss_latency_cycles {};
 };

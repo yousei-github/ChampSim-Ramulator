@@ -6,8 +6,6 @@
 /* No code here */
 
 #else
-#include <forward_list>
-
 #include "ChampSim/core_inst.inc"
 #include "ChampSim/environment.h"
 
@@ -18,19 +16,6 @@
 #include "ChampSim/chrono.h"
 #include "ChampSim/defaults.hpp"
 #include "ChampSim/vmem.h"
-
-namespace champsim::configured
-{
-
-template<typename R, typename... PTWs>
-auto build(PTWs... builders)
-{
-    std::forward_list<R> retval {};
-    (..., retval.emplace_front(builders));
-    return retval;
-}
-
-} // namespace champsim::configured
 
 #if __has_include("core_inst.cc.inc")
 #include "core_inst.cc.inc"

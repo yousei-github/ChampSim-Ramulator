@@ -37,6 +37,7 @@
 #include "ChampSim/defaults.hpp"
 #include "ChampSim/dram_controller.h"
 #include "ChampSim/environment.h"
+#include "ChampSim/event_listeners.h"
 #include "ChampSim/ooo_cpu.h" // for O3_CPU
 #include "ChampSim/phase_info.h"
 #include "ChampSim/stats_printer.h"

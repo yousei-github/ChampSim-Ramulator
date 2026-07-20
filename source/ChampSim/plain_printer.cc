@@ -95,15 +95,15 @@ std::vector<std::string> champsim::plain_printer::format(O3_CPU::stats_type stat
 
 std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats)
 {
-    using hits_value_type        = typename decltype(stats.hits)::value_type;
-    using misses_value_type      = typename decltype(stats.misses)::value_type;
-    using mshr_merge_value_type  = typename decltype(stats.mshr_merge)::value_type;
-    using mshr_return_value_type = typename decltype(stats.mshr_return)::value_type;
+    using hits_value_type       = typename decltype(stats.hits)::value_type;
+    using misses_value_type     = typename decltype(stats.misses)::value_type;
+    using miss_merge_value_type = typename decltype(stats.miss_merge)::value_type;
+    using fill_value_type       = typename decltype(stats.fill)::value_type;
 
     std::vector<std::size_t> cpus;
 
     // build a vector of all existing cpus
-    auto stat_keys = {stats.hits.get_keys(), stats.misses.get_keys(), stats.mshr_merge.get_keys(), stats.mshr_return.get_keys()};
+    auto stat_keys = {stats.hits.get_keys(), stats.misses.get_keys(), stats.miss_merge.get_keys(), stats.fill.get_keys()};
     for (auto keys : stat_keys)
     {
         std::transform(std::begin(keys), std::end(keys), std::back_inserter(cpus), [](auto val)
@@ -119,8 +119,8 @@ std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats
         {
             stats.hits.allocate(std::pair {type, cpu});
             stats.misses.allocate(std::pair {type, cpu});
-            stats.mshr_merge.allocate(std::pair {type, cpu});
-            stats.mshr_return.allocate(std::pair {type, cpu});
+            stats.miss_merge.allocate(std::pair {type, cpu});
+            stats.fill.allocate(std::pair {type, cpu});
         }
     }
 
@@ -129,18 +129,18 @@ std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats
     for (auto cpu : cpus)
     {
 #if (USE_VCPKG == ENABLE) || (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        hits_value_type total_hits               = 0;
-        misses_value_type total_misses           = 0;
-        mshr_merge_value_type total_mshr_merge   = 0;
-        mshr_return_value_type total_mshr_return = 0;
+        hits_value_type total_hits             = 0;
+        misses_value_type total_misses         = 0;
+        miss_merge_value_type total_miss_merge = 0;
+        fill_value_type total_fill             = 0;
         for (const auto type : {access_type::LOAD, access_type::RFO, access_type::PREFETCH, access_type::WRITE, access_type::TRANSLATION})
         {
             total_hits += stats.hits.value_or(std::pair {type, cpu}, hits_value_type {});
             total_misses += stats.misses.value_or(std::pair {type, cpu}, misses_value_type {});
-            total_mshr_merge += stats.mshr_merge.value_or(std::pair {type, cpu}, mshr_merge_value_type {});
-            total_mshr_return += stats.mshr_return.value_or(std::pair {type, cpu}, mshr_merge_value_type {});
+            total_miss_merge += stats.miss_merge.value_or(std::pair {type, cpu}, miss_merge_value_type {});
+            total_fill += stats.fill.value_or(std::pair {type, cpu}, miss_merge_value_type {});
         }
-        uint64_t total_downstream_demands = total_mshr_return - stats.mshr_return.value_or(std::pair {access_type::PREFETCH, cpu}, mshr_return_value_type {});
+        uint64_t total_downstream_demands = total_fill - stats.fill.value_or(std::pair {access_type::PREFETCH, cpu}, fill_value_type {});
 #endif /* USE_VCPKG, PRINT_STATISTICS_INTO_FILE */
 
 #if (USE_VCPKG == ENABLE)
@@ -148,15 +148,15 @@ std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats
         // placeholder list against the (truncated) template arg list at compile time. The literal
         // has 7 placeholders but the original declaration only listed 5 template args, so the check
         // fails. Route through fmt::runtime() to use the runtime validation path instead.
-        constexpr std::string_view hitmiss_fmtstr {"cpu{}->{} {:<12s} ACCESS: {:10d} HIT: {:10d} MISS: {:10d} MSHR_MERGE: {:10d}"};
+        constexpr std::string_view hitmiss_fmtstr {"cpu{}->{} {:<12s} ACCESS: {:10d} HIT: {:10d} MISS: {:10d} MISS_MERGE: {:10d}"};
 
-        lines.push_back(fmt::format(fmt::runtime(hitmiss_fmtstr), cpu, stats.name, "TOTAL", total_hits + total_misses, total_hits, total_misses, total_mshr_merge));
+        lines.push_back(fmt::format(fmt::runtime(hitmiss_fmtstr), cpu, stats.name, "TOTAL", total_hits + total_misses, total_hits, total_misses, total_miss_merge));
         for (const auto type : {access_type::LOAD, access_type::RFO, access_type::PREFETCH, access_type::WRITE, access_type::TRANSLATION})
         {
             lines.push_back(fmt::format(fmt::runtime(hitmiss_fmtstr), cpu, stats.name, access_type_names.at(champsim::to_underlying(type)),
                 stats.hits.value_or(std::pair {type, cpu}, hits_value_type {}) + stats.misses.value_or(std::pair {type, cpu}, misses_value_type {}),
                 stats.hits.value_or(std::pair {type, cpu}, hits_value_type {}), stats.misses.value_or(std::pair {type, cpu}, misses_value_type {}),
-                stats.mshr_merge.value_or(std::pair {type, cpu}, mshr_merge_value_type {})));
+                stats.miss_merge.value_or(std::pair {type, cpu}, miss_merge_value_type {})));
         }
 
         lines.push_back(fmt::format("cpu{}->{} PREFETCH REQUESTED: {:10} ISSUED: {:10} USEFUL: {:10} USELESS: {:10}", cpu, stats.name, stats.pf_requested, stats.pf_issued, stats.pf_useful, stats.pf_useless));
@@ -166,9 +166,9 @@ std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
         std::fprintf(output_statistics.file_handler, "\n");
 
-        const char hitmiss_str[] = "cpu%ld->%s %-12s ACCESS: %10ld HIT: %10ld MISS: %10ld MSHR_MERGE: %10ld\n";
+        const char hitmiss_str[] = "cpu%ld->%s %-12s ACCESS: %10ld HIT: %10ld MISS: %10ld MISS_MERGE: %10ld\n";
 
-        std::fprintf(output_statistics.file_handler, hitmiss_str, cpu, stats.name.c_str(), "TOTAL", total_hits + total_misses, total_hits, total_misses, total_mshr_merge);
+        std::fprintf(output_statistics.file_handler, hitmiss_str, cpu, stats.name.c_str(), "TOTAL", total_hits + total_misses, total_hits, total_misses, total_miss_merge);
         for (const auto type : {access_type::LOAD, access_type::RFO, access_type::PREFETCH, access_type::WRITE, access_type::TRANSLATION})
         {
             std::fprintf(output_statistics.file_handler, hitmiss_str,
@@ -176,7 +176,7 @@ std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats
                 stats.hits.value_or(std::pair {type, cpu}, hits_value_type {}) + stats.misses.value_or(std::pair {type, cpu}, misses_value_type {}),
                 stats.hits.value_or(std::pair {type, cpu}, hits_value_type {}),
                 stats.misses.value_or(std::pair {type, cpu}, misses_value_type {}),
-                stats.mshr_merge.value_or(std::pair {type, cpu}, mshr_merge_value_type {}));
+                stats.miss_merge.value_or(std::pair {type, cpu}, miss_merge_value_type {}));
         }
 
         std::fprintf(output_statistics.file_handler, "cpu%ld->%s PREFETCH REQUESTED: %10ld ISSUED: %10ld USEFUL: %10ld USELESS: %10ld\n",
