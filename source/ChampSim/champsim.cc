@@ -33,7 +33,9 @@
 #include "ChampSim/operable.h"
 #include "ChampSim/tracereader.h"
 
-#if (USER_CODES == DISABLE)
+#if (USER_CODES == ENABLE)
+#include "simulator_statistics.h"
+#else
 #include "ChampSim/phase_info.h"
 #endif /* USER_CODES */
 

@@ -15,6 +15,7 @@
  */
 
 #include "ProjectConfiguration.h" // User file
+#include "simulator_statistics.h" // User file
 
 #if (USE_VCPKG == ENABLE)
 #include <fmt/chrono.h>

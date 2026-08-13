@@ -32,6 +32,10 @@
 #include "ChampSim/util/span.h"
 #include "ChampSim/util/units.h"
 
+#if (USER_CODES == ENABLE)
+#include "simulator_statistics.h"
+#endif /* USER_CODES */
+
 #if (RAMULATOR != ENABLE) && (RAMULATOR2 != ENABLE)
 /** Ramulator-backed MEMORY_CONTROLLER lives in either:
  *  - include/ChampSim/ramulator_dram_controller.h  (v1, templated; header-only) or

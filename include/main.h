@@ -81,6 +81,8 @@
 
 #endif /* RAMULATOR */
 
+#include "simulator_statistics.h"
+
 /* Macro */
 
 /* Type */

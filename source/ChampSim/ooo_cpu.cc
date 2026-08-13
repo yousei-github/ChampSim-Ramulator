@@ -37,6 +37,7 @@
 
 #if (USER_CODES == ENABLE)
 #include "ChampSim/champsim_constants.h"
+#include "simulator_statistics.h"
 
 #else
 #include "ChampSim/champsim.h"

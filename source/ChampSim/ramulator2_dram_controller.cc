@@ -21,6 +21,7 @@
 #include "Ramulator2/base/factory.h"
 #include "Ramulator2/frontend/frontend.h"
 #include "Ramulator2/memory_system/memory_system.h"
+#include "simulator_statistics.h"
 
 /* Macro */
 

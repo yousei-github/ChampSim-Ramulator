@@ -11,6 +11,7 @@
 #include "ChampSim/events.h"
 #include "ChampSim/instruction.h"
 #include "ProjectConfiguration.h" // User file
+#include "simulator_statistics.h"
 
 class Heartbeat
 {

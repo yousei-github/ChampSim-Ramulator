@@ -38,6 +38,7 @@
 #include "Ramulator/Memory.h"
 #include "Ramulator/Request.h"
 #include "os_transparent_management.h"
+#include "simulator_statistics.h"
 
 /* Macro */
 

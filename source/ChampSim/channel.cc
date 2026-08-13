@@ -30,6 +30,7 @@
 
 #if (USER_CODES == ENABLE)
 #include "ChampSim/util/bit_enum.h"
+#include "simulator_statistics.h"
 #else
 #include "ChampSim/champsim.h"
 #endif /* USER_CODES */

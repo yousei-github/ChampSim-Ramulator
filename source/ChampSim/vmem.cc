@@ -25,7 +25,9 @@
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/util/bits.h"
 
-#if (USER_CODES == DISABLE)
+#if (USER_CODES == ENABLE)
+#include "simulator_statistics.h"
+#else
 #include "ChampSim/champsim.h"
 #include "ChampSim/dram_controller.h"
 #endif /* USER_CODES */

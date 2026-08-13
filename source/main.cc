@@ -18,14 +18,6 @@
 
 #include "main.h"
 
-#if (USER_CODES == ENABLE)
-#include <cstdio>
-#include <iomanip>
-#include <sstream>
-
-#include "ChampSim/util/to_underlying.h"
-#endif /* USER_CODES */
-
 /* Macro */
 
 /* Type */
@@ -174,60 +166,6 @@ long long parse_long_long_arg(const char* flag_name, const char* arg_value, uint
     }
 
     return value;
-}
-
-// Cache latencies are stored as durations; report them in CPU cycles.
-long long latency_in_cycles(champsim::chrono::clock::duration latency)
-{
-    return static_cast<long long>(latency / champsim::chrono::picoseconds {CPU_CLOCK_PERIOD});
-}
-
-// Tabulate the effective configuration of every cache in the environment. The geometry is derived
-// by champsim::cache_builder from the macros in ChampSim/champsim_constants.h, so this table is the
-// only place a build reveals what it actually simulates.
-std::string format_cache_configuration(champsim::environment& env)
-{
-    std::ostringstream stream;
-
-    stream << "Cache configuration:\n"
-           << std::setw(12) << "NAME" << std::setw(8) << "SETS" << std::setw(6) << "WAYS" << std::setw(7) << "MSHRS" << std::setw(6) << "PQ"
-           << std::setw(9) << "HIT_LAT" << std::setw(10) << "FILL_LAT" << std::setw(9) << "MAX_TAG" << std::setw(10) << "MAX_FILL" << '\n';
-
-    for (CACHE& cache : env.cache_view())
-    {
-        stream << std::setw(12) << cache.NAME << std::setw(8) << cache.NUM_SET << std::setw(6) << cache.NUM_WAY << std::setw(7) << cache.MSHR_SIZE
-               << std::setw(6) << cache.PQ_SIZE << std::setw(9) << latency_in_cycles(cache.HIT_LATENCY) << std::setw(10) << latency_in_cycles(cache.FILL_LATENCY)
-               << std::setw(9) << champsim::to_underlying(cache.MAX_TAG) << std::setw(10) << champsim::to_underlying(cache.MAX_FILL) << '\n';
-    }
-
-    return stream.str();
-}
-
-// Print the run banner and the effective cache configuration to stdout, and to the statistics file
-// as well when one is open. `stats_file` may be nullptr.
-void print_simulation_banner(champsim::environment& env, long long warmup_instructions, long long simulation_instructions, std::FILE* stats_file)
-{
-    std::ostringstream stream;
-
-    stream << "\n*** ChampSim Multicore Out-of-Order Simulator ***\n"
-           << "Warmup Instructions: " << warmup_instructions << '\n'
-           << "Simulation Instructions: " << simulation_instructions << '\n'
-           << "Number of CPUs: " << std::size(env.cpu_view()) << '\n'
-           << "Page size: " << PAGE_SIZE << "\n\n"
-           << format_cache_configuration(env) << '\n';
-
-    const std::string text = stream.str();
-
-#if (USE_VCPKG == ENABLE)
-    fmt::print("{}", text);
-#else
-    std::fputs(text.c_str(), stdout);
-#endif /* USE_VCPKG */
-
-    if (stats_file != nullptr)
-    {
-        std::fputs(text.c_str(), stats_file);
-    }
 }
 } // namespace
 
@@ -924,11 +862,7 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
         }
     }
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    print_simulation_banner(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, output_statistics.file_handler);
-#else
-    print_simulation_banner(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, nullptr);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    output_statistics.print_simulation_start(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length);
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
     fmt::print("\n*** TEST_SWAPPING_UNIT enabled — bypassing real simulation ***\n\n");
@@ -1101,11 +1035,7 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
         }
     }
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    print_simulation_banner(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, output_statistics.file_handler);
-#else
-    print_simulation_banner(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, nullptr);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    output_statistics.print_simulation_start(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length);
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
@@ -1165,11 +1095,7 @@ void start_run_simulation_r2(const std::string& yaml_path, simulator_input_param
         }
     }
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    print_simulation_banner(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, output_statistics.file_handler);
-#else
-    print_simulation_banner(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, nullptr);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    output_statistics.print_simulation_start(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length);
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
@@ -1214,11 +1140,7 @@ void run_simulation(simulator_input_parameter& input_parameter)
         }
     }
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    print_simulation_banner(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, output_statistics.file_handler);
-#else
-    print_simulation_banner(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, nullptr);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    output_statistics.print_simulation_start(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length);
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
