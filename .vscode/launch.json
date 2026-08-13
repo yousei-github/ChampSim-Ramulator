@@ -38,7 +38,7 @@
                     "description": "Set Disassembly Flavor to Intel",
                     "text": "-gdb-set disassembly-flavor intel",
                     "ignoreFailures": true
-                }
+                },
             ],
             //"preLaunchTask": "C/C++: g++ build all files",
             "miDebuggerPath": "/usr/bin/gdb" // The path of debugger. e.g., /usr/local/bin/gdb, /usr/bin/gdb
@@ -136,8 +136,6 @@
                 "2000000",
                 "--json",
                 "test.json",
-                "--stats",
-                "605.mcf_s-665B.champsimtrace.xz.DDR4.stats",
                 "dpc3_traces/605.mcf_s-665B.champsimtrace.xz",
             ],
             "stopAtEntry": true,
