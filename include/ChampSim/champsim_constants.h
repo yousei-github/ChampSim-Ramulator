@@ -142,9 +142,52 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #if (USER_CODES == ENABLE)
 
 /* Virtual memory */
-#define PAGE_TABLE_LEVELS              (5ul)
-#define MINOR_FAULT_PENALTY            (CPU_CLOCK_PERIOD * 200ul)
-#define VMEM_RANDOMIZATION             (1) // Seed for randomized virtual-to-physical page mapping
+#define PAGE_TABLE_LEVELS   (5ul)
+#define MINOR_FAULT_PENALTY (CPU_CLOCK_PERIOD * 200ul)
+#define VMEM_RANDOMIZATION  (1) // Seed for randomized virtual-to-physical page mapping
+
+/* CPUs' IDs */
+#if (CPU_USE_MULTIPLE_CORES == DISABLE)
+#define CPU_0 (0) // CPU 0 ID
+
+#else
+#define CPU_0 (0) // CPU 0 ID
+#define CPU_1 (1) // CPU 1 ID
+
+#endif /* CPU_USE_MULTIPLE_CORES */
+
+/* CPU configuration */
+#define CPU_FREQUENCY                  (4000.0)                                                 // MHz (ooo_cpu's frequency)
+#define CPU_CLOCK_PERIOD               ((uint32_t) (ONE_SECOND_IN_MICROSECOND / CPU_FREQUENCY)) // Picosecond
+
+#define CPU_DIB_SET                    (32)  // DIB (Decoded Instruction Buffer) sets (sets)
+#define CPU_DIB_WAY                    (8)   // DIB ways (ways)
+#define CPU_DIB_WINDOW                 (16)  // DIB window size (window_size)
+#define CPU_IFETCH_BUFFER_SIZE         (64)  // (ifetch_buffer_size)
+#define CPU_DECODE_BUFFER_SIZE         (32)  // (decode_buffer_size)
+#define CPU_DISPATCH_BUFFER_SIZE       (32)  // (dispatch_buffer_size)
+#define CPU_DIB_HIT_BUFFER_SIZE        (32)  // DIB hit buffer size
+#define CPU_REGISTER_FILE_SIZE         (128) // (register_file_size)
+#define CPU_ROB_SIZE                   (352) // (rob_size)
+#define CPU_LQ_SIZE                    (128) // (lq_size)
+#define CPU_SQ_SIZE                    (72)  // (sq_size)
+#define CPU_FETCH_WIDTH                (6)   // (fetch_width)
+#define CPU_DECODE_WIDTH               (6)   // (decode_width)
+#define CPU_DISPATCH_WIDTH             (6)   // (dispatch_width)
+#define CPU_EXECUTE_WIDTH              (4)   // (execute_width)
+#define CPU_LQ_WIDTH                   (2)   // (lq_width)
+#define CPU_SQ_WIDTH                   (2)   // (sq_width)
+#define CPU_RETIRE_WIDTH               (5)   // (retire_width)
+#define CPU_DIB_INORDER_WIDTH          (5)   // DIB inorder width
+#define CPU_MISPREDICT_PENALTY         (1)   // (mispredict_penalty)
+#define CPU_SCHEDULER_SIZE             (128) // (scheduler_size)
+#define CPU_DECODE_LATENCY             (1)   // (decode_latency)
+#define CPU_DIB_HIT_LATENCY            (1)   // DIB hit latency
+#define CPU_DISPATCH_LATENCY           (1)   // (dispatch_latency)
+#define CPU_SCHEDULE_LATENCY           (0)   // (schedule_latency)
+#define CPU_EXECUTE_LATENCY            (0)   // (execute_latency)
+#define CPU_L1I_BANDWIDTH              (1)
+#define CPU_L1D_BANDWIDTH              (1)
 
 /**
  * Cache setting for replacement policy (drrip, lru, ship, srrip)
@@ -202,48 +245,6 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #define BRANCH_TARGET_BUFFER_USE_BASIC basic_btb
 #define CPU_BRANCH_TARGET_BUFFER       BRANCH_TARGET_BUFFER_USE_BASIC
 
-/* CPUs' IDs */
-#if (CPU_USE_MULTIPLE_CORES == DISABLE)
-#define CPU_0 (0) // CPU 0 ID
-
-#else
-#define CPU_0 (0) // CPU 0 ID
-#define CPU_1 (1) // CPU 1 ID
-
-#endif /* CPU_USE_MULTIPLE_CORES */
-
-#define CPU_FREQUENCY            (4000.0)                                                 // MHz (ooo_cpu's frequency)
-#define CPU_CLOCK_PERIOD         ((uint32_t) (ONE_SECOND_IN_MICROSECOND / CPU_FREQUENCY)) // Picosecond
-
-#define CPU_DIB_SET              (32)  // DIB (Decoded Instruction Buffer) sets (sets)
-#define CPU_DIB_WAY              (8)   // DIB ways (ways)
-#define CPU_DIB_WINDOW           (16)  // DIB window size (window_size)
-#define CPU_IFETCH_BUFFER_SIZE   (64)  // (ifetch_buffer_size)
-#define CPU_DECODE_BUFFER_SIZE   (32)  // (decode_buffer_size)
-#define CPU_DISPATCH_BUFFER_SIZE (32)  // (dispatch_buffer_size)
-#define CPU_DIB_HIT_BUFFER_SIZE  (32)  // DIB hit buffer size
-#define CPU_REGISTER_FILE_SIZE   (128) // (register_file_size)
-#define CPU_ROB_SIZE             (352) // (rob_size)
-#define CPU_LQ_SIZE              (128) // (lq_size)
-#define CPU_SQ_SIZE              (72)  // (sq_size)
-#define CPU_FETCH_WIDTH          (6)   // (fetch_width)
-#define CPU_DECODE_WIDTH         (6)   // (decode_width)
-#define CPU_DISPATCH_WIDTH       (6)   // (dispatch_width)
-#define CPU_EXECUTE_WIDTH        (4)   // (execute_width)
-#define CPU_LQ_WIDTH             (2)   // (lq_width)
-#define CPU_SQ_WIDTH             (2)   // (sq_width)
-#define CPU_RETIRE_WIDTH         (5)   // (retire_width)
-#define CPU_DIB_INORDER_WIDTH    (5)   // DIB inorder width
-#define CPU_MISPREDICT_PENALTY   (1)   // (mispredict_penalty)
-#define CPU_SCHEDULER_SIZE       (128) // (scheduler_size)
-#define CPU_DECODE_LATENCY       (1)   // (decode_latency)
-#define CPU_DIB_HIT_LATENCY      (1)   // DIB hit latency
-#define CPU_DISPATCH_LATENCY     (1)   // (dispatch_latency)
-#define CPU_SCHEDULE_LATENCY     (0)   // (schedule_latency)
-#define CPU_EXECUTE_LATENCY      (0)   // (execute_latency)
-#define CPU_L1I_BANDWIDTH        (1)
-#define CPU_L1D_BANDWIDTH        (1)
-
 /** @todo Delete unused macro and add champsim_config.json setting to here */
 
 /**
@@ -258,16 +259,16 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
  */
 
 /* L1I (Level 1 Instruction Cache) */
-#define L1I_CAPACITY             (32 * KiB)                             // Default: 32 KiB
-#define L1I_WAYS                 (8)                                    // (ways)
-#define L1I_SETS                 (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS) // (sets)
-#define L1I_RQ_SIZE              (64)
-#define L1I_WQ_SIZE              (64)
-#define L1I_PQ_SIZE              (32)
-#define L1I_MSHR_SIZE            (8)
-#define L1I_LATENCY              (4)
-#define L1I_MAX_TAG_CHECK        (2)
-#define L1I_MAX_FILL             (2)
+#define L1I_CAPACITY                   (32 * KiB)                             // Default: 32 KiB
+#define L1I_WAYS                       (8)                                    // (ways)
+#define L1I_SETS                       (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS) // (sets)
+#define L1I_RQ_SIZE                    (64)
+#define L1I_WQ_SIZE                    (64)
+#define L1I_PQ_SIZE                    (32)
+#define L1I_MSHR_SIZE                  (8)
+#define L1I_LATENCY                    (4)
+#define L1I_MAX_TAG_CHECK              (2)
+#define L1I_MAX_FILL                   (2)
 
 static_assert((L1I_CAPACITY / BLOCK_SIZE) % L1I_WAYS == 0, "L1I Capacity is not enough");
 
