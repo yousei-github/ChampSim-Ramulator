@@ -52,9 +52,7 @@ VirtualMemory::VirtualMemory(champsim::data::bytes page_table_page_size, std::si
 
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[VMEM] WARNING: virtual memory configuration would require %ld bits of addressing.\n", static_cast<uint64_t>(required_bits));
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("[VMEM] WARNING: virtual memory configuration would require %ld bits of addressing.\n", static_cast<uint64_t>(required_bits));
     }
 
     if (required_bits > champsim::data::bits {champsim::lg2(memory_size.count())})
@@ -64,9 +62,7 @@ VirtualMemory::VirtualMemory(champsim::data::bytes page_table_page_size, std::si
 
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[VMEM] WARNING: physical memory size is smaller than virtual memory size.\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("[VMEM] WARNING: physical memory size is smaller than virtual memory size.\n");
     }
 
     populate_pages();
@@ -130,9 +126,7 @@ void VirtualMemory::ppage_pop()
         fmt::print("[VMEM] WARNING: Out of physical memory, freeing ppages\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[VMEM] WARNING: Out of physical memory, freeing ppages\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("[VMEM] WARNING: Out of physical memory, freeing ppages\n");
 
         populate_pages();
         shuffle_pages();
@@ -163,9 +157,7 @@ std::pair<champsim::page_number, champsim::chrono::clock::duration> VirtualMemor
         fmt::print("[VMEM] {} paddr: {} vpage: {} fault: {}\n", __func__, ppage->second, champsim::page_number {vaddr}, fault);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[VMEM] %s paddr: %ld vpage: %ld fault: %d\n", __func__, ppage->second.to<uint64_t>(), champsim::page_number(vaddr).to<uint64_t>(), fault);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("[VMEM] %s paddr: %ld vpage: %ld fault: %d\n", __func__, ppage->second.to<uint64_t>(), champsim::page_number(vaddr).to<uint64_t>(), fault);
     }
 
     return std::pair {ppage->second, penalty};
@@ -207,10 +199,8 @@ std::pair<champsim::address, champsim::chrono::clock::duration> VirtualMemory::g
         fmt::print("[VMEM] {} paddr: {} vaddr: {} pt_page_offset: {} translation_level: {} fault: {}\n", __func__, paddr, vaddr, offset, level, fault);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[VMEM] %s paddr: %ld vaddr: %ld pt_page_offset: %ld translation_level: %ld fault: %d\n",
+        PRINTF_STATISTICS_FILE("[VMEM] %s paddr: %ld vaddr: %ld pt_page_offset: %ld translation_level: %ld fault: %d\n",
             __func__, paddr.to<uint64_t>(), vaddr.to<uint64_t>(), offset, level, fault);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     auto penalty = minor_fault_penalty;

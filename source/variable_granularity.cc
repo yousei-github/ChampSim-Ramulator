@@ -70,33 +70,33 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
         }
     }
 
-    fprintf(output_statistics.file_handler, "\n\nInformation about variable granularity\n\n");
+    PRINTF_STATISTICS_FILE("\n\nInformation about variable granularity\n\n");
 
     // Print out spatial locality
-    fprintf(output_statistics.file_handler, "Estimated spatial locality distribution:\n");
+    PRINTF_STATISTICS_FILE("Estimated spatial locality distribution:\n");
     for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
     {
-        fprintf(output_statistics.file_handler, "Spatial locality [%d] %ld\n", i, estimated_spatial_locality_counts[i]);
+        PRINTF_STATISTICS_FILE("Spatial locality [%d] %ld\n", i, estimated_spatial_locality_counts[i]);
         estimated_spatial_locality_total_counts += estimated_spatial_locality_counts[i];
     }
-    fprintf(output_statistics.file_handler, "estimated_spatial_locality_total_counts %ld\n", estimated_spatial_locality_total_counts);
+    PRINTF_STATISTICS_FILE("estimated_spatial_locality_total_counts %ld\n", estimated_spatial_locality_total_counts);
 
     // Print out best granularity
-    fprintf(output_statistics.file_handler, "\nBest granularity distribution:\n");
+    PRINTF_STATISTICS_FILE("\nBest granularity distribution:\n");
     for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
     {
-        fprintf(output_statistics.file_handler, "Granularity [%d] %ld\n", i, granularity_counts[i]);
+        PRINTF_STATISTICS_FILE("Granularity [%d] %ld\n", i, granularity_counts[i]);
         granularity_total_counts += granularity_counts[i];
     }
-    fprintf(output_statistics.file_handler, "granularity_total_counts %ld\n", granularity_total_counts);
+    PRINTF_STATISTICS_FILE("granularity_total_counts %ld\n", granularity_total_counts);
 
-    fprintf(output_statistics.file_handler, "\nPredicted granularity distribution:\n");
+    PRINTF_STATISTICS_FILE("\nPredicted granularity distribution:\n");
     for (MIGRATION_GRANULARITY_WIDTH i = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::None); i < MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Max); i++)
     {
-        fprintf(output_statistics.file_handler, "Granularity [%d] %ld\n", i, granularity_predict_counts[i]);
+        PRINTF_STATISTICS_FILE("Granularity [%d] %ld\n", i, granularity_predict_counts[i]);
         granularity_total_predict_counts += granularity_predict_counts[i];
     }
-    fprintf(output_statistics.file_handler, "granularity_total_predict_counts %ld\n", granularity_total_predict_counts);
+    PRINTF_STATISTICS_FILE("granularity_total_predict_counts %ld\n", granularity_total_predict_counts);
 
 #endif /* STATISTICS_INFORMATION */
 

@@ -876,9 +876,7 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
     fmt::print("\nChampSim completed all CPUs\n\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nChampSim completed all CPUs\n\n");
 
     // This a workaround for statistics set only initially lost in the end
     memory.finish();
@@ -1043,9 +1041,7 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
     fmt::print("\nChampSim completed all CPUs\n\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nChampSim completed all CPUs\n\n");
 
     // This a workaround for statistics set only initially lost in the end
     memory.finish();
@@ -1103,9 +1099,7 @@ void start_run_simulation_r2(const std::string& yaml_path, simulator_input_param
     fmt::print("\nChampSim completed all CPUs\n\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nChampSim completed all CPUs\n\n");
 
     champsim::plain_printer {std::cout}.print(phase_stats);
 
@@ -1148,9 +1142,7 @@ void run_simulation(simulator_input_parameter& input_parameter)
     fmt::print("\nChampSim completed all CPUs\n\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nChampSim completed all CPUs\n\n");
 
     champsim::plain_printer {std::cout}.print(phase_stats);
 

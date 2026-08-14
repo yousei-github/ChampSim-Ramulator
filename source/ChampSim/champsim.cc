@@ -137,9 +137,7 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
                             fmt::print("{} CPU {} panic: IPC {:.5g} < {:.5g}\n", phase_name, cpu.cpu, livelock_ipc, *thres);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-                            std::fprintf(output_statistics.file_handler, "%s CPU %d panic: IPC %.5f < %.5f\n", phase_name.c_str(), cpu.cpu, livelock_ipc, *thres);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+                            PRINTF_STATISTICS_FILE("%s CPU %d panic: IPC %.5f < %.5f\n", phase_name.c_str(), cpu.cpu, livelock_ipc, *thres);
                         }
                         else if (std::distance(std::begin(livelock_threshold), thres) == 1)
                         {
@@ -147,9 +145,7 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
                             fmt::print("{} CPU {} critical: IPC {:.5g} < {:.5g}\n", phase_name, cpu.cpu, livelock_ipc, *thres);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-                            std::fprintf(output_statistics.file_handler, "%s CPU %d critical: IPC %.5f < %.5f\n", phase_name.c_str(), cpu.cpu, livelock_ipc, *thres);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+                            PRINTF_STATISTICS_FILE("%s CPU %d critical: IPC %.5f < %.5f\n", phase_name.c_str(), cpu.cpu, livelock_ipc, *thres);
                         }
                         else
                         {
@@ -157,9 +153,7 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
                             fmt::print("{} CPU {} warning: IPC {:.5g} < {:.5g}\n", phase_name, cpu.cpu, livelock_ipc, *thres);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-                            std::fprintf(output_statistics.file_handler, "%s CPU %d warning: IPC %.5f < %.5f\n", phase_name.c_str(), cpu.cpu, livelock_ipc, *thres);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+                            PRINTF_STATISTICS_FILE("%s CPU %d warning: IPC %.5f < %.5f\n", phase_name.c_str(), cpu.cpu, livelock_ipc, *thres);
                         }
 
                         break;
@@ -204,10 +198,8 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
                 fmt::print("{} finished CPU {} instructions: {} cycles: {} cumulative IPC: {:.4g} (Simulation time: {:%H hr %M min %S sec})\n", phase_name, cpu.cpu, cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time());
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-                std::fprintf(output_statistics.file_handler, "%s finished CPU %d instructions: %lld cycles: %lld cumulative IPC: %.4f (Simulation time: {: %ld sec})\n",
+                PRINTF_STATISTICS_FILE("%s finished CPU %d instructions: %lld cycles: %lld cumulative IPC: %.4f (Simulation time: {: %ld sec})\n",
                     phase_name.c_str(), cpu.cpu, cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time().count());
-#endif /* PRINT_STATISTICS_INTO_FILE */
             }
         }
 
@@ -224,7 +216,7 @@ phase_stats do_phase(const phase_info& phase, environment& env, std::vector<trac
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     for (O3_CPU& cpu : env.cpu_view())
     {
-        std::fprintf(output_statistics.file_handler, "%s complete CPU %d instructions: %lld cycles: %lld cumulative IPC: %.4f (Simulation time: {: %ld sec})\n",
+        PRINTF_STATISTICS_FILE("%s complete CPU %d instructions: %lld cycles: %lld cumulative IPC: %.4f (Simulation time: {: %ld sec})\n",
             phase_name.c_str(), cpu.cpu, cpu.sim_instr(), cpu.sim_cycle(), std::ceil(cpu.sim_instr()) / std::ceil(cpu.sim_cycle()), elapsed_time().count());
     }
 #endif /* PRINT_STATISTICS_INTO_FILE */

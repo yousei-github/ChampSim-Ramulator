@@ -26,6 +26,16 @@ struct environment;
 
 /* Macro */
 
+/**
+ *  Print a printf-style line into the simulator statistics file.
+ *  It expands to nothing when PRINT_STATISTICS_INTO_FILE is disabled, so call sites need no guard.
+ */
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+#define PRINTF_STATISTICS_FILE(...) std::fprintf(output_statistics.file_handler, __VA_ARGS__)
+#else
+#define PRINTF_STATISTICS_FILE(...) ((void) 0)
+#endif /* PRINT_STATISTICS_INTO_FILE */
+
 /* Type */
 
 /* Prototype */

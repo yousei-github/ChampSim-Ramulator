@@ -64,10 +64,8 @@ bool champsim::channel::add_rq(const request_type& packet)
         fmt::print("[channel_rq] {} instr_id: {} address: {} v_address: {} type: {}\n", __func__, packet.instr_id, packet.address, packet.v_address, access_type_names.at(champsim::to_underlying(packet.type)));
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[channel_rq] %s instr_id: %ld address: %ld v_address: %ld type: %s\n",
+        PRINTF_STATISTICS_FILE("[channel_rq] %s instr_id: %ld address: %ld v_address: %ld type: %s\n",
             __func__, packet.instr_id, packet.address.to<uint64_t>(), packet.v_address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(packet.type)).data());
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     sim_stats.RQ_ACCESS++;
@@ -94,10 +92,8 @@ bool champsim::channel::add_wq(const request_type& packet)
         fmt::print("[channel_wq] {} instr_id: {} address: {} v_address: {} type: {}\n", __func__, packet.instr_id, packet.address, packet.v_address, access_type_names.at(champsim::to_underlying(packet.type)));
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[channel_wq] %s instr_id: %ld address: %ld v_address: %ld type: %s\n",
+        PRINTF_STATISTICS_FILE("[channel_wq] %s instr_id: %ld address: %ld v_address: %ld type: %s\n",
             __func__, packet.instr_id, packet.address.to<uint64_t>(), packet.v_address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(packet.type)).data());
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     sim_stats.WQ_ACCESS++;
@@ -124,10 +120,8 @@ bool champsim::channel::add_pq(const request_type& packet)
         fmt::print("[channel_pq] {} instr_id: {} address: {} v_address: {} type: {}\n", __func__, packet.instr_id, packet.address, packet.v_address, access_type_names.at(champsim::to_underlying(packet.type)));
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[channel_pq] %s instr_id: %ld address: %ld v_address: %ld type: %s\n",
+        PRINTF_STATISTICS_FILE("[channel_pq] %s instr_id: %ld address: %ld v_address: %ld type: %s\n",
             __func__, packet.instr_id, packet.address.to<uint64_t>(), packet.v_address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(packet.type)).data());
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     sim_stats.PQ_ACCESS++;

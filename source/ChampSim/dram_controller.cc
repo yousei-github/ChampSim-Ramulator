@@ -457,21 +457,21 @@ void MEMORY_CONTROLLER::initialize()
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
     if (champsim::data::gibibytes gb_sz {sz}; gb_sz > 1_GiB)
     {
-        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", gb_sz.count());
+        PRINTF_STATISTICS_FILE("Off-chip DRAM Size: %lld", gb_sz.count());
     }
     else if (champsim::data::mebibytes mb_sz {sz}; mb_sz > 1_MiB)
     {
-        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", mb_sz.count());
+        PRINTF_STATISTICS_FILE("Off-chip DRAM Size: %lld", mb_sz.count());
     }
     else if (champsim::data::kibibytes kb_sz {sz}; kb_sz > 1_kiB)
     {
-        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", kb_sz.count());
+        PRINTF_STATISTICS_FILE("Off-chip DRAM Size: %lld", kb_sz.count());
     }
     else
     {
-        std::fprintf(output_statistics.file_handler, "Off-chip DRAM Size: %lld", sz.count());
+        PRINTF_STATISTICS_FILE("Off-chip DRAM Size: %lld", sz.count());
     }
-    std::fprintf(output_statistics.file_handler, " Channels: %ld Width: %lld-bit Data Rate: %ld MT/s\n",
+    PRINTF_STATISTICS_FILE(" Channels: %ld Width: %lld-bit Data Rate: %ld MT/s\n",
         std::size(channels), champsim::data::bits_per_byte * channel_width.count(), 1us / (data_bus_period));
 #endif /* PRINT_STATISTICS_INTO_FILE */
 }
@@ -764,9 +764,7 @@ void MEMORY_CONTROLLER::print_deadlock()
         fmt::print("DRAM Channel {}\n", j);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "DRAM Channel %d\n", j);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("DRAM Channel %d\n", j);
 
 #if (USER_CODES == ENABLE)
         chan.print_deadlock();

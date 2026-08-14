@@ -167,10 +167,8 @@ bool O3_CPU::do_predict_branch(ooo_model_instr& arch_instr)
             fmt::print("[BRANCH] instr_id: {} ip: {} taken: {}\n", arch_instr.instr_id, arch_instr.ip, arch_instr.branch_taken);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-            std::fprintf(output_statistics.file_handler, "[BRANCH] instr_id: %ld ip: %ld taken: %d\n",
+            PRINTF_STATISTICS_FILE("[BRANCH] instr_id: %ld ip: %ld taken: %d\n",
                 arch_instr.instr_id, arch_instr.ip.to<uint64_t>(), arch_instr.branch_taken);
-#endif /* PRINT_STATISTICS_INTO_FILE */
         }
 
         // call code prefetcher every time the branch predictor is used
@@ -248,10 +246,8 @@ void O3_CPU::do_check_dib(ooo_model_instr& instr)
         fmt::print("[DIB] {} instr_id: {} ip: {} hit: {} cycle: {}\n", __func__, instr.instr_id, instr.ip, dib_result.has_value(), current_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[DIB] %s instr_id: %ld ip: %ld hit: %d cycle: %ld\n",
+        PRINTF_STATISTICS_FILE("[DIB] %s instr_id: %ld ip: %ld hit: %d cycle: %ld\n",
             __func__, instr.instr_id, instr.ip.to<uint64_t>(), dib_result.has_value(), current_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 }
 
@@ -311,10 +307,8 @@ bool O3_CPU::do_fetch_instruction(std::deque<ooo_model_instr>::iterator begin, s
         fmt::print("[IFETCH] {} instr_id: {} ip: {} dependents: {} event_cycle: {}\n", __func__, begin->instr_id, begin->ip, std::size(fetch_packet.instr_depend_on_me), begin->ready_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[IFETCH] %s instr_id: %ld ip: %ld dependents: %ld event_cycle: %ld\n",
+        PRINTF_STATISTICS_FILE("[IFETCH] %s instr_id: %ld ip: %ld dependents: %ld event_cycle: %ld\n",
             __func__, begin->instr_id, begin->ip.to<uint64_t>(), std::size(fetch_packet.instr_depend_on_me), begin->ready_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     return L1I_bus.issue_read(fetch_packet);
@@ -433,10 +427,8 @@ long O3_CPU::decode_instruction()
             fmt::print("[DECODE] do_decode instr_id: {} time: {}\n", db_entry.instr_id, this->current_time.time_since_epoch() / this->clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-            std::fprintf(output_statistics.file_handler, "[DECODE] do_decode instr_id: %ld time: %ld\n",
+            PRINTF_STATISTICS_FILE("[DECODE] do_decode instr_id: %ld time: %ld\n",
                 db_entry.instr_id, this->current_time.time_since_epoch() / this->clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
         }
     };
 
@@ -579,10 +571,8 @@ void O3_CPU::do_execution(ooo_model_instr& instr)
         fmt::print("[ROB] {} instr_id: {} ready_time: {}\n", __func__, instr.instr_id, instr.ready_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[ROB] %s instr_id: %ld ready_time: %ld\n",
+        PRINTF_STATISTICS_FILE("[ROB] %s instr_id: %ld ready_time: %ld\n",
             __func__, instr.instr_id, instr.ready_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 }
 
@@ -619,10 +609,8 @@ void O3_CPU::do_memory_scheduling(ooo_model_instr& instr)
                     fmt::print("[DISPATCH] {} instr_id: {} waits on: {}\n", __func__, instr.instr_id, sq_it->instr_id);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-                    std::fprintf(output_statistics.file_handler, "[DISPATCH] %s instr_id: %ld waits on: %ld\n",
+                    PRINTF_STATISTICS_FILE("[DISPATCH] %s instr_id: %ld waits on: %ld\n",
                         __func__, instr.instr_id, sq_it->instr_id);
-#endif /* PRINT_STATISTICS_INTO_FILE */
                 }
             }
         }
@@ -640,10 +628,8 @@ void O3_CPU::do_memory_scheduling(ooo_model_instr& instr)
         fmt::print("[DISPATCH] {} instr_id: {} loads: {} stores: {} cycle: {}\n", __func__, instr.instr_id, std::size(instr.source_memory), std::size(instr.destination_memory), current_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[DISPATCH] %s instr_id: %ld loads: %ld stores: %ld cycle: %ld\n",
+        PRINTF_STATISTICS_FILE("[DISPATCH] %s instr_id: %ld loads: %ld stores: %ld cycle: %ld\n",
             __func__, instr.instr_id, std::size(instr.source_memory), std::size(instr.destination_memory), current_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 }
 
@@ -699,10 +685,8 @@ void O3_CPU::do_finish_store(const LSQ_ENTRY& sq_entry)
         fmt::print("[SQ] {} instr_id: {} vaddr: {}\n", __func__, sq_entry.instr_id, sq_entry.virtual_address);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[SQ] %s instr_id: %ld vaddr: %ld\n",
+        PRINTF_STATISTICS_FILE("[SQ] %s instr_id: %ld vaddr: %ld\n",
             __func__, sq_entry.instr_id, sq_entry.virtual_address.to<uint64_t>());
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     sq_entry.finish(std::begin(ROB), std::end(ROB));
@@ -731,10 +715,8 @@ bool O3_CPU::do_complete_store(const LSQ_ENTRY& sq_entry)
         fmt::print("[SQ] {} instr_id: {} vaddr: {}\n", __func__, data_packet.instr_id, data_packet.v_address);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[SQ] %s instr_id: %ld vaddr: %ld\n",
+        PRINTF_STATISTICS_FILE("[SQ] %s instr_id: %ld vaddr: %ld\n",
             __func__, data_packet.instr_id, data_packet.v_address.to<uint64_t>());
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     return L1D_bus.issue_write(data_packet);
@@ -753,10 +735,8 @@ bool O3_CPU::execute_load(const LSQ_ENTRY& lq_entry)
         fmt::print("[LQ] {} instr_id: {} vaddr: {}\n", __func__, data_packet.instr_id, data_packet.v_address);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[LQ] %s instr_id: %ld vaddr: %ld\n",
+        PRINTF_STATISTICS_FILE("[LQ] %s instr_id: %ld vaddr: %ld\n",
             __func__, data_packet.instr_id, data_packet.v_address.to<uint64_t>());
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     return L1D_bus.issue_read(data_packet);
@@ -817,9 +797,7 @@ long O3_CPU::handle_memory_return()
                     fmt::print("[IFETCH] {} instr_id: {} fetch completed\n", __func__, fetched->instr_id);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-                    std::fprintf(output_statistics.file_handler, "[IFETCH] %s instr_id: %ld fetch completed\n", __func__, fetched->instr_id);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+                    PRINTF_STATISTICS_FILE("[IFETCH] %s instr_id: %ld fetch completed\n", __func__, fetched->instr_id);
                 }
             }
 
@@ -868,7 +846,7 @@ long O3_CPU::retire_rob()
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
         std::for_each(retire_begin, retire_end, [cycle = current_time.time_since_epoch() / clock_period](const auto& x)
-            { std::fprintf(output_statistics.file_handler, "[ROB] %s retire_rob instr_id: %ld is retired cycle: %ld\n", x.instr_id, cycle); });
+            { PRINTF_STATISTICS_FILE("[ROB] retire_rob instr_id: %ld is retired cycle: %ld\n", x.instr_id, cycle); });
 #endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
@@ -969,9 +947,7 @@ void O3_CPU::print_deadlock()
     champsim::range_print_deadlock(SQ, "cpu" + std::to_string(cpu) + "_SQ", fmt::runtime(sq_fmt), sq_pack);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "DEADLOCK! CPU %d cycle %ld\n", cpu, current_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("DEADLOCK! CPU %d cycle %ld\n", cpu, current_time.time_since_epoch() / clock_period);
 }
 
 // LCOV_EXCL_STOP
@@ -1001,10 +977,8 @@ void LSQ_ENTRY::finish(ooo_model_instr& rob_entry) const
         fmt::print("[LSQ] {} instr_id: {} full_address: {} remain_mem_ops: {}\n", __func__, instr_id, virtual_address, rob_entry.num_mem_ops() - rob_entry.completed_mem_ops);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[LSQ] %s instr_id: %ld full_address: %ld remain_mem_ops: %ld\n",
+        PRINTF_STATISTICS_FILE("[LSQ] %s instr_id: %ld full_address: %ld remain_mem_ops: %ld\n",
             __func__, instr_id, virtual_address.to<uint64_t>(), rob_entry.num_mem_ops() - rob_entry.completed_mem_ops);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 }
 
