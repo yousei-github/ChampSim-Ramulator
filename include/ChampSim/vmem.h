@@ -44,7 +44,7 @@ class VirtualMemory
 {
 private:
 #if (USER_CODES == ENABLE)
-/**
+    /**
      * @brief Virtual page to physical page mapping
      * @details
      * Each application (here is CPU #) has its own virtual address space

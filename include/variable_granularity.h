@@ -12,9 +12,10 @@
 #include "ChampSim/util/bits.h"
 #include "ProjectConfiguration.h" // User file
 
-/** @note Abbreviation:
- *  FM -> Fast memory (e.g., HBM, DDR4)
- *  SM -> Slow memory (e.g., DDR4, PCM)
+/**
+ * @note Abbreviation:
+ * FM -> Fast memory (e.g., HBM, DDR4)
+ * SM -> Slow memory (e.g., DDR4, PCM)
 */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -81,7 +82,8 @@ public:
     uint64_t remapping_request_queue_congestion;
 
     // Scoped enumerations
-    /** @brief
+    /**
+     * @brief
      * It is used to store the migrated page's block number, which is to represent the location in a set.
      */
     enum class RemappingLocation : REMAPPING_LOCATION_WIDTH
@@ -96,8 +98,9 @@ public:
 
     uint8_t set_msb; // Most significant bit of set, and its address format is in the byte granularity
 
-    /** @brief
-     *  It is used to store the first address of the migrated part of the migrated pages.
+    /**
+     * @brief
+     * It is used to store the first address of the migrated part of the migrated pages.
      */
     enum class StartAddress : START_ADDRESS_WIDTH
     {
@@ -109,8 +112,9 @@ public:
         Max = 64
     };
 
-    /** @brief
-     *  It is used to store the migrated page's migration granularity.
+    /**
+     * @brief
+     * It is used to store the migrated page's migration granularity.
      */
     enum class MigrationGranularity : MIGRATION_GRANULARITY_WIDTH
     {

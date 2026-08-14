@@ -13,9 +13,10 @@
 #include "ChampSim/channel.h"
 #include "ProjectConfiguration.h" // User file
 
-/** @note Abbreviation:
- *  FM -> Fast memory (e.g., HBM, DDR4)
- *  SM -> Slow memory (e.g., DDR4, PCM)
+/**
+ * @note Abbreviation:
+ * FM -> Fast memory (e.g., HBM, DDR4)
+ * SM -> Slow memory (e.g., DDR4, PCM)
 */
 
 /*

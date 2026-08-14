@@ -37,9 +37,10 @@
 #endif /* USER_CODES */
 
 #if (RAMULATOR != ENABLE) && (RAMULATOR2 != ENABLE)
-/** Ramulator-backed MEMORY_CONTROLLER lives in either:
- *  - include/ChampSim/ramulator_dram_controller.h  (v1, templated; header-only) or
- *  - include/ChampSim/ramulator2_dram_controller.h (v2, non-templated; with source/ChampSim/ramulator2_dram_controller.cc).
+/**
+ * Ramulator-backed MEMORY_CONTROLLER lives in either:
+ * - include/ChampSim/ramulator_dram_controller.h  (v1, templated; header-only) or
+ * - include/ChampSim/ramulator2_dram_controller.h (v2, non-templated; with source/ChampSim/ramulator2_dram_controller.cc).
  * This translation unit only provides the native ChampSim variant.
 */
 

@@ -16,9 +16,10 @@
 #include "ideal_single_mempod.h"
 #include "variable_granularity.h"
 
-/** @note Abbreviation:
- *  FM -> Fast memory (e.g., HBM, DDR4)
- *  SM -> Slow memory (e.g., DDR4, PCM)
+/**
+ * @note Abbreviation:
+ * FM -> Fast memory (e.g., HBM, DDR4)
+ * SM -> Slow memory (e.g., DDR4, PCM)
 */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)

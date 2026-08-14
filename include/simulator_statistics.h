@@ -20,8 +20,8 @@
 /* Macro */
 
 /**
- *  Print a printf-style line into the simulator statistics file.
- *  It expands to nothing when PRINT_STATISTICS_INTO_FILE is disabled, so call sites need no guard.
+ * Print a printf-style line into the simulator statistics file.
+ * It expands to nothing when PRINT_STATISTICS_INTO_FILE is disabled, so call sites need no guard.
  */
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
 #define PRINTF_STATISTICS_FILE(...) std::fprintf(output_statistics.file_handler, __VA_ARGS__)
@@ -32,9 +32,9 @@
 /* Type */
 
 /**
- *  One row of the startup cache-configuration table. It deliberately holds only primitives, so this
- *  header stays free of ChampSim types even though nearly every translation unit includes it.
- *  source/main.cc fills the rows from champsim::environment.
+ * One row of the startup cache-configuration table. It deliberately holds only primitives, so this
+ * header stays free of ChampSim types even though nearly every translation unit includes it.
+ * source/main.cc fills the rows from champsim::environment.
  */
 struct CACHE_CONFIGURATION
 {
@@ -68,15 +68,15 @@ public:
     ~DATA_OUTPUT();
 
     /**
-     *  Initialize the output file's name based on the name of input @p string.
+     * Initialize the output file's name based on the name of input @p string.
      *
      * @param[in] string The name string.
      */
     void output_file_initialization(const char* string);
 
     /**
-     *  Initialize the output file's name based on the name of input @p string_array[number].
-     *  It extracts the last name of each string from @p string_array using the delimiter "/" and concatenates them to form a single string as the result.
+     * Initialize the output file's name based on the name of input @p string_array[number].
+     * It extracts the last name of each string from @p string_array using the delimiter "/" and concatenates them to form a single string as the result.
      *
      * @param[in] string_array The string array containing a string.
      * @param[in] number The number of strings in the string_array.
@@ -133,8 +133,8 @@ public:
     ~SIMULATOR_STATISTICS();
 
     /**
-     *  Print the run start message and the effective cache configuration to stdout, and to the
-     *  statistics file as well when one is open (see output_file_initialization).
+     * Print the run start message and the effective cache configuration to stdout, and to the
+     * statistics file as well when one is open (see output_file_initialization).
      *
      * @param[in] warmup_instructions The number of instructions used to warm up the simulation.
      * @param[in] simulation_instructions The number of instructions to simulate.

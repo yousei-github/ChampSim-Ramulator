@@ -4,7 +4,6 @@
 
 #include <errno.h>
 #include <limits.h>
-#include <stddef.h>
 #include <string.h>
 
 #include <algorithm>
@@ -25,10 +24,13 @@
 // Functions private to a Compilation Unit (TU - Translation Unit): using anonymous namespaces or the static keyword
 namespace
 {
-// Linux file systems cap a single path component at NAME_MAX (typically 255).
-// If the basename of `path` would exceed that, replace its middle with a
-// deterministic hash so the resulting name is short, unique per original
-// input, and keeps the original extension.
+
+/**
+ * Linux file systems cap a single path component at NAME_MAX (typically 255).
+ * If the basename of `path` would exceed that, replace its middle with a
+ * deterministic hash so the resulting name is short, unique per original
+ * input, and keeps the original extension.
+*/
 std::string shorten_path_if_needed(const std::string& path)
 {
     const size_t slash     = path.find_last_of('/');
@@ -51,9 +53,11 @@ std::string shorten_path_if_needed(const std::string& path)
     return dir + shortened_stem + hash_suffix + ext;
 }
 
-// Tabulate the effective configuration of every cache the caller collected. The geometry is derived
-// by champsim::cache_builder from the macros in ChampSim/champsim_constants.h, so this table is the
-// only place a build reveals what it actually simulates.
+/**
+ * Tabulate the effective configuration of every cache the caller collected. The geometry is derived
+ * by champsim::cache_builder from the macros in ChampSim/champsim_constants.h, so this table is the
+ * only place a build reveals what it actually simulates.
+ */
 std::string format_cache_configuration(const std::vector<CACHE_CONFIGURATION>& cache_configuration)
 {
     std::ostringstream stream;

@@ -64,8 +64,10 @@ template<typename T, typename T2>
 void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramulator::Controller>& memory, const ramulator::Config& configs2, ramulator::Memory<T2, ramulator::Controller>& memory2, simulator_input_parameter& input_parameter);
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
-/** Stand-alone swapping-unit smoke test. Runs in place of normal simulation
- *  when both MEMORY_USE_SWAPPING_UNIT and TEST_SWAPPING_UNIT are enabled. */
+/**
+ * Stand-alone swapping-unit smoke test. Runs in place of normal simulation
+ * when both MEMORY_USE_SWAPPING_UNIT and TEST_SWAPPING_UNIT are enabled.
+ */
 void run_swapping_unit_test();
 #endif /* MEMORY_USE_SWAPPING_UNIT && TEST_SWAPPING_UNIT */
 
@@ -134,11 +136,15 @@ const unsigned LOG2_PAGE_SIZE  = champsim::lg2(PAGE_SIZE);
 
 #if (USER_CODES == ENABLE)
 
+// Functions private to a Compilation Unit (TU - Translation Unit): using anonymous namespaces or the static keyword
 namespace
 {
-// Parse a long-long-valued CLI argument with full validation. On failure,
-// prints a diagnostic in the same style as the surrounding parsing loop and
-// bumps `abort_flag`, which the loop checks at the end of each iteration.
+
+/**
+ * Parse a long-long-valued CLI argument with full validation. On failure,
+ * prints a diagnostic in the same style as the surrounding parsing loop and
+ * bumps `abort_flag`, which the loop checks at the end of each iteration.
+*/
 long long parse_long_long_arg(const char* flag_name, const char* arg_value, uint8_t& abort_flag)
 {
     if (arg_value == nullptr || *arg_value == '\0')
@@ -174,9 +180,11 @@ long long convert_latency_in_cycles(champsim::chrono::clock::duration latency)
     return static_cast<long long>(latency / champsim::chrono::picoseconds {CPU_CLOCK_PERIOD});
 }
 
-// Flatten the environment's caches into the primitive rows SIMULATOR_STATISTICS tabulates, so the
-// statistics classes never have to name a ChampSim type. The geometry itself is derived by
-// champsim::cache_builder from the macros in ChampSim/champsim_constants.h.
+/**
+ * Flatten the environment's caches into the primitive rows SIMULATOR_STATISTICS tabulates, so the
+ * statistics classes never have to name a ChampSim type. The geometry itself is derived by
+ * champsim::cache_builder from the macros in ChampSim/champsim_constants.h.
+*/
 std::vector<CACHE_CONFIGURATION> collect_cache_configuration(champsim::environment& env)
 {
     std::vector<CACHE_CONFIGURATION> cache_configuration;
@@ -793,11 +801,13 @@ void start_run_simulation(const ramulator::Config& configs, T* spec, const ramul
 }
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
-/** Smoke test for the swapping unit — preserved from the previous in-line
- *  block in run_simulation(). The body still references symbols that may no
- *  longer be in scope (LLC, memory_controller, all_warmup_complete, PACKET,
- *  MemoryRequestProducer, warmup_instructions, simulation_instructions);
- *  reviving this test requires reattaching those bindings. */
+/**
+ * Smoke test for the swapping unit — preserved from the previous in-line
+ * block in run_simulation(). The body still references symbols that may no
+ * longer be in scope (LLC, memory_controller, all_warmup_complete, PACKET,
+ * MemoryRequestProducer, warmup_instructions, simulation_instructions);
+ * reviving this test requires reattaching those bindings.
+ */
 void run_swapping_unit_test()
 {
     all_warmup_complete = 1;

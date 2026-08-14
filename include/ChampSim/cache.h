@@ -184,7 +184,8 @@ public:
     stats_type sim_stats, roi_stats;
 
 #if (USER_CODES == ENABLE)
-    /** @brief
+    /**
+     * @brief
      * Miss status holding registers (MSHR) is the hardware structure for tracking outstanding misses.
      * This mechanism is to insure accesses to the same location execute in program order.
      * Each MSHR refers to one missing cache line and contains a valid bit, the tag of the cache line and
