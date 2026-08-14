@@ -24,6 +24,10 @@
 #include "ChampSim/util/units.h"
 #include "ProjectConfiguration.h" // User file
 
+#if (USER_CODES == ENABLE)
+#include <cassert> // The bit helpers below assert on their arguments
+#endif             /* USER_CODES */
+
 namespace champsim::msl
 {
 

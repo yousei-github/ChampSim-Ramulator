@@ -13,7 +13,16 @@
 #include <cstdio>
 #include <string>
 
-#include "ChampSim/environment.h"
+#include "ChampSim/champsim_constants.h" // For PAGE_TABLE_LEVELS
+
+namespace champsim
+{
+// Only a reference is needed here, so the ChampSim headers stay out of this file. Including
+// ChampSim/environment.h instead would form a cycle: with RAMULATOR enabled it reaches
+// ChampSim/ramulator_dram_controller.h, which includes this header back and would then see
+// output_statistics / output_memorytrace before they are declared.
+struct environment;
+} // namespace champsim
 
 /* Macro */
 

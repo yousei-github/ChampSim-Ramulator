@@ -23,6 +23,7 @@
 #include "ChampSim/cache.h"
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/chrono.h"
+#include "ChampSim/environment.h"
 #include "ChampSim/util/to_underlying.h"
 
 // Functions private to a Compilation Unit (TU - Translation Unit): using anonymous namespaces or the static keyword
