@@ -91,84 +91,119 @@ const auto default_core =
         .l1d_bandwidth(champsim::bandwidth::maximum_type {CPU_L1D_BANDWIDTH});
 
 const auto default_l1i = champsim::cache_builder<champsim::cache_builder_module_type_holder<CPU_L1I_PREFETCHER>, champsim::cache_builder_module_type_holder<CPU_L1I_REPLACEMENT_POLICY>> {}
-                             .sets_factor(L1I_SETS)
+                             .sets(L1I_SETS)
                              .ways(L1I_WAYS)
                              .pq_size(L1I_PQ_SIZE)
+                             .mshr_size(L1I_MSHR_SIZE)
+                             .latency(L1I_LATENCY)
+                             .tag_bandwidth(champsim::bandwidth::maximum_type {L1I_MAX_TAG_CHECK})
+                             .fill_bandwidth(champsim::bandwidth::maximum_type {L1I_MAX_FILL})
                              .offset_bits(champsim::data::bits {LOG2_BLOCK_SIZE})
-                             .reset_prefetch_as_load()
-                             .set_virtual_prefetch()
-                             .set_wq_checks_full_addr()
-                             .prefetch_activate(access_type::LOAD, access_type::PREFETCH);
+                             L1I_PREFETCH_AS_LOAD_PART
+                             L1I_WQ_CHECK_FULL_ADDR_PART
+                             L1I_VIRTUAL_PREFETCH_PART
+                             .prefetch_activate(L1I_PREFETCH_ACTIVATE)
+                             L1I_EXTRA_BUILDER_PARTS;
 
 const auto default_l1d = champsim::cache_builder<champsim::cache_builder_module_type_holder<CPU_L1D_PREFETCHER>, champsim::cache_builder_module_type_holder<CPU_L1D_REPLACEMENT_POLICY>> {}
-                             .sets_factor(L1D_SETS)
+                             .sets(L1D_SETS)
                              .ways(L1D_WAYS)
                              .pq_size(L1D_PQ_SIZE)
+                             .mshr_size(L1D_MSHR_SIZE)
+                             .latency(L1D_LATENCY)
+                             .tag_bandwidth(champsim::bandwidth::maximum_type {L1D_MAX_TAG_CHECK})
+                             .fill_bandwidth(champsim::bandwidth::maximum_type {L1D_MAX_FILL})
                              .offset_bits(champsim::data::bits {LOG2_BLOCK_SIZE})
-                             .reset_prefetch_as_load()
-                             .reset_virtual_prefetch()
-                             .set_wq_checks_full_addr()
-                             .prefetch_activate(access_type::LOAD, access_type::PREFETCH);
+                             L1D_PREFETCH_AS_LOAD_PART
+                             L1D_WQ_CHECK_FULL_ADDR_PART
+                             L1D_VIRTUAL_PREFETCH_PART
+                             .prefetch_activate(L1D_PREFETCH_ACTIVATE)
+                             L1D_EXTRA_BUILDER_PARTS;
 
 const auto default_l2c = champsim::cache_builder<champsim::cache_builder_module_type_holder<CPU_L2C_PREFETCHER>, champsim::cache_builder_module_type_holder<CPU_L2C_REPLACEMENT_POLICY>> {}
-                             .sets_factor(L2C_SETS)
+                             .sets(L2C_SETS)
                              .ways(L2C_WAYS)
                              .pq_size(L2C_PQ_SIZE)
+                             .mshr_size(L2C_MSHR_SIZE)
+                             .latency(L2C_LATENCY)
+                             .tag_bandwidth(champsim::bandwidth::maximum_type {L2C_MAX_TAG_CHECK})
+                             .fill_bandwidth(champsim::bandwidth::maximum_type {L2C_MAX_FILL})
                              .offset_bits(champsim::data::bits {LOG2_BLOCK_SIZE})
-                             .reset_prefetch_as_load()
-                             .reset_virtual_prefetch()
-                             .reset_wq_checks_full_addr()
-                             .prefetch_activate(access_type::LOAD, access_type::PREFETCH);
+                             L2C_PREFETCH_AS_LOAD_PART
+                             L2C_WQ_CHECK_FULL_ADDR_PART
+                             L2C_VIRTUAL_PREFETCH_PART
+                             .prefetch_activate(L2C_PREFETCH_ACTIVATE)
+                             L2C_EXTRA_BUILDER_PARTS;
 
 const auto default_itlb = champsim::cache_builder<champsim::cache_builder_module_type_holder<CPU_ITLB_PREFETCHER>, champsim::cache_builder_module_type_holder<CPU_ITLB_REPLACEMENT_POLICY>> {}
-                              .sets_factor(ITLB_SETS)
+                              .sets(ITLB_SETS)
                               .ways(ITLB_WAYS)
                               .pq_size(ITLB_PQ_SIZE)
+                              .mshr_size(ITLB_MSHR_SIZE)
+                              .latency(ITLB_LATENCY)
+                              .tag_bandwidth(champsim::bandwidth::maximum_type {ITLB_MAX_TAG_CHECK})
+                              .fill_bandwidth(champsim::bandwidth::maximum_type {ITLB_MAX_FILL})
                               .offset_bits(champsim::data::bits {LOG2_PAGE_SIZE})
-                              .reset_prefetch_as_load()
-                              .set_virtual_prefetch()
-                              .set_wq_checks_full_addr()
-                              .prefetch_activate(access_type::LOAD, access_type::PREFETCH);
+                              ITLB_PREFETCH_AS_LOAD_PART
+                              ITLB_WQ_CHECK_FULL_ADDR_PART
+                              ITLB_VIRTUAL_PREFETCH_PART
+                              .prefetch_activate(ITLB_PREFETCH_ACTIVATE)
+                              ITLB_EXTRA_BUILDER_PARTS;
 
 const auto default_dtlb = champsim::cache_builder<champsim::cache_builder_module_type_holder<CPU_DTLB_PREFETCHER>, champsim::cache_builder_module_type_holder<CPU_DTLB_REPLACEMENT_POLICY>> {}
-                              .sets_factor(DTLB_SETS)
+                              .sets(DTLB_SETS)
                               .ways(DTLB_WAYS)
                               .pq_size(DTLB_PQ_SIZE)
                               .mshr_size(DTLB_MSHR_SIZE)
+                              .latency(DTLB_LATENCY)
+                              .tag_bandwidth(champsim::bandwidth::maximum_type {DTLB_MAX_TAG_CHECK})
+                              .fill_bandwidth(champsim::bandwidth::maximum_type {DTLB_MAX_FILL})
                               .offset_bits(champsim::data::bits {LOG2_PAGE_SIZE})
-                              .reset_prefetch_as_load()
-                              .reset_virtual_prefetch()
-                              .set_wq_checks_full_addr()
-                              .prefetch_activate(access_type::LOAD, access_type::PREFETCH);
+                              DTLB_PREFETCH_AS_LOAD_PART
+                              DTLB_WQ_CHECK_FULL_ADDR_PART
+                              DTLB_VIRTUAL_PREFETCH_PART
+                              .prefetch_activate(DTLB_PREFETCH_ACTIVATE)
+                              DTLB_EXTRA_BUILDER_PARTS;
 
 const auto default_stlb = champsim::cache_builder<champsim::cache_builder_module_type_holder<CPU_STLB_PREFETCHER>, champsim::cache_builder_module_type_holder<CPU_STLB_REPLACEMENT_POLICY>> {}
-                              .sets_factor(STLB_SETS)
+                              .sets(STLB_SETS)
                               .ways(STLB_WAYS)
                               .pq_size(STLB_PQ_SIZE)
+                              .mshr_size(STLB_MSHR_SIZE)
+                              .latency(STLB_LATENCY)
+                              .tag_bandwidth(champsim::bandwidth::maximum_type {STLB_MAX_TAG_CHECK})
+                              .fill_bandwidth(champsim::bandwidth::maximum_type {STLB_MAX_FILL})
                               .offset_bits(champsim::data::bits {LOG2_PAGE_SIZE})
-                              .reset_prefetch_as_load()
-                              .reset_virtual_prefetch()
-                              .reset_wq_checks_full_addr()
-                              .prefetch_activate(access_type::LOAD, access_type::PREFETCH);
+                              STLB_PREFETCH_AS_LOAD_PART
+                              STLB_WQ_CHECK_FULL_ADDR_PART
+                              STLB_VIRTUAL_PREFETCH_PART
+                              .prefetch_activate(STLB_PREFETCH_ACTIVATE)
+                              STLB_EXTRA_BUILDER_PARTS;
 
 const auto default_llc = champsim::cache_builder<champsim::cache_builder_module_type_holder<LLC_PREFETCHER>, champsim::cache_builder_module_type_holder<LLC_REPLACEMENT_POLICY>> {}
                              .name("LLC")
-                             .sets_factor(LLC_SETS)
+                             .sets(LLC_SETS)
                              .ways(LLC_WAYS)
                              .pq_size(LLC_PQ_SIZE)
+                             .mshr_size(LLC_MSHR_SIZE)
+                             .latency(LLC_LATENCY)
+                             .tag_bandwidth(champsim::bandwidth::maximum_type {LLC_MAX_TAG_CHECK})
+                             .fill_bandwidth(champsim::bandwidth::maximum_type {LLC_MAX_FILL})
                              .offset_bits(champsim::data::bits {LOG2_BLOCK_SIZE})
-                             .reset_prefetch_as_load()
-                             .reset_virtual_prefetch()
-                             .reset_wq_checks_full_addr()
-                             .prefetch_activate(access_type::LOAD, access_type::PREFETCH);
+                             LLC_PREFETCH_AS_LOAD_PART
+                             LLC_WQ_CHECK_FULL_ADDR_PART
+                             LLC_VIRTUAL_PREFETCH_PART
+                             .prefetch_activate(LLC_PREFETCH_ACTIVATE)
+                             LLC_EXTRA_BUILDER_PARTS;
 
 const auto default_ptw = champsim::ptw_builder {}
                              .bandwidth_factor(2)
                              .mshr_factor(PTW_MSHR_SIZE)
-                             .add_pscl(5, PTW_PSCL5_SET, PTW_PSCL5_WAY)
-                             .add_pscl(4, PTW_PSCL4_SET, PTW_PSCL4_WAY)
-                             .add_pscl(3, PTW_PSCL3_SET, PTW_PSCL3_WAY)
-                             .add_pscl(2, PTW_PSCL2_SET, PTW_PSCL2_WAY);
+                             PTW_PSCL5_PART
+                             PTW_PSCL4_PART
+                             PTW_PSCL3_PART
+                             PTW_PSCL2_PART
+                             PTW_EXTRA_BUILDER_PARTS;
 } // namespace champsim::defaults
 
 #endif

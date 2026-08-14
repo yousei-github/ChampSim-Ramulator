@@ -1,5 +1,7 @@
 #include "os_transparent_management.h"
 
+#include "simulator_statistics.h"
+
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 
 #if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)

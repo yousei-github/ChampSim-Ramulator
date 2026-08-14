@@ -11,6 +11,10 @@
 
 #include "ProjectConfiguration.h" // User file
 
+#if (USER_CODES == ENABLE)
+#include <stdint.h>
+#endif /* USER_CODES */
+
 namespace ramulator
 {
 

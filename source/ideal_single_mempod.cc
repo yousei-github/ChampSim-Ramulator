@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "simulator_statistics.h"
+
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 #if (IDEAL_SINGLE_MEMPOD == ENABLE)
 

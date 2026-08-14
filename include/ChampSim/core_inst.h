@@ -276,15 +276,15 @@ champsim::configured::generated_environment<ID>::generated_environment()
 #endif /* MEMORY_USE_HYBRID */
 #else
   /* Memory's initialization */
-  DRAM {champsim::chrono::picoseconds {DRAM_DATA_TRANSFER_PERIOD}, champsim::chrono::picoseconds {DRAM_IO_CLOCK_PERIOD}, std::size_t {24}, std::size_t {24}, std::size_t {24}, std::size_t {52}, champsim::chrono::microseconds {32000}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, DRAM_RQ_SIZE, DRAM_WQ_SIZE, DRAM_CHANNELS, champsim::data::bytes {DRAM_CHANNEL_WIDTH}, DRAM_ROWS, DRAM_COLUMNS, DRAM_RANKS, DRAM_BANK_GROUPS, DRAM_BANKS, 8192},
+  DRAM {champsim::chrono::picoseconds {DRAM_DATA_TRANSFER_PERIOD}, champsim::chrono::picoseconds {DRAM_IO_CLOCK_PERIOD}, DRAM_tRP, DRAM_tRCD, DRAM_tCAS, DRAM_tRAS, champsim::chrono::microseconds {DRAM_REFRESH_PERIOD}, {&channels.at(index_type(ChannelIndex::LLC_to_MAIN_MEMORY_Queues))}, DRAM_RQ_SIZE, DRAM_WQ_SIZE, DRAM_CHANNELS, champsim::data::bytes {DRAM_CHANNEL_WIDTH}, DRAM_ROWS, DRAM_COLUMNS, DRAM_RANKS, DRAM_BANK_GROUPS, DRAM_BANKS, DRAM_REFRESHES_PER_PERIOD},
 #endif /* RAMULATOR */
 
 #if (RAMULATOR == ENABLE) || (RAMULATOR2 == ENABLE)
   /* Virtual memory's initialization */
-  vmem {champsim::data::bytes {PAGE_SIZE}, PAGE_TABLE_LEVELS, champsim::chrono::picoseconds {MINOR_FAULT_PENALTY}, memory_controller.size(), 1},
+  vmem {champsim::data::bytes {PAGE_SIZE}, PAGE_TABLE_LEVELS, champsim::chrono::picoseconds {MINOR_FAULT_PENALTY}, memory_controller.size(), VMEM_RANDOMIZATION},
 #else
   /* Virtual memory's initialization */
-  vmem {champsim::data::bytes {PAGE_SIZE}, PAGE_TABLE_LEVELS, champsim::chrono::picoseconds {MINOR_FAULT_PENALTY}, DRAM.size(), 1},
+  vmem {champsim::data::bytes {PAGE_SIZE}, PAGE_TABLE_LEVELS, champsim::chrono::picoseconds {MINOR_FAULT_PENALTY}, DRAM.size(), VMEM_RANDOMIZATION},
 #endif /* RAMULATOR */
 
   /* Page table walker's initialization */

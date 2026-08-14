@@ -13,9 +13,10 @@
 #include "ChampSim/util/bits.h"
 #include "ProjectConfiguration.h" // User file
 
-/** @note Abbreviation:
- *  FM -> Fast memory (e.g., HBM, DDR4)
- *  SM -> Slow memory (e.g., DDR4, PCM)
+/**
+ * @note Abbreviation:
+ * FM -> Fast memory (e.g., HBM, DDR4)
+ * SM -> Slow memory (e.g., DDR4, PCM)
 */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -122,9 +123,10 @@ public:
 #endif /* BITS_MANIPULATION */
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
-    /** @brief
-     *  If a memory read request is mapped in slow memory, the memory controller needs first access the fast memory
-     *  to get the Location Entry and Data (LEAD), and then access the slow memory based on that LEAD.
+    /**
+     * @brief
+     * If a memory read request is mapped in slow memory, the memory controller needs first access the fast memory
+     * to get the Location Entry and Data (LEAD), and then access the slow memory based on that LEAD.
      */
     struct ReadRequest
     {
@@ -134,10 +136,11 @@ public:
 
     std::vector<ReadRequest> incomplete_read_request_queue;
 
-    /** @brief
-     *  If a memory write request is received, the memory controller needs first to figure out where is the right
-     *  place to write. So, the memory controller first access the fast memory to get the Location Entry and Data (LEAD),
-     *  and then write the memory (fast or slow memory).
+    /**
+     * @brief
+     * If a memory write request is received, the memory controller needs first to figure out where is the right
+     * place to write. So, the memory controller first access the fast memory to get the Location Entry and Data (LEAD),
+     * and then write the memory (fast or slow memory).
      */
     struct WriteRequest
     {

@@ -1,24 +1,36 @@
-#include "ProjectConfiguration.h"
+#include "simulator_statistics.h"
+
+#if (USER_CODES == ENABLE)
 
 #include <errno.h>
 #include <limits.h>
-#include <stddef.h>
 #include <string.h>
 
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
+
+#if (USE_VCPKG == ENABLE)
+#include <fmt/core.h>
+#endif /* USE_VCPKG */
+
+#include "ChampSim/champsim_constants.h"
 
 // Functions private to a Compilation Unit (TU - Translation Unit): using anonymous namespaces or the static keyword
 namespace
 {
-// Linux file systems cap a single path component at NAME_MAX (typically 255).
-// If the basename of `path` would exceed that, replace its middle with a
-// deterministic hash so the resulting name is short, unique per original
-// input, and keeps the original extension.
+
+/**
+ * Linux file systems cap a single path component at NAME_MAX (typically 255).
+ * If the basename of `path` would exceed that, replace its middle with a
+ * deterministic hash so the resulting name is short, unique per original
+ * input, and keeps the original extension.
+*/
 std::string shorten_path_if_needed(const std::string& path)
 {
     const size_t slash     = path.find_last_of('/');
@@ -39,6 +51,29 @@ std::string shorten_path_if_needed(const std::string& path)
     const std::string shortened_stem = stem.substr(0, std::min(stem.size(), budget));
 
     return dir + shortened_stem + hash_suffix + ext;
+}
+
+/**
+ * Tabulate the effective configuration of every cache the caller collected. The geometry is derived
+ * by champsim::cache_builder from the macros in ChampSim/champsim_constants.h, so this table is the
+ * only place a build reveals what it actually simulates.
+ */
+std::string format_cache_configuration(const std::vector<CACHE_CONFIGURATION>& cache_configuration)
+{
+    std::ostringstream stream;
+
+    stream << "Cache configuration:\n"
+           << std::setw(12) << "NAME" << std::setw(8) << "SETS" << std::setw(6) << "WAYS" << std::setw(7) << "MSHRS" << std::setw(6) << "PQ"
+           << std::setw(9) << "HIT_LAT" << std::setw(10) << "FILL_LAT" << std::setw(9) << "MAX_TAG" << std::setw(10) << "MAX_FILL" << '\n';
+
+    for (const CACHE_CONFIGURATION& cache : cache_configuration)
+    {
+        stream << std::setw(12) << cache.name << std::setw(8) << cache.sets << std::setw(6) << cache.ways << std::setw(7) << cache.mshrs
+               << std::setw(6) << cache.pq_size << std::setw(9) << cache.hit_latency_in_cycles << std::setw(10) << cache.fill_latency_in_cycles
+               << std::setw(9) << cache.max_tag_check << std::setw(10) << cache.max_fill << '\n';
+    }
+
+    return stream.str();
 }
 } // namespace
 
@@ -64,10 +99,7 @@ DATA_OUTPUT::DATA_OUTPUT(std::string v1, std::string v2, char** string_array, ui
 
 DATA_OUTPUT::~DATA_OUTPUT()
 {
-    if (file_handler) // Check the validity of this file handler
-    {
-        fclose(file_handler);
-    }
+    close_file(file_handler);
 
     if (file_name) // Check the validity of this file name string
     {
@@ -78,6 +110,8 @@ DATA_OUTPUT::~DATA_OUTPUT()
 
 void DATA_OUTPUT::output_file_initialization(const char* string)
 {
+    close_file(file_handler); // In case of repeated file open
+
     const std::string original_name = string;
     const std::string actual_name   = shorten_path_if_needed(original_name);
 
@@ -106,6 +140,8 @@ void DATA_OUTPUT::output_file_initialization(const char* string)
 
 void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t number)
 {
+    close_file(file_handler); // In case of repeated file open
+
     std::string benchmark_names;
     for (uint32_t i = 0; i < number; i++)
     {
@@ -149,6 +185,14 @@ void DATA_OUTPUT::output_file_initialization(char** string_array, uint32_t numbe
     }
 
     strcpy(file_name, actual_name.c_str());
+}
+
+void DATA_OUTPUT::close_file(FILE* file_handler)
+{
+    if (file_handler) // Check the validity of this file handler
+    {
+        fclose(file_handler);
+    }
 }
 
 MEMORY_TRACE::MEMORY_TRACE(std::string v1, std::string v2)
@@ -221,6 +265,34 @@ SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
     }
 }
 
+void SIMULATOR_STATISTICS::print_simulation_start(long long warmup_instructions, long long simulation_instructions, std::size_t cpu_number,
+    const std::vector<CACHE_CONFIGURATION>& cache_configuration)
+{
+    std::ostringstream stream;
+
+    stream << "\n*** ChampSim Multicore Out-of-Order Simulator ***\n"
+           << "Warmup Instructions: " << warmup_instructions << '\n'
+           << "Simulation Instructions: " << simulation_instructions << '\n'
+           << "Number of CPUs: " << cpu_number << '\n'
+           << "Page size: " << PAGE_SIZE << "\n\n"
+           << format_cache_configuration(cache_configuration) << '\n';
+
+    const std::string text = stream.str();
+
+#if (USE_VCPKG == ENABLE)
+    fmt::print("{}", text);
+#endif /* USE_VCPKG */
+
+    // file_handler stays nullptr unless output_file_initialization() opened the statistics file,
+    // which only happens when PRINT_STATISTICS_INTO_FILE is enabled.
+    if (file_handler != nullptr)
+    {
+#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
+        std::fputs(text.c_str(), file_handler);
+#endif /* PRINT_STATISTICS_INTO_FILE */
+    }
+}
+
 void SIMULATOR_STATISTICS::statistics_initialization()
 {
     /* Initialize variabes */
@@ -256,3 +328,5 @@ void SIMULATOR_STATISTICS::statistics_initialization()
     uncertain_counter                             = 0;
 #endif /* IDEAL_VARIABLE_GRANULARITY */
 }
+
+#endif /* USER_CODES */

@@ -140,20 +140,6 @@
 
 /* Header */
 
-// Standard libraries
-#include <ctype.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <array>
-#include <cassert>
-#include <cerrno>
-#include <cstdio>
-#include <cstdlib>
-#include <functional>
-#include <string>
-
 #if (USE_OPENMP == ENABLE)
 #include <omp.h>
 #endif /* USE_OPENMP */
@@ -164,119 +150,36 @@
 
 /* Prototype */
 
-/** 
- * The primitive class for data output.
- */
-class DATA_OUTPUT
-{
-public:
-    const std::string data_name;      // The name of data to output
-    const std::string file_extension; // The name of file extension
-    FILE* file_handler = nullptr;
-    char* file_name    = nullptr;
-
-    DATA_OUTPUT(std::string v1, std::string v2);
-    DATA_OUTPUT(std::string v1, std::string v2, const char* string);
-    DATA_OUTPUT(std::string v1, std::string v2, char** string_array, uint32_t number);
-    ~DATA_OUTPUT();
-
-    /**
-     *  Initialize the output file's name based on the name of input @p string.
-     * 
-     * @param[in] string The name string.
-     */
-    void output_file_initialization(const char* string);
-
-    /**
-     *  Initialize the output file's name based on the name of input @p string_array[number].
-     *  It extracts the last name of each string from @p string_array using the delimiter "/" and concatenates them to form a single string as the result.
-     * 
-     * @param[in] string_array The string array containing a string.
-     * @param[in] number The number of strings in the string_array.
-     */
-    void output_file_initialization(char** string_array, uint32_t number);
-};
-
-// Memory trace output class
-class MEMORY_TRACE : public DATA_OUTPUT
-{
-public:
-    MEMORY_TRACE(std::string v1, std::string v2);
-    MEMORY_TRACE(std::string v1, std::string v2, char** string_array, uint32_t number);
-
-    void output_memory_trace_hexadecimal(uint64_t address, char type);
-};
-
-// Simulator statistics output class
-class SIMULATOR_STATISTICS : public DATA_OUTPUT
-{
-public:
-#define PAGE_TABLE_LEVEL_NUMBER (5u)
-
-    std::array<uint64_t, PAGE_TABLE_LEVEL_NUMBER> valid_pte_count = {0};
-    uint64_t virtual_page_count;
-
-    uint64_t read_request_in_memory, read_request_in_memory2;
-    uint64_t write_request_in_memory, write_request_in_memory2;
-
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-    uint64_t load_request_in_memory, load_request_in_memory2;
-    uint64_t store_request_in_memory, store_request_in_memory2;
-#endif /* TRACKING_LOAD_STORE_STATISTICS */
-
-    uint64_t swapping_count;
-    uint64_t swapping_traffic_in_bytes;
-
-    uint64_t remapping_request_queue_congestion;
-
-#if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-    uint64_t no_free_space_for_migration;
-    uint64_t no_invalid_group_for_migration;
-    uint64_t unexpandable_since_start_address;
-    uint64_t unexpandable_since_no_invalid_group;
-    uint64_t data_eviction_success, data_eviction_failure;
-    uint64_t uncertain_counter;
-#endif /* IDEAL_VARIABLE_GRANULARITY */
-
-    SIMULATOR_STATISTICS(std::string v1, std::string v2);
-    SIMULATOR_STATISTICS(std::string v1, std::string v2, char** string_array, uint32_t number);
-    ~SIMULATOR_STATISTICS();
-
-private:
-    void statistics_initialization();
-};
-
-extern MEMORY_TRACE output_memorytrace;
-extern SIMULATOR_STATISTICS output_statistics;
-
 /* Variable */
 
 /* Function */
 
 #endif /* USER_CODES */
 
-/** @note
- *  600.perlbench_s-210B.champsimtrace.xz
- *  602.gcc_s-734B.champsimtrace.xz
- *  603.bwaves_s-3699B.champsimtrace.xz
- *  605.mcf_s-665B.champsimtrace.xz
- *  607.cactuBSSN_s-2421B.champsimtrace.xz
- *  619.lbm_s-4268B.champsimtrace.xz
- *  620.omnetpp_s-874B.champsimtrace.xz
- *  621.wrf_s-575B.champsimtrace.xz
- *  623.xalancbmk_s-700B.champsimtrace.xz
- *  625.x264_s-18B.champsimtrace.xz
- *  627.cam4_s-573B.champsimtrace.xz
- *  628.pop2_s-17B.champsimtrace.xz
- *  631.deepsjeng_s-928B.champsimtrace.xz has 2000000000 PIN traces
- *  638.imagick_s-10316B.champsimtrace.xz
- *  641.leela_s-800B.champsimtrace.xz
- *  644.nab_s-5853B.champsimtrace.xz
- *  648.exchange2_s-1699B.champsimtrace.xz
- *  649.fotonik3d_s-1176B.champsimtrace.xz
- *  654.roms_s-842B.champsimtrace.xz
- *  657.xz_s-3167B.champsimtrace.xz
- *  Protection: 1989/4/15-1989/6/4, 39'54'12'N 116'23'30'E
+/**
+ * @note
+ * - 600.perlbench_s-210B.champsimtrace.xz
+ * - 602.gcc_s-734B.champsimtrace.xz
+ * - 603.bwaves_s-3699B.champsimtrace.xz
+ * - 605.mcf_s-665B.champsimtrace.xz
+ * - 607.cactuBSSN_s-2421B.champsimtrace.xz
+ * - 619.lbm_s-4268B.champsimtrace.xz
+ * - 620.omnetpp_s-874B.champsimtrace.xz
+ * - 621.wrf_s-575B.champsimtrace.xz
+ * - 623.xalancbmk_s-700B.champsimtrace.xz
+ * - 625.x264_s-18B.champsimtrace.xz
+ * - 627.cam4_s-573B.champsimtrace.xz
+ * - 628.pop2_s-17B.champsimtrace.xz
+ * - 631.deepsjeng_s-928B.champsimtrace.xz has 2000000000 PIN traces
+ * - 638.imagick_s-10316B.champsimtrace.xz
+ * - 641.leela_s-800B.champsimtrace.xz
+ * - 644.nab_s-5853B.champsimtrace.xz
+ * - 648.exchange2_s-1699B.champsimtrace.xz
+ * - 649.fotonik3d_s-1176B.champsimtrace.xz
+ * - 654.roms_s-842B.champsimtrace.xz
+ * - 657.xz_s-3167B.champsimtrace.xz
+ *
+ * Protection: 1989/4/15-1989/6/4, 39'54'12'N 116'23'30'E
  *
  */
 

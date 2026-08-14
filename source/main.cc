@@ -64,8 +64,10 @@ template<typename T, typename T2>
 void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramulator::Controller>& memory, const ramulator::Config& configs2, ramulator::Memory<T2, ramulator::Controller>& memory2, simulator_input_parameter& input_parameter);
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
-/** Stand-alone swapping-unit smoke test. Runs in place of normal simulation
- *  when both MEMORY_USE_SWAPPING_UNIT and TEST_SWAPPING_UNIT are enabled. */
+/**
+ * Stand-alone swapping-unit smoke test. Runs in place of normal simulation
+ * when both MEMORY_USE_SWAPPING_UNIT and TEST_SWAPPING_UNIT are enabled.
+ */
 void run_swapping_unit_test();
 #endif /* MEMORY_USE_SWAPPING_UNIT && TEST_SWAPPING_UNIT */
 
@@ -134,11 +136,15 @@ const unsigned LOG2_PAGE_SIZE  = champsim::lg2(PAGE_SIZE);
 
 #if (USER_CODES == ENABLE)
 
+// Functions private to a Compilation Unit (TU - Translation Unit): using anonymous namespaces or the static keyword
 namespace
 {
-// Parse a long-long-valued CLI argument with full validation. On failure,
-// prints a diagnostic in the same style as the surrounding parsing loop and
-// bumps `abort_flag`, which the loop checks at the end of each iteration.
+
+/**
+ * Parse a long-long-valued CLI argument with full validation. On failure,
+ * prints a diagnostic in the same style as the surrounding parsing loop and
+ * bumps `abort_flag`, which the loop checks at the end of each iteration.
+*/
 long long parse_long_long_arg(const char* flag_name, const char* arg_value, uint8_t& abort_flag)
 {
     if (arg_value == nullptr || *arg_value == '\0')
@@ -166,6 +172,31 @@ long long parse_long_long_arg(const char* flag_name, const char* arg_value, uint
     }
 
     return value;
+}
+
+// Cache latencies are stored as durations; report them in CPU cycles.
+long long convert_latency_in_cycles(champsim::chrono::clock::duration latency)
+{
+    return static_cast<long long>(latency / champsim::chrono::picoseconds {CPU_CLOCK_PERIOD});
+}
+
+/**
+ * Flatten the environment's caches into the primitive rows SIMULATOR_STATISTICS tabulates, so the
+ * statistics classes never have to name a ChampSim type. The geometry itself is derived by
+ * champsim::cache_builder from the macros in ChampSim/champsim_constants.h.
+*/
+std::vector<CACHE_CONFIGURATION> collect_cache_configuration(champsim::environment& env)
+{
+    std::vector<CACHE_CONFIGURATION> cache_configuration;
+
+    for (CACHE& cache : env.cache_view())
+    {
+        cache_configuration.push_back({cache.NAME, cache.NUM_SET, cache.NUM_WAY, cache.MSHR_SIZE, cache.PQ_SIZE,
+            convert_latency_in_cycles(cache.HIT_LATENCY), convert_latency_in_cycles(cache.FILL_LATENCY),
+            champsim::to_underlying(cache.MAX_TAG), champsim::to_underlying(cache.MAX_FILL)});
+    }
+
+    return cache_configuration;
 }
 } // namespace
 
@@ -770,11 +801,13 @@ void start_run_simulation(const ramulator::Config& configs, T* spec, const ramul
 }
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
-/** Smoke test for the swapping unit — preserved from the previous in-line
- *  block in run_simulation(). The body still references symbols that may no
- *  longer be in scope (LLC, memory_controller, all_warmup_complete, PACKET,
- *  MemoryRequestProducer, warmup_instructions, simulation_instructions);
- *  reviving this test requires reattaching those bindings. */
+/**
+ * Smoke test for the swapping unit — preserved from the previous in-line
+ * block in run_simulation(). The body still references symbols that may no
+ * longer be in scope (LLC, memory_controller, all_warmup_complete, PACKET,
+ * MemoryRequestProducer, warmup_instructions, simulation_instructions);
+ * reviving this test requires reattaching those bindings.
+ */
 void run_swapping_unit_test()
 {
     all_warmup_complete = 1;
@@ -862,14 +895,8 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
         }
     }
 
-#if (USE_VCPKG == ENABLE)
-    fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* USE_VCPKG */
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
-        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    output_statistics.print_simulation_start(input_parameter.phases.at(0).length, input_parameter.phases.at(1).length,
+        std::size(gen_environment.cpu_view()), collect_cache_configuration(gen_environment));
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
     fmt::print("\n*** TEST_SWAPPING_UNIT enabled — bypassing real simulation ***\n\n");
@@ -883,9 +910,7 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
     fmt::print("\nChampSim completed all CPUs\n\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nChampSim completed all CPUs\n\n");
 
     // This a workaround for statistics set only initially lost in the end
     memory.finish();
@@ -1042,14 +1067,8 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
         }
     }
 
-#if (USE_VCPKG == ENABLE)
-    fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* USE_VCPKG */
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
-        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    output_statistics.print_simulation_start(input_parameter.phases.at(0).length, input_parameter.phases.at(1).length,
+        std::size(gen_environment.cpu_view()), collect_cache_configuration(gen_environment));
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
@@ -1057,9 +1076,7 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
     fmt::print("\nChampSim completed all CPUs\n\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nChampSim completed all CPUs\n\n");
 
     // This a workaround for statistics set only initially lost in the end
     memory.finish();
@@ -1109,14 +1126,8 @@ void start_run_simulation_r2(const std::string& yaml_path, simulator_input_param
         }
     }
 
-#if (USE_VCPKG == ENABLE)
-    fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* USE_VCPKG */
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
-        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    output_statistics.print_simulation_start(input_parameter.phases.at(0).length, input_parameter.phases.at(1).length,
+        std::size(gen_environment.cpu_view()), collect_cache_configuration(gen_environment));
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
@@ -1124,9 +1135,7 @@ void start_run_simulation_r2(const std::string& yaml_path, simulator_input_param
     fmt::print("\nChampSim completed all CPUs\n\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nChampSim completed all CPUs\n\n");
 
     champsim::plain_printer {std::cout}.print(phase_stats);
 
@@ -1161,14 +1170,8 @@ void run_simulation(simulator_input_parameter& input_parameter)
         }
     }
 
-#if (USE_VCPKG == ENABLE)
-    fmt::print("\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: {}\nSimulation Instructions: {}\nNumber of CPUs: {}\nPage size: {}\n\n", input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* USE_VCPKG */
-
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n*** ChampSim Multicore Out-of-Order Simulator ***\nWarmup Instructions: %lld\nSimulation Instructions: %lld\nNumber of CPUs: %ld\nPage size: %d\n\n",
-        input_parameter.phases.at(0).length, input_parameter.phases.at(1).length, std::size(gen_environment.cpu_view()), PAGE_SIZE);
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    output_statistics.print_simulation_start(input_parameter.phases.at(0).length, input_parameter.phases.at(1).length,
+        std::size(gen_environment.cpu_view()), collect_cache_configuration(gen_environment));
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
@@ -1176,9 +1179,7 @@ void run_simulation(simulator_input_parameter& input_parameter)
     fmt::print("\nChampSim completed all CPUs\n\n");
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nChampSim completed all CPUs\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nChampSim completed all CPUs\n\n");
 
     champsim::plain_printer {std::cout}.print(phase_stats);
 

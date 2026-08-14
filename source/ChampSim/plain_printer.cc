@@ -15,6 +15,7 @@
  */
 
 #include "ProjectConfiguration.h" // User file
+#include "simulator_statistics.h" // User file
 
 #if (USE_VCPKG == ENABLE)
 #include <fmt/chrono.h>
@@ -72,20 +73,20 @@ std::vector<std::string> champsim::plain_printer::format(O3_CPU::stats_type stat
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n");
+    PRINTF_STATISTICS_FILE("\n");
 
-    std::fprintf(output_statistics.file_handler, "%s cumulative IPC: %s instructions: %lld cycles: %lld\n",
+    PRINTF_STATISTICS_FILE("%s cumulative IPC: %s instructions: %lld cycles: %lld\n",
         stats.name.c_str(), ::print_ratio(stats.instrs(), stats.cycles()).c_str(), stats.instrs(), stats.cycles());
-    std::fprintf(output_statistics.file_handler, "%s Branch Prediction Accuracy: %s%% MPKI: %s Average ROB Occupancy at Mispredict: %s\n",
+    PRINTF_STATISTICS_FILE("%s Branch Prediction Accuracy: %s%% MPKI: %s Average ROB Occupancy at Mispredict: %s\n",
         stats.name.c_str(),
         ::print_ratio(100 * (total_branch - total_mispredictions), total_branch).c_str(),
         ::print_ratio(std::kilo::num * total_mispredictions, stats.instrs()).c_str(),
         ::print_ratio(stats.total_rob_occupancy_at_branch_mispredict, total_mispredictions).c_str());
 
-    std::fprintf(output_statistics.file_handler, "Branch type MPKI\n");
+    PRINTF_STATISTICS_FILE("Branch type MPKI\n");
     for (auto idx : types)
     {
-        std::fprintf(output_statistics.file_handler, "%s: %s\n",
+        PRINTF_STATISTICS_FILE("%s: %s\n",
             branch_type_names.at(champsim::to_underlying(idx)).data(), ::print_ratio(std::kilo::num * stats.branch_type_misses.value_or(idx, 0), stats.instrs()).c_str());
     }
 #endif /* PRINT_STATISTICS_INTO_FILE */
@@ -164,14 +165,14 @@ std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "\n");
+        PRINTF_STATISTICS_FILE("\n");
 
         const char hitmiss_str[] = "cpu%ld->%s %-12s ACCESS: %10ld HIT: %10ld MISS: %10ld MISS_MERGE: %10ld\n";
 
-        std::fprintf(output_statistics.file_handler, hitmiss_str, cpu, stats.name.c_str(), "TOTAL", total_hits + total_misses, total_hits, total_misses, total_miss_merge);
+        PRINTF_STATISTICS_FILE(hitmiss_str, cpu, stats.name.c_str(), "TOTAL", total_hits + total_misses, total_hits, total_misses, total_miss_merge);
         for (const auto type : {access_type::LOAD, access_type::RFO, access_type::PREFETCH, access_type::WRITE, access_type::TRANSLATION})
         {
-            std::fprintf(output_statistics.file_handler, hitmiss_str,
+            PRINTF_STATISTICS_FILE(hitmiss_str,
                 cpu, stats.name.c_str(), access_type_names.at(champsim::to_underlying(type)).data(),
                 stats.hits.value_or(std::pair {type, cpu}, hits_value_type {}) + stats.misses.value_or(std::pair {type, cpu}, misses_value_type {}),
                 stats.hits.value_or(std::pair {type, cpu}, hits_value_type {}),
@@ -179,9 +180,9 @@ std::vector<std::string> champsim::plain_printer::format(CACHE::stats_type stats
                 stats.miss_merge.value_or(std::pair {type, cpu}, miss_merge_value_type {}));
         }
 
-        std::fprintf(output_statistics.file_handler, "cpu%ld->%s PREFETCH REQUESTED: %10ld ISSUED: %10ld USEFUL: %10ld USELESS: %10ld\n",
+        PRINTF_STATISTICS_FILE("cpu%ld->%s PREFETCH REQUESTED: %10ld ISSUED: %10ld USEFUL: %10ld USELESS: %10ld\n",
             cpu, stats.name.c_str(), stats.pf_requested, stats.pf_issued, stats.pf_useful, stats.pf_useless);
-        std::fprintf(output_statistics.file_handler, "cpu%ld->%s AVERAGE MISS LATENCY: %s cycles\n",
+        PRINTF_STATISTICS_FILE("cpu%ld->%s AVERAGE MISS LATENCY: %s cycles\n",
             cpu, stats.name.c_str(), ::print_ratio(stats.total_miss_latency_cycles, total_downstream_demands).c_str());
 #endif /* PRINT_STATISTICS_INTO_FILE */
     }
@@ -208,19 +209,19 @@ std::vector<std::string> champsim::plain_printer::format(DRAM_CHANNEL::stats_typ
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\n");
+    PRINTF_STATISTICS_FILE("\n");
 
-    std::fprintf(output_statistics.file_handler, "%s RQ ROW_BUFFER_HIT: %10d\n", stats.name.c_str(), stats.RQ_ROW_BUFFER_HIT);
-    std::fprintf(output_statistics.file_handler, "  ROW_BUFFER_MISS: %10d\n", stats.RQ_ROW_BUFFER_MISS);
-    std::fprintf(output_statistics.file_handler, "  AVG DBUS CONGESTED CYCLE: %s\n", ::print_ratio(stats.dbus_cycle_congested, stats.dbus_count_congested).c_str());
-    std::fprintf(output_statistics.file_handler, "%s WQ ROW_BUFFER_HIT: %10d\n", stats.name.c_str(), stats.WQ_ROW_BUFFER_HIT);
-    std::fprintf(output_statistics.file_handler, "  ROW_BUFFER_MISS: %10d\n", stats.WQ_ROW_BUFFER_MISS);
-    std::fprintf(output_statistics.file_handler, "  FULL: %10d\n", stats.WQ_FULL);
+    PRINTF_STATISTICS_FILE("%s RQ ROW_BUFFER_HIT: %10d\n", stats.name.c_str(), stats.RQ_ROW_BUFFER_HIT);
+    PRINTF_STATISTICS_FILE("  ROW_BUFFER_MISS: %10d\n", stats.RQ_ROW_BUFFER_MISS);
+    PRINTF_STATISTICS_FILE("  AVG DBUS CONGESTED CYCLE: %s\n", ::print_ratio(stats.dbus_cycle_congested, stats.dbus_count_congested).c_str());
+    PRINTF_STATISTICS_FILE("%s WQ ROW_BUFFER_HIT: %10d\n", stats.name.c_str(), stats.WQ_ROW_BUFFER_HIT);
+    PRINTF_STATISTICS_FILE("  ROW_BUFFER_MISS: %10d\n", stats.WQ_ROW_BUFFER_MISS);
+    PRINTF_STATISTICS_FILE("  FULL: %10d\n", stats.WQ_FULL);
 
     if (stats.refresh_cycles > 0)
-        std::fprintf(output_statistics.file_handler, "%s REFRESHES ISSUED: %10ld\n", stats.name.c_str(), stats.refresh_cycles);
+        PRINTF_STATISTICS_FILE("%s REFRESHES ISSUED: %10ld\n", stats.name.c_str(), stats.refresh_cycles);
     else
-        std::fprintf(output_statistics.file_handler, "%s REFRESHES ISSUED: -\n", stats.name.c_str());
+        PRINTF_STATISTICS_FILE("%s REFRESHES ISSUED: -\n", stats.name.c_str());
 #endif /* PRINT_STATISTICS_INTO_FILE */
 
     return lines;
@@ -234,9 +235,7 @@ std::vector<std::string> champsim::plain_printer::format(champsim::phase_stats& 
     lines.push_back(fmt::format("=== {} ===", stats.name));
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "=== %s ===\n", stats.name.c_str());
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("=== %s ===\n", stats.name.c_str());
 
     int i = 0;
     for (auto tn : stats.trace_names)
@@ -245,9 +244,7 @@ std::vector<std::string> champsim::plain_printer::format(champsim::phase_stats& 
         lines.push_back(fmt::format("CPU {} runs {}", i, tn));
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "CPU %d runs %s\n", i, tn.c_str());
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("CPU %d runs %s\n", i, tn.c_str());
 
         i++;
     }
@@ -257,9 +254,7 @@ std::vector<std::string> champsim::plain_printer::format(champsim::phase_stats& 
         lines.emplace_back("");
         lines.emplace_back("Total Simulation Statistics (not including warmup)");
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "\nTotal Simulation Statistics (not including warmup)\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("\nTotal Simulation Statistics (not including warmup)\n");
 
         for (const auto& stat : stats.sim_cpu_stats)
         {
@@ -268,9 +263,7 @@ std::vector<std::string> champsim::plain_printer::format(champsim::phase_stats& 
             std::move(std::begin(sublines), std::end(sublines), std::back_inserter(lines));
             lines.emplace_back("");
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-            std::fprintf(output_statistics.file_handler, "\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+            PRINTF_STATISTICS_FILE("\n\n");
         }
 
         for (const auto& stat : stats.sim_cache_stats)
@@ -283,9 +276,7 @@ std::vector<std::string> champsim::plain_printer::format(champsim::phase_stats& 
     lines.emplace_back("");
     lines.emplace_back("Region of Interest Statistics");
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nRegion of Interest Statistics\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nRegion of Interest Statistics\n");
 
     for (const auto& stat : stats.roi_cpu_stats)
     {
@@ -294,9 +285,7 @@ std::vector<std::string> champsim::plain_printer::format(champsim::phase_stats& 
         std::move(std::begin(sublines), std::end(sublines), std::back_inserter(lines));
         lines.emplace_back("");
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "\n\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("\n\n");
     }
 
     for (const auto& stat : stats.roi_cache_stats)
@@ -308,9 +297,7 @@ std::vector<std::string> champsim::plain_printer::format(champsim::phase_stats& 
     lines.emplace_back("");
     lines.emplace_back("DRAM Statistics");
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-    std::fprintf(output_statistics.file_handler, "\nDRAM Statistics\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+    PRINTF_STATISTICS_FILE("\nDRAM Statistics\n");
 
     for (const auto& stat : stats.roi_dram_stats)
     {
@@ -318,9 +305,7 @@ std::vector<std::string> champsim::plain_printer::format(champsim::phase_stats& 
         lines.emplace_back("");
         std::move(std::begin(sublines), std::end(sublines), std::back_inserter(lines));
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "\n");
-#endif /* PRINT_STATISTICS_INTO_FILE */
+        PRINTF_STATISTICS_FILE("\n");
     }
 
     return lines;

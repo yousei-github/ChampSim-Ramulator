@@ -11,6 +11,7 @@
 #include "ChampSim/events.h"
 #include "ChampSim/instruction.h"
 #include "ProjectConfiguration.h" // User file
+#include "simulator_statistics.h"
 
 class Heartbeat
 {
@@ -97,10 +98,8 @@ inline void handle_event<Event::RETIRE>(Heartbeat* hb, uint32_t& cpu, std::deque
             hb->num_retired[cpu], current_cycles, heartbeat_instr / heartbeat_cycle, phase_instr / phase_cycle, elapsed_time());
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "Heartbeat CPU %d instructions: %ld cycles: %ld heartbeat IPC: %.4f cumulative IPC: %.4f (Simulation time: {: %ld sec})\n",
+        PRINTF_STATISTICS_FILE("Heartbeat CPU %d instructions: %ld cycles: %ld heartbeat IPC: %.4f cumulative IPC: %.4f (Simulation time: {: %ld sec})\n",
             cpu, hb->num_retired[cpu], current_cycles, heartbeat_instr / heartbeat_cycle, phase_instr / phase_cycle, elapsed_time().count());
-#endif /* PRINT_STATISTICS_INTO_FILE */
 
         hb->num_retired_last_printout[cpu] = hb->num_retired[cpu];
         hb->cycles_last_printout[cpu]      = current_cycles;

@@ -1,7 +1,7 @@
 target_sources(${EXECUTABLE_NAME}
     PRIVATE
     main.cc
-    ProjectConfiguration.cc
+    simulator_statistics.cc
     cameo.cc
     os_transparent_management.cc
     variable_granularity.cc

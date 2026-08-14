@@ -135,7 +135,7 @@ class Execution:
 
 def statistics_filename_for(trace: Path) -> str:
     """The binary names its stats file ``<trace-basename>.statistics`` (see
-    DATA_OUTPUT::output_file_initialization in source/ProjectConfiguration.cc)."""
+    DATA_OUTPUT::output_file_initialization in source/simulator_statistics.cc)."""
     return trace.name + ".statistics"
 
 

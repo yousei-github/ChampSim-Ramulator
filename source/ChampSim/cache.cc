@@ -39,6 +39,7 @@
 #if (USER_CODES == ENABLE)
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/util/bit_enum.h"
+#include "simulator_statistics.h"
 #else
 #include "ChampSim/champsim.h"
 #endif /* USER_CODES */
@@ -143,12 +144,12 @@ CACHE::fill_type CACHE::fill_type::merge(fill_type predecessor, fill_type succes
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
         if (successor.type == access_type::PREFETCH)
         {
-            std::fprintf(output_statistics.file_handler, "[MSHR] %s address %ld type: %s into address %ld type: %s\n",
+            PRINTF_STATISTICS_FILE("[MSHR] %s address %ld type: %s into address %ld type: %s\n",
                 __func__, successor.address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(successor.type)).data(), predecessor.address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(successor.type)).data());
         }
         else
         {
-            std::fprintf(output_statistics.file_handler, "[MSHR] %s address %ld type: %s into address %ld type: %s\n",
+            PRINTF_STATISTICS_FILE("[MSHR] %s address %ld type: %s into address %ld type: %s\n",
                 __func__, predecessor.address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(predecessor.type)).data(), successor.address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(successor.type)).data());
         }
 #endif /* PRINT_STATISTICS_INTO_FILE */
@@ -214,12 +215,10 @@ bool CACHE::handle_fill(const fill_type& fill)
             (fill.time_enqueued.time_since_epoch()) / clock_period, (current_time.time_since_epoch()) / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[%s] %s instr_id: %ld address: %ld v_address: %ld set: %ld way: %ld type: %s prefetch_metadata: %d cycle_enqueued: %ld cycle: %ld\n",
+        PRINTF_STATISTICS_FILE("[%s] %s instr_id: %ld address: %ld v_address: %ld set: %ld way: %ld type: %s prefetch_metadata: %d cycle_enqueued: %ld cycle: %ld\n",
             NAME.c_str(), __func__, fill.instr_id, fill.address.to<uint64_t>(), fill.v_address.to<uint64_t>(), get_set_index(fill.address), way_idx,
             access_type_names.at(champsim::to_underlying(fill.type)).data(), fill.data_promise->pf_metadata,
             (fill.time_enqueued.time_since_epoch()) / clock_period, (current_time.time_since_epoch()) / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     if (way != set_end && way->valid && way->dirty)
@@ -245,10 +244,8 @@ bool CACHE::handle_fill(const fill_type& fill)
             fmt::print("[{}] {} evict address: {} v_address: {} prefetch_metadata: {}\n", NAME, __func__, writeback_packet.address, writeback_packet.v_address, fill.data_promise->pf_metadata);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-            std::fprintf(output_statistics.file_handler, "[%s] %s evict address: %ld v_address: %ld prefetch_metadata: %d\n",
+            PRINTF_STATISTICS_FILE("[%s] %s evict address: %ld v_address: %ld prefetch_metadata: %d\n",
                 NAME.c_str(), __func__, writeback_packet.address.to<uint64_t>(), writeback_packet.v_address.to<uint64_t>(), fill.data_promise->pf_metadata);
-#endif /* PRINT_STATISTICS_INTO_FILE */
         }
 
         auto success = lower_level->add_wq(writeback_packet);
@@ -318,11 +315,9 @@ bool CACHE::try_hit(const tag_lookup_type& handle_pkt)
             hit ? "HIT" : "MISS", access_type_names.at(champsim::to_underlying(handle_pkt.type)), current_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[%s] %s instr_id: %ld address: %ld v_address: %ld data: %ld set: %ld way: %ld (%s) type: %s cycle: %ld\n",
+        PRINTF_STATISTICS_FILE("[%s] %s instr_id: %ld address: %ld v_address: %ld data: %ld set: %ld way: %ld (%s) type: %s cycle: %ld\n",
             NAME.c_str(), __func__, handle_pkt.instr_id, handle_pkt.address.to<uint64_t>(), handle_pkt.v_address.to<uint64_t>(), handle_pkt.data.to<uint64_t>(), get_set_index(handle_pkt.address), std::distance(set_begin, way),
             hit ? "HIT" : "MISS", access_type_names.at(champsim::to_underlying(handle_pkt.type)).data(), current_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     auto metadata_thru = handle_pkt.pf_metadata;
@@ -392,11 +387,9 @@ bool CACHE::handle_miss(const tag_lookup_type& handle_pkt)
             current_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[%s] %s instr_id: %ld address: %ld v_address: %ld type: %s local_prefetch: %d cycle: %ld\n",
+        PRINTF_STATISTICS_FILE("[%s] %s instr_id: %ld address: %ld v_address: %ld type: %s local_prefetch: %d cycle: %ld\n",
             NAME.c_str(), __func__, handle_pkt.instr_id, handle_pkt.address.to<uint64_t>(), handle_pkt.v_address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(handle_pkt.type)).data(), handle_pkt.prefetch_from_this,
             current_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     fill_type to_allocate {handle_pkt, current_time};
@@ -469,11 +462,9 @@ bool CACHE::handle_write(const tag_lookup_type& handle_pkt)
             current_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[%s] %s instr_id: %ld address: %ld v_address: %ld type: %s local_prefetch: %d cycle: %ld\n",
+        PRINTF_STATISTICS_FILE("[%s] %s instr_id: %ld address: %ld v_address: %ld type: %s local_prefetch: %d cycle: %ld\n",
             NAME.c_str(), __func__, handle_pkt.instr_id, handle_pkt.address.to<uint64_t>(), handle_pkt.v_address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(handle_pkt.type)).data(), handle_pkt.prefetch_from_this,
             current_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     fill_type to_allocate {handle_pkt, current_time};
@@ -512,10 +503,8 @@ auto CACHE::initiate_tag_check(champsim::channel* ul)
                 retval.v_address, access_type_names.at(champsim::to_underlying(retval.type)), ! std::empty(retval.to_return));
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-            std::fprintf(output_statistics.file_handler, "[TAG] initiate_tag_check instr_id: %ld address: %ld v_address: %ld type: %s response_requested: %d\n",
+            PRINTF_STATISTICS_FILE("[TAG] initiate_tag_check instr_id: %ld address: %ld v_address: %ld type: %s response_requested: %d\n",
                 retval.instr_id, retval.address.to<uint64_t>(), retval.v_address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(retval.type)).data(), ! std::empty(retval.to_return));
-#endif /* PRINT_STATISTICS_INTO_FILE */
         }
 
         return retval;
@@ -641,17 +630,17 @@ long CACHE::operate()
 #endif /* USE_VCPKG */
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[%s] %s cycle completed: %ld tags checked: %ld remaining: %ld stash consumed: %ld remaining: %ld channel consumed: [",
+        PRINTF_STATISTICS_FILE("[%s] %s cycle completed: %ld tags checked: %ld remaining: %ld stash consumed: %ld remaining: %ld channel consumed: [",
             NAME.c_str(), __func__, current_time.time_since_epoch() / clock_period, tag_check_bw.amount_consumed(), std::size(inflight_tag_check),
             stash_bandwidth_consumed, std::size(translation_stash));
 
         // Print the channels_bandwidth_consumed vector
         for (auto bandwidth_consumed : channels_bandwidth_consumed)
         {
-            std::fprintf(output_statistics.file_handler, "%lld, ", bandwidth_consumed);
+            PRINTF_STATISTICS_FILE("%lld, ", bandwidth_consumed);
         }
 
-        std::fprintf(output_statistics.file_handler, "] pq consumed %ld unused consume bw %ld\n", pq_bandwidth_consumed, initiate_tag_bw.amount_remaining());
+        PRINTF_STATISTICS_FILE("] pq consumed %ld unused consume bw %ld\n", pq_bandwidth_consumed, initiate_tag_bw.amount_remaining());
 #endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
@@ -757,10 +746,8 @@ void CACHE::finish_packet(const response_type& packet)
         fmt::print(stderr, "[{}_MSHR] {} cannot find a matching entry! address: {} v_address: {}\n", NAME, __func__, packet.address, packet.v_address);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[%s_MSHR] %s cannot find a matching entry! address: %ld v_address: %ld\n",
+        PRINTF_STATISTICS_FILE("[%s_MSHR] %s cannot find a matching entry! address: %ld v_address: %ld\n",
             NAME.c_str(), __func__, packet.address.to<uint64_t>(), packet.v_address.to<uint64_t>());
-#endif /* PRINT_STATISTICS_INTO_FILE */
 
         assert(0);
     }
@@ -775,11 +762,9 @@ void CACHE::finish_packet(const response_type& packet)
             mshr_entry->data_promise->data, access_type_names.at(champsim::to_underlying(mshr_entry->type)), current_time.time_since_epoch() / clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        std::fprintf(output_statistics.file_handler, "[%s_MSHR] finish_packet instr_id: %ld address: %ld data: %ld type: %s current: %ld\n",
+        PRINTF_STATISTICS_FILE("[%s_MSHR] finish_packet instr_id: %ld address: %ld data: %ld type: %s current: %ld\n",
             this->NAME.c_str(), mshr_entry->instr_id, mshr_entry->address.to<uint64_t>(), mshr_entry->data_promise->data.to<uint64_t>(),
             access_type_names.at(champsim::to_underlying(mshr_entry->type)).data(), current_time.time_since_epoch() / clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
     std::iter_swap(mshr_entry, std::begin(MSHR));
@@ -806,11 +791,9 @@ void CACHE::finish_translation(const response_type& packet)
             fmt::print("[{}_TRANSLATE] finish_translation old: {} paddr: {} vaddr: {} type: {} cycle: {}\n", this->NAME, old_address, entry.address, entry.v_address, access_type_names.at(champsim::to_underlying(entry.type)), this->current_time.time_since_epoch() / this->clock_period);
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-            std::fprintf(output_statistics.file_handler, "[%s_TRANSLATE] finish_translation old: %ld paddr: %ld vaddr: %ld type: %s cycle: %ld\n",
+            PRINTF_STATISTICS_FILE("[%s_TRANSLATE] finish_translation old: %ld paddr: %ld vaddr: %ld type: %s cycle: %ld\n",
                 this->NAME.c_str(), old_address, entry.address, entry.v_address,
                 access_type_names.at(champsim::to_underlying(entry.type)).data(), this->current_time.time_since_epoch() / this->clock_period);
-#endif /* PRINT_STATISTICS_INTO_FILE */
         }
     };
 
@@ -858,10 +841,8 @@ void CACHE::issue_translation(tag_lookup_type& q_entry) const
                 fmt::print("[TRANSLATE] do_issue_translation instr_id: {} paddr: {} vaddr: {} type: {}\n", q_entry.instr_id, q_entry.address, q_entry.v_address, access_type_names.at(champsim::to_underlying(q_entry.type)));
 #endif /* USE_VCPKG */
 
-#if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-                std::fprintf(output_statistics.file_handler, "[TRANSLATE] do_issue_translation instr_id: %ld paddr: %ld vaddr: %ld type: %s\n",
+                PRINTF_STATISTICS_FILE("[TRANSLATE] do_issue_translation instr_id: %ld paddr: %ld vaddr: %ld type: %s\n",
                     q_entry.instr_id, q_entry.address.to<uint64_t>(), q_entry.v_address.to<uint64_t>(), access_type_names.at(champsim::to_underlying(q_entry.type)).data());
-#endif /* PRINT_STATISTICS_INTO_FILE */
             }
         }
     }
