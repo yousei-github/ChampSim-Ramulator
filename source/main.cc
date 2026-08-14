@@ -167,6 +167,29 @@ long long parse_long_long_arg(const char* flag_name, const char* arg_value, uint
 
     return value;
 }
+
+// Cache latencies are stored as durations; report them in CPU cycles.
+long long convert_latency_in_cycles(champsim::chrono::clock::duration latency)
+{
+    return static_cast<long long>(latency / champsim::chrono::picoseconds {CPU_CLOCK_PERIOD});
+}
+
+// Flatten the environment's caches into the primitive rows SIMULATOR_STATISTICS tabulates, so the
+// statistics classes never have to name a ChampSim type. The geometry itself is derived by
+// champsim::cache_builder from the macros in ChampSim/champsim_constants.h.
+std::vector<CACHE_CONFIGURATION> collect_cache_configuration(champsim::environment& env)
+{
+    std::vector<CACHE_CONFIGURATION> cache_configuration;
+
+    for (CACHE& cache : env.cache_view())
+    {
+        cache_configuration.push_back({cache.NAME, cache.NUM_SET, cache.NUM_WAY, cache.MSHR_SIZE, cache.PQ_SIZE,
+            convert_latency_in_cycles(cache.HIT_LATENCY), convert_latency_in_cycles(cache.FILL_LATENCY),
+            champsim::to_underlying(cache.MAX_TAG), champsim::to_underlying(cache.MAX_FILL)});
+    }
+
+    return cache_configuration;
+}
 } // namespace
 
 int main(int argc, char** argv) // NOLINT(bugprone-exception-escape)
@@ -862,7 +885,8 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
         }
     }
 
-    output_statistics.print_simulation_start(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length);
+    output_statistics.print_simulation_start(input_parameter.phases.at(0).length, input_parameter.phases.at(1).length,
+        std::size(gen_environment.cpu_view()), collect_cache_configuration(gen_environment));
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE) && (TEST_SWAPPING_UNIT == ENABLE)
     fmt::print("\n*** TEST_SWAPPING_UNIT enabled — bypassing real simulation ***\n\n");
@@ -1033,7 +1057,8 @@ void run_simulation(const ramulator::Config& configs, ramulator::Memory<T, ramul
         }
     }
 
-    output_statistics.print_simulation_start(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length);
+    output_statistics.print_simulation_start(input_parameter.phases.at(0).length, input_parameter.phases.at(1).length,
+        std::size(gen_environment.cpu_view()), collect_cache_configuration(gen_environment));
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
@@ -1091,7 +1116,8 @@ void start_run_simulation_r2(const std::string& yaml_path, simulator_input_param
         }
     }
 
-    output_statistics.print_simulation_start(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length);
+    output_statistics.print_simulation_start(input_parameter.phases.at(0).length, input_parameter.phases.at(1).length,
+        std::size(gen_environment.cpu_view()), collect_cache_configuration(gen_environment));
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 
@@ -1134,7 +1160,8 @@ void run_simulation(simulator_input_parameter& input_parameter)
         }
     }
 
-    output_statistics.print_simulation_start(gen_environment, input_parameter.phases.at(0).length, input_parameter.phases.at(1).length);
+    output_statistics.print_simulation_start(input_parameter.phases.at(0).length, input_parameter.phases.at(1).length,
+        std::size(gen_environment.cpu_view()), collect_cache_configuration(gen_environment));
 
     auto phase_stats = champsim::main(gen_environment, input_parameter.phases, input_parameter.traces);
 

@@ -10,19 +10,12 @@
 #include <stdint.h>
 
 #include <array>
+#include <cstddef>
 #include <cstdio>
 #include <string>
+#include <vector>
 
 #include "ChampSim/champsim_constants.h" // For PAGE_TABLE_LEVELS
-
-namespace champsim
-{
-// Only a reference is needed here, so the ChampSim headers stay out of this file. Including
-// ChampSim/environment.h instead would form a cycle: with RAMULATOR enabled it reaches
-// ChampSim/ramulator_dram_controller.h, which includes this header back and would then see
-// output_statistics / output_memorytrace before they are declared.
-struct environment;
-} // namespace champsim
 
 /* Macro */
 
@@ -37,6 +30,24 @@ struct environment;
 #endif /* PRINT_STATISTICS_INTO_FILE */
 
 /* Type */
+
+/**
+ *  One row of the startup cache-configuration table. It deliberately holds only primitives, so this
+ *  header stays free of ChampSim types even though nearly every translation unit includes it.
+ *  source/main.cc fills the rows from champsim::environment.
+ */
+struct CACHE_CONFIGURATION
+{
+    std::string name;
+    uint32_t sets;
+    uint32_t ways;
+    uint32_t mshrs;
+    std::size_t pq_size;
+    long long hit_latency_in_cycles;
+    long long fill_latency_in_cycles;
+    long long max_tag_check;
+    long long max_fill;
+};
 
 /* Prototype */
 
@@ -125,11 +136,13 @@ public:
      *  Print the run start message and the effective cache configuration to stdout, and to the
      *  statistics file as well when one is open (see output_file_initialization).
      *
-     * @param[in] env The simulation environment describing the CPUs and caches to report.
      * @param[in] warmup_instructions The number of instructions used to warm up the simulation.
      * @param[in] simulation_instructions The number of instructions to simulate.
+     * @param[in] cpu_number The number of simulated CPUs.
+     * @param[in] cache_configuration One row per cache, in the order they should be tabulated.
      */
-    void print_simulation_start(champsim::environment& env, long long warmup_instructions, long long simulation_instructions);
+    void print_simulation_start(long long warmup_instructions, long long simulation_instructions, std::size_t cpu_number,
+        const std::vector<CACHE_CONFIGURATION>& cache_configuration);
 
 private:
     void statistics_initialization();

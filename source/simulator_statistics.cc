@@ -20,11 +20,7 @@
 #include <fmt/core.h>
 #endif /* USE_VCPKG */
 
-#include "ChampSim/cache.h"
 #include "ChampSim/champsim_constants.h"
-#include "ChampSim/chrono.h"
-#include "ChampSim/environment.h"
-#include "ChampSim/util/to_underlying.h"
 
 // Functions private to a Compilation Unit (TU - Translation Unit): using anonymous namespaces or the static keyword
 namespace
@@ -55,16 +51,10 @@ std::string shorten_path_if_needed(const std::string& path)
     return dir + shortened_stem + hash_suffix + ext;
 }
 
-// Cache latencies are stored as durations; report them in CPU cycles.
-long long convert_latency_in_cycles(champsim::chrono::clock::duration latency)
-{
-    return static_cast<long long>(latency / champsim::chrono::picoseconds {CPU_CLOCK_PERIOD});
-}
-
-// Tabulate the effective configuration of every cache in the environment. The geometry is derived
+// Tabulate the effective configuration of every cache the caller collected. The geometry is derived
 // by champsim::cache_builder from the macros in ChampSim/champsim_constants.h, so this table is the
 // only place a build reveals what it actually simulates.
-std::string format_cache_configuration(champsim::environment& env)
+std::string format_cache_configuration(const std::vector<CACHE_CONFIGURATION>& cache_configuration)
 {
     std::ostringstream stream;
 
@@ -72,11 +62,11 @@ std::string format_cache_configuration(champsim::environment& env)
            << std::setw(12) << "NAME" << std::setw(8) << "SETS" << std::setw(6) << "WAYS" << std::setw(7) << "MSHRS" << std::setw(6) << "PQ"
            << std::setw(9) << "HIT_LAT" << std::setw(10) << "FILL_LAT" << std::setw(9) << "MAX_TAG" << std::setw(10) << "MAX_FILL" << '\n';
 
-    for (CACHE& cache : env.cache_view())
+    for (const CACHE_CONFIGURATION& cache : cache_configuration)
     {
-        stream << std::setw(12) << cache.NAME << std::setw(8) << cache.NUM_SET << std::setw(6) << cache.NUM_WAY << std::setw(7) << cache.MSHR_SIZE
-               << std::setw(6) << cache.PQ_SIZE << std::setw(9) << convert_latency_in_cycles(cache.HIT_LATENCY) << std::setw(10) << convert_latency_in_cycles(cache.FILL_LATENCY)
-               << std::setw(9) << champsim::to_underlying(cache.MAX_TAG) << std::setw(10) << champsim::to_underlying(cache.MAX_FILL) << '\n';
+        stream << std::setw(12) << cache.name << std::setw(8) << cache.sets << std::setw(6) << cache.ways << std::setw(7) << cache.mshrs
+               << std::setw(6) << cache.pq_size << std::setw(9) << cache.hit_latency_in_cycles << std::setw(10) << cache.fill_latency_in_cycles
+               << std::setw(9) << cache.max_tag_check << std::setw(10) << cache.max_fill << '\n';
     }
 
     return stream.str();
@@ -271,16 +261,17 @@ SIMULATOR_STATISTICS::~SIMULATOR_STATISTICS()
     }
 }
 
-void SIMULATOR_STATISTICS::print_simulation_start(champsim::environment& env, long long warmup_instructions, long long simulation_instructions)
+void SIMULATOR_STATISTICS::print_simulation_start(long long warmup_instructions, long long simulation_instructions, std::size_t cpu_number,
+    const std::vector<CACHE_CONFIGURATION>& cache_configuration)
 {
     std::ostringstream stream;
 
     stream << "\n*** ChampSim Multicore Out-of-Order Simulator ***\n"
            << "Warmup Instructions: " << warmup_instructions << '\n'
            << "Simulation Instructions: " << simulation_instructions << '\n'
-           << "Number of CPUs: " << std::size(env.cpu_view()) << '\n'
+           << "Number of CPUs: " << cpu_number << '\n'
            << "Page size: " << PAGE_SIZE << "\n\n"
-           << format_cache_configuration(env) << '\n';
+           << format_cache_configuration(cache_configuration) << '\n';
 
     const std::string text = stream.str();
 
