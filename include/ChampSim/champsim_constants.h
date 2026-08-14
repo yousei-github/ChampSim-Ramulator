@@ -140,6 +140,7 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 #endif /* USER_CODES */
 
 #if (USER_CODES == ENABLE)
+
 /* Virtual memory */
 #define PAGE_TABLE_LEVELS              (5ul)
 #define MINOR_FAULT_PENALTY            (CPU_CLOCK_PERIOD * 200ul)
@@ -246,14 +247,17 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 /** @todo Delete unused macro and add champsim_config.json setting to here */
 
 /**
- * Per-cache geometry, latency, and bandwidth.
+ * Cache configuration: per-cache geometry (e.g., set, way), latency, and bandwidth.
+ *
  * The *_LATENCY values are total latencies in cycles; cache_builder splits each one into a fill
  * latency of (latency + 1) / 2 and a hit latency of the remainder, and clamps the total to a
  * minimum of 2 cycles (so the TLBs' latency of 1 is effectively 2, as upstream).
+ * @see include/ChampSim/cache_builder.h
+ *
  * *_MAX_TAG_CHECK and *_MAX_FILL are the per-cycle tag-check and fill bandwidths.
  */
 
-/* L1I */
+/* L1I (Level 1 Instruction Cache) */
 #define L1I_CAPACITY             (32 * KiB)                             // Default: 32 KiB
 #define L1I_WAYS                 (8)                                    // (ways)
 #define L1I_SETS                 (L1I_CAPACITY / BLOCK_SIZE / L1I_WAYS) // (sets)
@@ -267,7 +271,7 @@ constexpr std::size_t DRAM_RQ_SIZE       = 64;
 
 static_assert((L1I_CAPACITY / BLOCK_SIZE) % L1I_WAYS == 0, "L1I Capacity is not enough");
 
-/* L1D */
+/* L1D (Level 1 Data Cache) */
 #define L1D_CAPACITY      (48 * KiB) // Default: 48 KiB
 #define L1D_WAYS          (12)
 #define L1D_SETS          (L1D_CAPACITY / BLOCK_SIZE / L1D_WAYS)
@@ -281,7 +285,7 @@ static_assert((L1I_CAPACITY / BLOCK_SIZE) % L1I_WAYS == 0, "L1I Capacity is not 
 
 static_assert((L1D_CAPACITY / BLOCK_SIZE) % L1D_WAYS == 0, "L1D Capacity is not enough");
 
-/* L2C */
+/* L2C (Level 2 Cache) */
 #define L2C_CAPACITY      (512 * KiB) // Default: 512 KiB
 #define L2C_WAYS          (8)
 #define L2C_SETS          (L2C_CAPACITY / BLOCK_SIZE / L2C_WAYS)
@@ -295,7 +299,7 @@ static_assert((L1D_CAPACITY / BLOCK_SIZE) % L1D_WAYS == 0, "L1D Capacity is not 
 
 static_assert((L2C_CAPACITY / BLOCK_SIZE) % L2C_WAYS == 0, "L2C Capacity is not enough");
 
-/* ITLB */
+/* ITLB (Instruction Translation Lookaside Buffer) */
 #define ITLB_CAPACITY      (256 * KiB)
 #define ITLB_WAYS          (4)
 #define ITLB_SETS          (ITLB_CAPACITY / PAGE_SIZE / ITLB_WAYS)
@@ -309,7 +313,7 @@ static_assert((L2C_CAPACITY / BLOCK_SIZE) % L2C_WAYS == 0, "L2C Capacity is not 
 
 static_assert((ITLB_CAPACITY / PAGE_SIZE) % ITLB_WAYS == 0, "ITLB Capacity is not enough");
 
-/* DTLB */
+/* DTLB (Data Translation Lookaside Buffer) */
 #define DTLB_CAPACITY      (256 * KiB)
 #define DTLB_WAYS          (4)
 #define DTLB_SETS          (DTLB_CAPACITY / PAGE_SIZE / DTLB_WAYS)
@@ -323,7 +327,7 @@ static_assert((ITLB_CAPACITY / PAGE_SIZE) % ITLB_WAYS == 0, "ITLB Capacity is no
 
 static_assert((DTLB_CAPACITY / PAGE_SIZE) % DTLB_WAYS == 0, "DTLB Capacity is not enough");
 
-/* STLB */
+/* STLB (Second-level/Shared Translation Lookaside Buffer) */
 #define STLB_CAPACITY      (6 * MiB)
 #define STLB_WAYS          (12)
 #define STLB_SETS          (STLB_CAPACITY / PAGE_SIZE / STLB_WAYS)
@@ -337,7 +341,7 @@ static_assert((DTLB_CAPACITY / PAGE_SIZE) % DTLB_WAYS == 0, "DTLB Capacity is no
 
 static_assert((STLB_CAPACITY / PAGE_SIZE) % STLB_WAYS == 0, "STLB Capacity is not enough");
 
-/* LLC */
+/* LLC (Last Level Cache) */
 #define LLC_CAPACITY      (2 * MiB) // Default: 2 MiB
 #define LLC_WAYS          (16)
 #define LLC_SETS          (LLC_CAPACITY / BLOCK_SIZE / LLC_WAYS)
@@ -351,17 +355,262 @@ static_assert((STLB_CAPACITY / PAGE_SIZE) % STLB_WAYS == 0, "STLB Capacity is no
 
 static_assert((LLC_CAPACITY / BLOCK_SIZE) % LLC_WAYS == 0, "LLC Capacity is not enough");
 
-/* PTW */
-#define PTW_RQ_SIZE                  (16)
-#define PTW_MSHR_SIZE                (5)
-#define PTW_PSCL5_SET                (1)
-#define PTW_PSCL5_WAY                (2)
-#define PTW_PSCL4_SET                (1)
-#define PTW_PSCL4_WAY                (4)
-#define PTW_PSCL3_SET                (2)
-#define PTW_PSCL3_WAY                (4)
-#define PTW_PSCL2_SET                (4)
-#define PTW_PSCL2_WAY                (8)
+/**
+ * Cache configuration: prefetch as load, write queue full address check, virtual address prefetch
+ *
+ * @details
+ * Upstream ChampSim picks a *different* cache_builder method depending on the value of a boolean
+ * configuration key (.set_x() when true, .reset_x() when false); see the local_cache_builder_parts
+ * table in ChampSim/config/instantiation_file.py. The preprocessor equivalent below splits each
+ * knob into two macros:
+ *
+ * - <CACHE>_USE_<FLAG>   the knob, ENABLE or DISABLE. This is the one to edit.
+ * - <CACHE>_<FLAG>_PART  the derived builder text, spliced into the chains in defaults.hpp.
+ *
+ * <CACHE>_PREFETCH_ACTIVATE is the access_type list handed to .prefetch_activate(). The valid
+ * enumerators are LOAD, RFO, PREFETCH, WRITE and TRANSLATION (see include/ChampSim/access_type.h).
+ *
+ * <CACHE>_EXTRA_BUILDER_PARTS is a free-form escape hatch appended to the end of the builder chain;
+ * it is empty by default. Use it for cache_builder setters that have no macro of their own, such as
+ * .size(), .log2_size(), .sets_factor(), .hit_latency(), .fill_latency(), .log2_offset_bits() and
+ * .clock_period().
+ * @see include/ChampSim/cache_builder.h
+ * 
+ * It must not contain .prefetcher<>() or .replacement<>(), which return a different cache_builder specialization,
+ * nor the channel wiring (.upper_levels(), .lower_level(), .lower_translate()) — those are applied in core_inst.h instead.
+ *
+ * The default values below reproduce upstream ChampSim's champsim_config.json.
+ */
+
+/* L1I */
+#define L1I_USE_PREFETCH_AS_LOAD   (DISABLE)
+#define L1I_USE_WQ_CHECK_FULL_ADDR (ENABLE)
+#define L1I_USE_VIRTUAL_PREFETCH   (ENABLE)
+#define L1I_PREFETCH_ACTIVATE      access_type::LOAD, access_type::PREFETCH
+#define L1I_EXTRA_BUILDER_PARTS
+
+#if (L1I_USE_PREFETCH_AS_LOAD == ENABLE)
+#define L1I_PREFETCH_AS_LOAD_PART .set_prefetch_as_load()
+#else
+#define L1I_PREFETCH_AS_LOAD_PART .reset_prefetch_as_load()
+#endif /* L1I_USE_PREFETCH_AS_LOAD */
+
+#if (L1I_USE_WQ_CHECK_FULL_ADDR == ENABLE)
+#define L1I_WQ_CHECK_FULL_ADDR_PART .set_wq_checks_full_addr()
+#else
+#define L1I_WQ_CHECK_FULL_ADDR_PART .reset_wq_checks_full_addr()
+#endif /* L1I_USE_WQ_CHECK_FULL_ADDR */
+
+#if (L1I_USE_VIRTUAL_PREFETCH == ENABLE)
+#define L1I_VIRTUAL_PREFETCH_PART .set_virtual_prefetch()
+#else
+#define L1I_VIRTUAL_PREFETCH_PART .reset_virtual_prefetch()
+#endif /* L1I_USE_VIRTUAL_PREFETCH */
+
+/* L1D */
+#define L1D_USE_PREFETCH_AS_LOAD   (DISABLE)
+#define L1D_USE_WQ_CHECK_FULL_ADDR (ENABLE)
+#define L1D_USE_VIRTUAL_PREFETCH   (DISABLE)
+#define L1D_PREFETCH_ACTIVATE      access_type::LOAD, access_type::PREFETCH
+#define L1D_EXTRA_BUILDER_PARTS
+
+#if (L1D_USE_PREFETCH_AS_LOAD == ENABLE)
+#define L1D_PREFETCH_AS_LOAD_PART .set_prefetch_as_load()
+#else
+#define L1D_PREFETCH_AS_LOAD_PART .reset_prefetch_as_load()
+#endif /* L1D_USE_PREFETCH_AS_LOAD */
+
+#if (L1D_USE_WQ_CHECK_FULL_ADDR == ENABLE)
+#define L1D_WQ_CHECK_FULL_ADDR_PART .set_wq_checks_full_addr()
+#else
+#define L1D_WQ_CHECK_FULL_ADDR_PART .reset_wq_checks_full_addr()
+#endif /* L1D_USE_WQ_CHECK_FULL_ADDR */
+
+#if (L1D_USE_VIRTUAL_PREFETCH == ENABLE)
+#define L1D_VIRTUAL_PREFETCH_PART .set_virtual_prefetch()
+#else
+#define L1D_VIRTUAL_PREFETCH_PART .reset_virtual_prefetch()
+#endif /* L1D_USE_VIRTUAL_PREFETCH */
+
+/* L2C */
+#define L2C_USE_PREFETCH_AS_LOAD   (DISABLE)
+#define L2C_USE_WQ_CHECK_FULL_ADDR (DISABLE)
+#define L2C_USE_VIRTUAL_PREFETCH   (DISABLE)
+#define L2C_PREFETCH_ACTIVATE      access_type::LOAD, access_type::PREFETCH
+#define L2C_EXTRA_BUILDER_PARTS
+
+#if (L2C_USE_PREFETCH_AS_LOAD == ENABLE)
+#define L2C_PREFETCH_AS_LOAD_PART .set_prefetch_as_load()
+#else
+#define L2C_PREFETCH_AS_LOAD_PART .reset_prefetch_as_load()
+#endif /* L2C_USE_PREFETCH_AS_LOAD */
+
+#if (L2C_USE_WQ_CHECK_FULL_ADDR == ENABLE)
+#define L2C_WQ_CHECK_FULL_ADDR_PART .set_wq_checks_full_addr()
+#else
+#define L2C_WQ_CHECK_FULL_ADDR_PART .reset_wq_checks_full_addr()
+#endif /* L2C_USE_WQ_CHECK_FULL_ADDR */
+
+#if (L2C_USE_VIRTUAL_PREFETCH == ENABLE)
+#define L2C_VIRTUAL_PREFETCH_PART .set_virtual_prefetch()
+#else
+#define L2C_VIRTUAL_PREFETCH_PART .reset_virtual_prefetch()
+#endif /* L2C_USE_VIRTUAL_PREFETCH */
+
+/* ITLB */
+#define ITLB_USE_PREFETCH_AS_LOAD   (DISABLE)
+#define ITLB_USE_WQ_CHECK_FULL_ADDR (ENABLE)
+#define ITLB_USE_VIRTUAL_PREFETCH   (ENABLE)
+#define ITLB_PREFETCH_ACTIVATE      access_type::LOAD, access_type::PREFETCH
+#define ITLB_EXTRA_BUILDER_PARTS
+
+#if (ITLB_USE_PREFETCH_AS_LOAD == ENABLE)
+#define ITLB_PREFETCH_AS_LOAD_PART .set_prefetch_as_load()
+#else
+#define ITLB_PREFETCH_AS_LOAD_PART .reset_prefetch_as_load()
+#endif /* ITLB_USE_PREFETCH_AS_LOAD */
+
+#if (ITLB_USE_WQ_CHECK_FULL_ADDR == ENABLE)
+#define ITLB_WQ_CHECK_FULL_ADDR_PART .set_wq_checks_full_addr()
+#else
+#define ITLB_WQ_CHECK_FULL_ADDR_PART .reset_wq_checks_full_addr()
+#endif /* ITLB_USE_WQ_CHECK_FULL_ADDR */
+
+#if (ITLB_USE_VIRTUAL_PREFETCH == ENABLE)
+#define ITLB_VIRTUAL_PREFETCH_PART .set_virtual_prefetch()
+#else
+#define ITLB_VIRTUAL_PREFETCH_PART .reset_virtual_prefetch()
+#endif /* ITLB_USE_VIRTUAL_PREFETCH */
+
+/* DTLB */
+#define DTLB_USE_PREFETCH_AS_LOAD   (DISABLE)
+#define DTLB_USE_WQ_CHECK_FULL_ADDR (ENABLE)
+#define DTLB_USE_VIRTUAL_PREFETCH   (DISABLE)
+#define DTLB_PREFETCH_ACTIVATE      access_type::LOAD, access_type::PREFETCH
+#define DTLB_EXTRA_BUILDER_PARTS
+
+#if (DTLB_USE_PREFETCH_AS_LOAD == ENABLE)
+#define DTLB_PREFETCH_AS_LOAD_PART .set_prefetch_as_load()
+#else
+#define DTLB_PREFETCH_AS_LOAD_PART .reset_prefetch_as_load()
+#endif /* DTLB_USE_PREFETCH_AS_LOAD */
+
+#if (DTLB_USE_WQ_CHECK_FULL_ADDR == ENABLE)
+#define DTLB_WQ_CHECK_FULL_ADDR_PART .set_wq_checks_full_addr()
+#else
+#define DTLB_WQ_CHECK_FULL_ADDR_PART .reset_wq_checks_full_addr()
+#endif /* DTLB_USE_WQ_CHECK_FULL_ADDR */
+
+#if (DTLB_USE_VIRTUAL_PREFETCH == ENABLE)
+#define DTLB_VIRTUAL_PREFETCH_PART .set_virtual_prefetch()
+#else
+#define DTLB_VIRTUAL_PREFETCH_PART .reset_virtual_prefetch()
+#endif /* DTLB_USE_VIRTUAL_PREFETCH */
+
+/* STLB */
+#define STLB_USE_PREFETCH_AS_LOAD   (DISABLE)
+#define STLB_USE_WQ_CHECK_FULL_ADDR (DISABLE)
+#define STLB_USE_VIRTUAL_PREFETCH   (DISABLE)
+#define STLB_PREFETCH_ACTIVATE      access_type::LOAD, access_type::PREFETCH
+#define STLB_EXTRA_BUILDER_PARTS
+
+#if (STLB_USE_PREFETCH_AS_LOAD == ENABLE)
+#define STLB_PREFETCH_AS_LOAD_PART .set_prefetch_as_load()
+#else
+#define STLB_PREFETCH_AS_LOAD_PART .reset_prefetch_as_load()
+#endif /* STLB_USE_PREFETCH_AS_LOAD */
+
+#if (STLB_USE_WQ_CHECK_FULL_ADDR == ENABLE)
+#define STLB_WQ_CHECK_FULL_ADDR_PART .set_wq_checks_full_addr()
+#else
+#define STLB_WQ_CHECK_FULL_ADDR_PART .reset_wq_checks_full_addr()
+#endif /* STLB_USE_WQ_CHECK_FULL_ADDR */
+
+#if (STLB_USE_VIRTUAL_PREFETCH == ENABLE)
+#define STLB_VIRTUAL_PREFETCH_PART .set_virtual_prefetch()
+#else
+#define STLB_VIRTUAL_PREFETCH_PART .reset_virtual_prefetch()
+#endif /* STLB_USE_VIRTUAL_PREFETCH */
+
+/* LLC */
+#define LLC_USE_PREFETCH_AS_LOAD   (DISABLE)
+#define LLC_USE_WQ_CHECK_FULL_ADDR (DISABLE)
+#define LLC_USE_VIRTUAL_PREFETCH   (DISABLE)
+#define LLC_PREFETCH_ACTIVATE      access_type::LOAD, access_type::PREFETCH
+#define LLC_EXTRA_BUILDER_PARTS
+
+#if (LLC_USE_PREFETCH_AS_LOAD == ENABLE)
+#define LLC_PREFETCH_AS_LOAD_PART .set_prefetch_as_load()
+#else
+#define LLC_PREFETCH_AS_LOAD_PART .reset_prefetch_as_load()
+#endif /* LLC_USE_PREFETCH_AS_LOAD */
+
+#if (LLC_USE_WQ_CHECK_FULL_ADDR == ENABLE)
+#define LLC_WQ_CHECK_FULL_ADDR_PART .set_wq_checks_full_addr()
+#else
+#define LLC_WQ_CHECK_FULL_ADDR_PART .reset_wq_checks_full_addr()
+#endif /* LLC_USE_WQ_CHECK_FULL_ADDR */
+
+#if (LLC_USE_VIRTUAL_PREFETCH == ENABLE)
+#define LLC_VIRTUAL_PREFETCH_PART .set_virtual_prefetch()
+#else
+#define LLC_VIRTUAL_PREFETCH_PART .reset_virtual_prefetch()
+#endif /* LLC_USE_VIRTUAL_PREFETCH */
+
+/* PTW (Page Table Walker) */
+#define PTW_RQ_SIZE   (16)
+#define PTW_MSHR_SIZE (5)
+#define PTW_PSCL5_SET (1)
+#define PTW_PSCL5_WAY (2)
+#define PTW_PSCL4_SET (1)
+#define PTW_PSCL4_WAY (4)
+#define PTW_PSCL3_SET (2)
+#define PTW_PSCL3_WAY (4)
+#define PTW_PSCL2_SET (4)
+#define PTW_PSCL2_WAY (8)
+
+/**
+ * Page table walker's page structure cache level (pscl) configuration 
+ *
+ * @details
+ * Upstream emits an .add_pscl(level, set, way) call only for the levels the configuration
+ * mentions; see the local_ptw_builder_parts table in ChampSim/config/instantiation_file.py.
+ *
+ * Setting PTW_USE_PSCL<n> to DISABLE drops that page structure cache level entirely — the walker
+ * then has to walk that level of the page table on every miss.
+ *
+ * PTW_EXTRA_BUILDER_PARTS is the escape hatch for ptw_builder setters with no macro of their own,
+ * such as .latency(), .mshr_size(), .tag_bandwidth() and .fill_bandwidth().
+ */
+#define PTW_USE_PSCL5 (ENABLE)
+#define PTW_USE_PSCL4 (ENABLE)
+#define PTW_USE_PSCL3 (ENABLE)
+#define PTW_USE_PSCL2 (ENABLE)
+#define PTW_EXTRA_BUILDER_PARTS
+
+#if (PTW_USE_PSCL5 == ENABLE)
+#define PTW_PSCL5_PART .add_pscl(5, PTW_PSCL5_SET, PTW_PSCL5_WAY)
+#else
+#define PTW_PSCL5_PART
+#endif /* PTW_USE_PSCL5 */
+
+#if (PTW_USE_PSCL4 == ENABLE)
+#define PTW_PSCL4_PART .add_pscl(4, PTW_PSCL4_SET, PTW_PSCL4_WAY)
+#else
+#define PTW_PSCL4_PART
+#endif /* PTW_USE_PSCL4 */
+
+#if (PTW_USE_PSCL3 == ENABLE)
+#define PTW_PSCL3_PART .add_pscl(3, PTW_PSCL3_SET, PTW_PSCL3_WAY)
+#else
+#define PTW_PSCL3_PART
+#endif /* PTW_USE_PSCL3 */
+
+#if (PTW_USE_PSCL2 == ENABLE)
+#define PTW_PSCL2_PART .add_pscl(2, PTW_PSCL2_SET, PTW_PSCL2_WAY)
+#else
+#define PTW_PSCL2_PART
+#endif /* PTW_USE_PSCL2 */
 
 /**
  * Cache and PTW channel (inter-component queue) sizes — shared across all CPUs.
