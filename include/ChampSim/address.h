@@ -707,11 +707,42 @@ struct fmt::formatter<champsim::address_slice<Extent>>
 
     constexpr auto parse(format_parse_context& ctx) -> format_parse_context::iterator
     {
+#if (USER_CODES == ENABLE)
+        /**
+         * std::from_chars is not constexpr before C++23, which makes this whole function unusable in a
+         * constant expression. fmt 9 checks literal format strings inside a consteval constructor, so
+         * formatting an address_slice against a literal ("{}", "{:18}") fails to compile unless the
+         * width is parsed by hand. The semantics below match the std::from_chars call kept in the #else
+         * branch: no digits leaves len untouched and consumes nothing, and overflow is an error.
+         */
+        auto ret_ptr                 = ctx.begin();
+        std::size_t value            = 0;
+        bool out_of_range            = false;
+        constexpr std::size_t cutoff = std::numeric_limits<std::size_t>::max() / 10;
+
+        for (; ret_ptr != ctx.end() && *ret_ptr >= '0' && *ret_ptr <= '9'; ++ret_ptr)
+        {
+            const auto digit = static_cast<std::size_t>(*ret_ptr - '0');
+            if (value > cutoff || (value == cutoff && digit > std::numeric_limits<std::size_t>::max() % 10))
+                out_of_range = true;
+            else
+                value = value * 10 + digit;
+        }
+
+        if (ret_ptr != ctx.begin() && ! out_of_range)
+            len = value;
+
+        // Check if reached the end of the range:
+        if (out_of_range || (ret_ptr != ctx.end() && *ret_ptr != '}'))
+            throw fmt::format_error("invalid format");
+        return ret_ptr;
+#else
         auto [ret_ptr, ec] = std::from_chars(ctx.begin(), ctx.end(), len);
         // Check if reached the end of the range:
         if (ec == std::errc::result_out_of_range || (ret_ptr != ctx.end() && *ret_ptr != '}'))
             throw fmt::format_error("invalid format");
         return ret_ptr;
+#endif /* USER_CODES */
     }
 
     auto format(const addr_type& addr, fmt::format_context& ctx) const -> fmt::format_context::iterator

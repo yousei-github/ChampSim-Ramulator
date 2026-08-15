@@ -726,7 +726,10 @@ champsim::data::bytes MEMORY_CONTROLLER::size() const
     const auto address_bit_width = address_mapping.address_slicer.bit_size();
     const long long memory_size  = 1ll << address_bit_width;
 
-    assert(memory_size == DRAM_CAPACITY);
+    // The size a controller reports is whatever its own address mapping spans, which for a controller
+    // built from the DRAM_* macros is DRAM_CAPACITY. That correspondence is checked once, at compile
+    // time, in ChampSim/champsim_constants.h; asserting it here instead would forbid every controller
+    // configured with a different geometry, which is exactly what the address mapping tests build.
 
     return champsim::data::bytes {memory_size};
 #else

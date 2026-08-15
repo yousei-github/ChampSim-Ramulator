@@ -22,9 +22,16 @@
 /**
  * Print a printf-style line into the simulator statistics file.
  * It expands to nothing when PRINT_STATISTICS_INTO_FILE is disabled, so call sites need no guard.
+ *
+ * The null check matters for binaries that never call output_file_initialization(), such as the unit
+ * tests: there the handler legitimately stays null, and std::fprintf(nullptr, ...) is undefined behaviour.
+ * The simulator opens the file before any call site can run, so this costs it one predictable branch.
  */
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-#define PRINTF_STATISTICS_FILE(...) std::fprintf(output_statistics.file_handler, __VA_ARGS__)
+#define PRINTF_STATISTICS_FILE(...)                                                                    \
+    ((output_statistics.file_handler != nullptr) ? (void) std::fprintf(output_statistics.file_handler, \
+                                                       __VA_ARGS__)                                    \
+                                                 : (void) 0)
 #else
 #define PRINTF_STATISTICS_FILE(...) ((void) 0)
 #endif /* PRINT_STATISTICS_INTO_FILE */
