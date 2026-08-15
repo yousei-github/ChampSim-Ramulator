@@ -282,7 +282,7 @@ Cycle-level results also shift relative to earlier versions of this project, bec
 # Test
 
 ## Unit tests
-Unit testing is implemented in [test/unitTest/](test/unitTest/), using the Catch2 framework. The tests under [test/unitTest/ChampSim/](test/unitTest/ChampSim/) are ported from upstream ChampSim (commit 51588e1d); further suites (for example for Ramulator) can be added as sibling directories.
+Unit testing is implemented in [test/unitTest/](test/unitTest/), using the Catch2 framework. The tests under [test/unitTest/ChampSim/](test/unitTest/ChampSim/) are ported from upstream ChampSim; further suites (for example for Ramulator) can be added as sibling directories.
 
 They are excluded from the default build. The `tests` preset enables them and shares its build directory with the `default` preset, so the simulator objects are reused instead of recompiled:
 

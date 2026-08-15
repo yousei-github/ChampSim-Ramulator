@@ -107,9 +107,8 @@ constexpr std::size_t DRAM_COLUMNS           = 1024;
 constexpr std::size_t DRAM_CAPACITY          = DRAM_CHANNEL_WIDTH * DRAM_CHANNELS * DRAM_RANKS * DRAM_BANK_GROUPS * DRAM_BANKS * DRAM_ROWS * DRAM_COLUMNS; // The unit of DRAM_CAPACITY is byte
 
 /**
- * The memory controller derives its capacity by summing the widths of its address slices, so the two
- * agree only while every term above is a power of two. Checking that here makes a bad configuration a
- * compile error, and lets MEMORY_CONTROLLER::size() stay a plain accessor that works for any geometry.
+ * The memory controller derives its capacity by summing the widths of its address slices, so the two agree only while every term above is a power of two.
+ * Checking that here makes a bad configuration a compile error, and lets MEMORY_CONTROLLER::size() stay a plain accessor that works for any geometry.
  */
 static_assert((DRAM_CHANNEL_WIDTH & (DRAM_CHANNEL_WIDTH - 1)) == 0, "DRAM_CHANNEL_WIDTH must be a power of two");
 static_assert((DRAM_CHANNELS & (DRAM_CHANNELS - 1)) == 0, "DRAM_CHANNELS must be a power of two");

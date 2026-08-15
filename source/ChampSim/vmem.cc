@@ -183,13 +183,7 @@ std::pair<champsim::address, champsim::chrono::clock::duration> VirtualMemory::g
         }
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        // The counter only has a slot for levels 1 to PAGE_TABLE_LEVELS, but this function accepts any
-        // level. Without the bounds check a level of 0 wraps the unsigned subtraction and writes far
-        // outside the array; the simulator's page table walker never asks for level 0, but callers may.
-        if (level > 0 && level <= output_statistics.valid_pte_count.size())
-        {
-            output_statistics.valid_pte_count[level - 1]++;
-        }
+        output_statistics.valid_pte_count[level]++;
 #endif /* PRINT_STATISTICS_INTO_FILE */
     }
 

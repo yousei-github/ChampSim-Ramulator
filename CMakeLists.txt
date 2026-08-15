@@ -24,7 +24,7 @@ set(EXECUTABLE_NAME "champsim_plus_ramulator" CACHE STRING "Name of the output e
 message(STATUS "EXECUTABLE_NAME: ${EXECUTABLE_NAME}")
 
 # Build system options
-# Option provides a boolean option that the user can optionally select.
+# Option provides a boolean option that the user can optionally select by overriding with -D <option_name>=ON at configure time, or use the "default"/"debug"/"release"/"strict" preset].
 option(ENABLE_ASSERT "Enable assertion" ON) # Assertion Configuration
 option(SHOW_All_WARNING "Show all optional warnings which are desirable for normal code" ON) # Warnings Configuration
 option(ENABLE_All_WARNING_ERROR "Make all warnings into hard errors" OFF) # Warnings-as-error Configuration
@@ -119,8 +119,11 @@ find_package(ZLIB            REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(spdlog   CONFIG REQUIRED)
 
-# Unit test option (CMake Cache, boolean, override with -D BUILD_CHAMPSIM_TESTS=ON at configure time, or use the "tests" preset)
-option(BUILD_CHAMPSIM_TESTS "Build the Catch2 unit tests under test/unitTest" OFF)
+# Build system options for unit test
+# ChampSim unit test configuration (CMake Cache, boolean, override with -D BUILD_CHAMPSIM_TESTS=ON at configure time, or use the "tests" preset)
+option(BUILD_CHAMPSIM_TESTS "Build the Catch2 unit tests under test/unitTest/ChampSim" OFF)
+
+# Output build system options for unit test
 message(STATUS "BUILD_CHAMPSIM_TESTS: ${BUILD_CHAMPSIM_TESTS}")
 
 # Building the simulator core as an object library
@@ -132,8 +135,8 @@ message(STATUS "BUILD_CHAMPSIM_TESTS: ${BUILD_CHAMPSIM_TESTS}")
 # would let the linker drop those translation units, because nothing references them by symbol.
 add_library(champsim_core OBJECT)
 
-# The name every per-directory CMakeLists.txt under source/ attaches its sources to
-set(CHAMPSIM_TARGET champsim_core)
+# The name which every per-directory CMakeLists.txt under source/ attaches its sources to
+set(CHAMPSIM_TARGET "champsim_core" CACHE STRING "Name of the main body of simulator")
 
 # Specifies compile definitions to use when compiling a given target
 if(NOT ENABLE_ASSERT)
@@ -143,7 +146,7 @@ if(NOT ENABLE_ASSERT)
 endif()
 
 # Specifies include directories (map to the -I compiler flag) to use when compiling a given target.
-# PUBLIC, so that everything linking champsim_core (the simulator and the unit tests) inherits the include path
+# Scope keyword is PUBLIC, so that everything linking champsim_core (the simulator and the unit tests) inherits the include path (Not INTERFACE property since champsim_core also needs that include path)
 target_include_directories(champsim_core
     PUBLIC
     "${CMAKE_SOURCE_DIR}/include")
@@ -156,7 +159,7 @@ target_compile_options(champsim_core
     -fdiagnostics-color=always)
 
 # Specify libraries or flags to use when linking a given target and/or its dependents.
-# PUBLIC, so that the dependencies propagate to whatever links champsim_core
+# Scope keyword is PUBLIC, so that the dependencies propagate to whatever links champsim_core
 target_link_libraries(champsim_core
     PUBLIC
     fmt::fmt
@@ -198,8 +201,8 @@ set_target_properties(${EXECUTABLE_NAME}
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 # Pull in per-directory source lists. Each subdirectory's CMakeLists.txt
-# attaches its files to ${CHAMPSIM_TARGET} via target_sources(); source/main.cc,
-# which owns main(), is the sole exception and goes straight to the executable.
+# attaches its files to ${CHAMPSIM_TARGET} via target_sources();
+# source/main.cc, which owns main(), is the sole exception and goes straight to the executable.
 add_subdirectory(source)
 
 # Pull in the unit tests. They link champsim_core, so they exercise the very objects the simulator is built from
