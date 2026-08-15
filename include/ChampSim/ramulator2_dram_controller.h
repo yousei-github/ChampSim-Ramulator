@@ -20,8 +20,8 @@
 #include "ChampSim/chrono.h"
 #include "ChampSim/dram_stats.h"
 #include "ChampSim/operable.h"
+#include "OS_Transparent_Management/os_transparent_management.h"
 #include "Ramulator2/base/request.h"
-#include "os_transparent_management.h"
 
 #if (MEMORY_USE_HYBRID == ENABLE)
 #include <array>

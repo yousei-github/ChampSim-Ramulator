@@ -92,7 +92,7 @@ The physical address space is partitioned linearly:
 
 ## OS-Transparent Management Layer
 
-When `MEMORY_USE_OS_TRANSPARENT_MANAGEMENT (ENABLE)`, `MEMORY_CONTROLLER` also holds an `OS_TRANSPARENT_MANAGEMENT` object (defined in `include/os_transparent_management.h`). It is constructed with the total address space size and the fast-memory boundary:
+When `MEMORY_USE_OS_TRANSPARENT_MANAGEMENT (ENABLE)`, `MEMORY_CONTROLLER` also holds an `OS_TRANSPARENT_MANAGEMENT` object (defined in `include/OS_Transparent_Management/os_transparent_management.h`). It is constructed with the total address space size and the fast-memory boundary:
 
 ```cpp
 os_transparent_management(

@@ -28,6 +28,8 @@
 			"RAMULATOR_SOURCE_PATH": "${workspaceFolder}/source/Ramulator/*.cpp",
 			/* Ramulator 2.0 */
 			"RAMULATOR2_SOURCE_PATH": "${workspaceFolder}/source/Ramulator2/*.cpp ${workspaceFolder}/source/Ramulator2/base/*.cpp ${workspaceFolder}/source/Ramulator2/addr_mapper/impl/*.cpp ${workspaceFolder}/source/Ramulator2/translation/impl/*.cpp ${workspaceFolder}/source/Ramulator2/dram/impl/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/bliss/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/blockhammer/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/device_config/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/plugin/prac/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/refresh/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/rowpolicy/*.cpp ${workspaceFolder}/source/Ramulator2/dram_controller/impl/scheduler/*.cpp ${workspaceFolder}/source/Ramulator2/memory_system/impl/*.cpp ${workspaceFolder}/source/Ramulator2/frontend/impl/external_wrapper/*.cpp ${workspaceFolder}/source/Ramulator2/frontend/impl/memory_trace/*.cpp ${workspaceFolder}/source/Ramulator2/frontend/impl/processor/bhO3/*.cpp ${workspaceFolder}/source/Ramulator2/frontend/impl/processor/simpleO3/*.cpp ${workspaceFolder}/source/Ramulator2/example/impl/*.cpp ${workspaceFolder}/source/Ramulator2/test/*.cpp",
+			/* OS-transparent data management */
+			"OS_TRANSPARENT_MANAGEMENT_SOURCE_PATH": "${workspaceFolder}/source/OS_Transparent_Management/*.cc",
 			/* User */
 			"PROJECT_SOURCE_PATH": "${workspaceFolder}/source/*.cc",
 			/* ccache: the project-scoped cache directory, isolated from the user's global ~/.cache/ccache */
@@ -109,6 +111,7 @@
 				"${CHAMPSIM_BRANCH_TARGET_BUFFER_SOURCE_PATH}",
 				"${RAMULATOR_SOURCE_PATH}",
 				"${RAMULATOR2_SOURCE_PATH}",
+				"${OS_TRANSPARENT_MANAGEMENT_SOURCE_PATH}",
 				"${PROJECT_SOURCE_PATH}",
 				/**
                  * Below are library names:

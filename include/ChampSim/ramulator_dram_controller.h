@@ -35,9 +35,9 @@
 
 #include "ChampSim/util/span.h"
 #include "ChampSim/util/units.h"
+#include "OS_Transparent_Management/os_transparent_management.h"
 #include "Ramulator/Memory.h"
 #include "Ramulator/Request.h"
-#include "os_transparent_management.h"
 #include "simulator_statistics.h"
 
 /* Macro */

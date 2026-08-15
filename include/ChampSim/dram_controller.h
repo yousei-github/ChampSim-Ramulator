@@ -42,7 +42,7 @@
 #include <iostream>
 
 #include "ChampSim/util/span.h"
-#include "os_transparent_management.h"
+#include "OS_Transparent_Management/os_transparent_management.h"
 #endif /* USER_CODES */
 
 #if (USE_VCPKG == ENABLE)

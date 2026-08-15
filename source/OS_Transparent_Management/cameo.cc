@@ -1,4 +1,4 @@
-#include "os_transparent_management.h"
+#include "OS_Transparent_Management/os_transparent_management.h"
 #include "simulator_statistics.h"
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
