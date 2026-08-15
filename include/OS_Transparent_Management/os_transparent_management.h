@@ -12,9 +12,9 @@
 #include "ProjectConfiguration.h" // User file
 
 /* Includes for research */
-#include "cameo.h"
-#include "ideal_single_mempod.h"
-#include "variable_granularity.h"
+#include "OS_Transparent_Management/cameo.h"
+#include "OS_Transparent_Management/ideal_single_mempod.h"
+#include "OS_Transparent_Management/variable_granularity.h"
 
 /**
  * @note Abbreviation:
