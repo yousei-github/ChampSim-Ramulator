@@ -1,4 +1,4 @@
-target_sources(${EXECUTABLE_NAME}
+target_sources(${CHAMPSIM_TARGET}
     PRIVATE
     basic_btb/basic_btb.cc
     basic_btb/direct_predictor.cc

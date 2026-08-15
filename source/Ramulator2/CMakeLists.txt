@@ -6,7 +6,7 @@
 #   #if (USER_CODES != ENABLE) ... #endif
 # so it compiles to an empty translation unit.
 
-target_sources(${EXECUTABLE_NAME}
+target_sources(${CHAMPSIM_TARGET}
     PRIVATE
     main.cpp)
 

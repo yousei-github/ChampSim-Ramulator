@@ -1,4 +1,4 @@
-target_sources(${EXECUTABLE_NAME}
+target_sources(${CHAMPSIM_TARGET}
     PRIVATE
     impl/external_wrapper/champSim_frontend.cpp
     impl/external_wrapper/gem5_frontend.cpp

@@ -1,4 +1,4 @@
-target_sources(${EXECUTABLE_NAME}
+target_sources(${CHAMPSIM_TARGET}
     PRIVATE
     impl/DDR3.cpp
     impl/DDR4.cpp

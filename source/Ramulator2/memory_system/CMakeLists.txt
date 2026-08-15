@@ -1,4 +1,4 @@
-target_sources(${EXECUTABLE_NAME}
+target_sources(${CHAMPSIM_TARGET}
     PRIVATE
     impl/bh_DRAM_system.cpp
     impl/dummy_memory_system.cpp

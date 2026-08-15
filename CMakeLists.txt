@@ -119,6 +119,55 @@ find_package(ZLIB            REQUIRED)
 find_package(yaml-cpp CONFIG REQUIRED)
 find_package(spdlog   CONFIG REQUIRED)
 
+# Unit test option (CMake Cache, boolean, override with -D BUILD_CHAMPSIM_TESTS=ON at configure time, or use the "tests" preset)
+option(BUILD_CHAMPSIM_TESTS "Build the Catch2 unit tests under test/unitTest" OFF)
+message(STATUS "BUILD_CHAMPSIM_TESTS: ${BUILD_CHAMPSIM_TESTS}")
+
+# Building the simulator core as an object library
+# Every simulator source except source/main.cc lands here, so that both the simulator executable and
+# the unit test executable compile these translation units exactly once and share the resulting objects.
+#
+# OBJECT (rather than STATIC) is required: Ramulator 2.0 registers its implementations with static
+# initializers (RAMULATOR_REGISTER_IMPLEMENTATION in include/Ramulator2/base/base.h). A static archive
+# would let the linker drop those translation units, because nothing references them by symbol.
+add_library(champsim_core OBJECT)
+
+# The name every per-directory CMakeLists.txt under source/ attaches its sources to
+set(CHAMPSIM_TARGET champsim_core)
+
+# Specifies compile definitions to use when compiling a given target
+if(NOT ENABLE_ASSERT)
+    target_compile_definitions(champsim_core
+        PRIVATE
+        NDEBUG)
+endif()
+
+# Specifies include directories (map to the -I compiler flag) to use when compiling a given target.
+# PUBLIC, so that everything linking champsim_core (the simulator and the unit tests) inherits the include path
+target_include_directories(champsim_core
+    PUBLIC
+    "${CMAKE_SOURCE_DIR}/include")
+
+# Adds options (compiler flags) to the COMPILE_OPTIONS or INTERFACE_COMPILE_OPTIONS target properties. These options are used when compiling the given target
+target_compile_options(champsim_core
+    PRIVATE
+    ${WarningConfig}
+    ${WarningErrorConfig}
+    -fdiagnostics-color=always)
+
+# Specify libraries or flags to use when linking a given target and/or its dependents.
+# PUBLIC, so that the dependencies propagate to whatever links champsim_core
+target_link_libraries(champsim_core
+    PUBLIC
+    fmt::fmt
+    CLI11::CLI11
+    OpenMP::OpenMP_CXX
+    LibLZMA::LibLZMA
+    BZip2::BZip2
+    ZLIB::ZLIB
+    yaml-cpp
+    spdlog::spdlog)
+
 # Building an executable
 add_executable(${EXECUTABLE_NAME}) # This command creates a target. In CMake lingo, a target is a name the developer gives to a collection of properties
 
@@ -129,11 +178,6 @@ if(NOT ENABLE_ASSERT)
         NDEBUG)
 endif()
 
-# Specifies include directories (map to the -I compiler flag) to use when compiling a given target
-target_include_directories(${EXECUTABLE_NAME}
-    PRIVATE
-    "${CMAKE_SOURCE_DIR}/include")
-
 # Adds options (compiler flags) to the COMPILE_OPTIONS or INTERFACE_COMPILE_OPTIONS target properties. These options are used when compiling the given target
 target_compile_options(${EXECUTABLE_NAME}
     PRIVATE
@@ -141,17 +185,11 @@ target_compile_options(${EXECUTABLE_NAME}
     ${WarningErrorConfig}
     -fdiagnostics-color=always)
 
-# Specify libraries or flags to use when linking a given target and/or its dependents
+# Specify libraries or flags to use when linking a given target and/or its dependents.
+# The include path and the third-party dependencies come along with champsim_core
 target_link_libraries(${EXECUTABLE_NAME}
     PRIVATE
-    fmt::fmt
-    CLI11::CLI11
-    OpenMP::OpenMP_CXX
-    LibLZMA::LibLZMA
-    BZip2::BZip2
-    ZLIB::ZLIB
-    yaml-cpp
-    spdlog::spdlog)
+    champsim_core)
 
 # Sets properties on a given target:
 # RUNTIME_OUTPUT_DIRECTORY property specifies the directory into which runtime target files should be built
@@ -160,5 +198,13 @@ set_target_properties(${EXECUTABLE_NAME}
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
 # Pull in per-directory source lists. Each subdirectory's CMakeLists.txt
-# attaches its files to the executable via target_sources().
+# attaches its files to ${CHAMPSIM_TARGET} via target_sources(); source/main.cc,
+# which owns main(), is the sole exception and goes straight to the executable.
 add_subdirectory(source)
+
+# Pull in the unit tests. They link champsim_core, so they exercise the very objects the simulator is built from
+if(BUILD_CHAMPSIM_TESTS)
+    enable_testing() # Enables testing for this directory and below, so that ctest picks up the tests registered by catch_discover_tests()
+    find_package(Catch2 3 CONFIG REQUIRED)
+    add_subdirectory(test/unitTest)
+endif()

@@ -34,7 +34,8 @@
             "binaryDir": "${sourceDir}/build",
             "toolchainFile": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "BUILD_CHAMPSIM_TESTS": "OFF"
             }
         },
         {
@@ -81,6 +82,15 @@
             "cacheVariables": {
                 "ENABLE_All_WARNING_ERROR": "ON"
             }
+        },
+        {
+            "name": "tests",
+            "displayName": "Unit tests (Default + test/unitTest)",
+            "description": "Same as 'default' but also builds the Catch2 unit tests into test/bin/unit_tests. Shares the build directory with 'default', so the simulator objects are reused rather than recompiled.",
+            "inherits": "default",
+            "cacheVariables": {
+                "BUILD_CHAMPSIM_TESTS": "ON"
+            }
         }
     ],
     "buildPresets": [
@@ -107,6 +117,21 @@
             "configurePreset": "strict",
             "jobs": 8,
             "cleanFirst": true
+        },
+        {
+            "name": "tests",
+            "configurePreset": "tests",
+            "jobs": 8,
+            "cleanFirst": false
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "tests",
+            "configurePreset": "tests",
+            "output": {
+                "outputOnFailure": true
+            }
         }
     ]
 }
