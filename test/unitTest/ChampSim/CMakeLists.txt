@@ -1,6 +1,6 @@
 # ChampSim unit tests, ported from upstream ChampSim test/cpp/src.
 # The leading number groups a test by area; see README.txt. Keep this list sorted by file name.
-target_sources(unit_tests
+target_sources(${UNIT_TEST_EXECUTABLE_NAME}
     PRIVATE
     000-test-main.cc
     001-operable.cc

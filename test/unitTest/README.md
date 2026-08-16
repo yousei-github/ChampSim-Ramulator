@@ -5,7 +5,7 @@ cache behaviour to the page table walker. They link the very object files the
 simulator is built from (the `champsim_core` library), so they exercise the real
 classes rather than a copy.
 
-Everything builds into a single `unit_tests` executable. The suites under
+Everything builds into a single `champsim_unit_tests` executable. The suites under
 [ChampSim/](ChampSim/) are ported from upstream ChampSim; see
 [ChampSim/README.txt](ChampSim/README.txt) for their numbering scheme and the
 conventions the port follows.
@@ -19,7 +19,7 @@ reused instead of recompiled:
 ```sh
 cd ChampSim-Ramulator
 cmake --preset tests
-cmake --build --preset tests        # -> test/bin/unit_tests
+cmake --build --preset tests        # -> test/bin/champsim_unit_tests
 ctest --preset tests                # run every test case
 ```
 
@@ -37,8 +37,8 @@ preset picker.
 are testing the previous binary.
 
 ```sh
-./test/bin/unit_tests                                    # everything
-./test/bin/unit_tests --order rand --warn NoAssertions --invisibles   # as upstream CI runs it
+./test/bin/champsim_unit_tests                                    # everything
+./test/bin/champsim_unit_tests --order rand --warn NoAssertions --invisibles   # as upstream CI runs it
 ```
 
 `--order rand` checks that the suite does not depend on execution order, and
@@ -47,10 +47,10 @@ are testing the previous binary.
 Each file is tagged with its own name, so a single one can be selected with `-#`:
 
 ```sh
-./test/bin/unit_tests -# "[#401-hit-latency]"
+./test/bin/champsim_unit_tests -# "[#401-hit-latency]"
 ```
 
-Catch2's usual filters work too — by name, `./test/bin/unit_tests "An address is constructible*"`,
+Catch2's usual filters work too — by name, `./test/bin/champsim_unit_tests "An address is constructible*"`,
 and `--list-tests` to see what is registered.
 
 ## Simulator configuration affects the suite
@@ -73,12 +73,12 @@ makes cheap on the way back.
 
 ## Adding another suite
 
-`CMakeLists.txt` here owns the `unit_tests` executable and the Catch2 wiring; each
+`CMakeLists.txt` here owns the `champsim_unit_tests` executable and the Catch2 wiring; each
 subdirectory attaches its own sources to it. A new suite — for Ramulator, say — is a
 sibling of `ChampSim/` containing a `CMakeLists.txt` of the form
 
 ```cmake
-target_sources(unit_tests
+target_sources(champsim_unit_tests
     PRIVATE
     <files>)
 ```

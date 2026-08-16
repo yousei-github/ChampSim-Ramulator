@@ -87,7 +87,7 @@
         {
             "name": "tests",
             "displayName": "Unit tests (Default + test/unitTest)",
-            "description": "Same as 'default' but also builds the Catch2 unit tests into test/bin/unit_tests. Shares the build directory with 'default', so the simulator objects are reused rather than recompiled.",
+            "description": "Same as 'default' but also builds the Catch2 unit tests into test/bin/champsim_unit_tests. Shares the build directory with 'default', so the simulator objects are reused rather than recompiled.",
             "inherits": "default",
             "cacheVariables": {
                 "BUILD_CHAMPSIM_TESTS": "ON"
