@@ -266,19 +266,6 @@ The Intel PIN tracer can select the traced region either by instruction count (`
 ChampSim measures IPC (Instructions Per Cycle) as a performance metric. <br>
 Some other useful metrics are printed at the end of the simulation. <br>
 
-## Statistics format changes
-
-Updating ChampSim to `51588e1d` changed the per-cache statistics that are printed at the end of a run. **Scripts that parse the simulation output or the `.statistics` file need to be updated accordingly.**
-
-- The per-cache hit/miss lines now end with `MISS_MERGE` instead of `MSHR_MERGE`:
-  ```
-  cpu0->cpu0_DTLB TOTAL        ACCESS:    6644169 HIT:    6634770 MISS:       9399 MISS_MERGE:       8566
-  ```
-- The queue merge and forward counters `RQ_MERGED`, `PQ_MERGED`, `WQ_MERGED`, and `WQ_FORWARD` are no longer reported, because caches no longer merge or forward requests inside the queues.
-- In the JSON output, the key `mshr_merge` is renamed `miss_merge` and `mshr_return` is renamed `fill`.
-
-Cycle-level results also shift relative to earlier versions of this project, because of the request forwarding change above and the reworked `ship` / `drrip` replacement policies. This is expected behavior, not a regression.
-
 # Test
 
 ## Unit tests

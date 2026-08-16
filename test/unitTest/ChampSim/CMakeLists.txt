@@ -1,4 +1,4 @@
-# ChampSim unit tests, ported from upstream ChampSim test/cpp/src (commit 51588e1d).
+# ChampSim unit tests, ported from upstream ChampSim test/cpp/src.
 # The leading number groups a test by area; see README.txt. Keep this list sorted by file name.
 target_sources(unit_tests
     PRIVATE

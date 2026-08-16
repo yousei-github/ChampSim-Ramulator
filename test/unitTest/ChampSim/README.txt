@@ -17,7 +17,7 @@ The files are organized as follows: "xxx-descriptive-name.cc", where "xxx" is a 
 NOTES FOR THIS FORK
 ===================
 
-These files were ported from upstream ChampSim (test/cpp/src, commit 51588e1d). Upstream builds them
+These files were ported from upstream ChampSim (test/cpp/src, commit [51588e1d](https://github.com/ChampSim/ChampSim/commit/51588e1d6f97875fe8de1a3621d28668bff83fcf)). Upstream builds them
 with its own Makefile ('make test'); here they are a CMake target. See ../README.md for how to build
 and run them, and for the effect of the Ramulator toggles on the DRAM tests (700-751).
 
