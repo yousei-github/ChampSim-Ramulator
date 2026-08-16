@@ -256,6 +256,7 @@
 			"args": [
 				"-l",
 				"./bin/",
+				"./test/bin/",
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -264,7 +265,8 @@
 			"windows": {
 				"command": "dir",
 				"args": [
-					".\\bin\\"
+					".\\bin\\",
+					".\\test\\bin\\"
 				],
 				"options": {
 					"cwd": "${workspaceFolder}"
