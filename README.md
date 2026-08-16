@@ -282,25 +282,7 @@ Cycle-level results also shift relative to earlier versions of this project, bec
 # Test
 
 ## Unit tests
-Unit testing is implemented in [test/unitTest/](test/unitTest/), using the Catch2 framework. The tests under [test/unitTest/ChampSim/](test/unitTest/ChampSim/) are ported from upstream ChampSim; further suites (for example for Ramulator) can be added as sibling directories.
-
-They are excluded from the default build. The `tests` preset enables them and shares its build directory with the `default` preset, so the simulator objects are reused instead of recompiled:
-
-```bash
-cmake --preset tests
-cmake --build --preset tests
-
-# Run every test case, each as an individual ctest entry
-ctest --preset tests
-
-# Or run the test binary directly
-./test/bin/unit_tests --order rand --warn NoAssertions --invisibles
-
-# The three-digit file prefix works as a filter tag
-./test/bin/unit_tests -# "[#401-hit-latency]"
-```
-
-The DRAM tests (700, 701, 702, 750, 751) cover ChampSim's built-in memory model, which Ramulator replaces, so they only compile when both `RAMULATOR` and `RAMULATOR2` are `DISABLE` in [include/ProjectConfiguration.h](include/ProjectConfiguration.h). A default Ramulator 2.0 build therefore runs 607 test cases, and a ChampSim-internal-memory build runs 624. For the porting conventions, please read [test/unitTest/ChampSim/README.txt](test/unitTest/ChampSim/README.txt).
+Unit testing is implemented in [test/unitTest/](test/unitTest/), using the Catch2 framework. For details, please read [test/unitTest/README.md](test/unitTest/README.md).
 
 ## End-to-end tests
 End-to-end testing is implemented in [test/end_to_end/](test/end_to_end/). For details, please read [test/end_to_end/README.md](test/end_to_end/README.md).
