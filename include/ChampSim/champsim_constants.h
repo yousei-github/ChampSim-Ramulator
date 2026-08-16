@@ -104,7 +104,19 @@ constexpr std::size_t DRAM_BANK_GROUPS       = 8;
 constexpr std::size_t DRAM_BANKS             = 4;
 constexpr std::size_t DRAM_ROWS              = 65536;
 constexpr std::size_t DRAM_COLUMNS           = 1024;
-constexpr std::size_t DRAM_CAPACITY          = DRAM_CHANNEL_WIDTH * DRAM_CHANNELS * DRAM_RANKS * DRAM_RANKS * DRAM_BANK_GROUPS * DRAM_BANKS * DRAM_ROWS * DRAM_COLUMNS; // The unit of DRAM_CAPACITY is byte
+constexpr std::size_t DRAM_CAPACITY          = DRAM_CHANNEL_WIDTH * DRAM_CHANNELS * DRAM_RANKS * DRAM_BANK_GROUPS * DRAM_BANKS * DRAM_ROWS * DRAM_COLUMNS; // The unit of DRAM_CAPACITY is byte
+
+/**
+ * The memory controller derives its capacity by summing the widths of its address slices, so the two agree only while every term above is a power of two.
+ * Checking that here makes a bad configuration a compile error, and lets MEMORY_CONTROLLER::size() stay a plain accessor that works for any geometry.
+ */
+static_assert((DRAM_CHANNEL_WIDTH & (DRAM_CHANNEL_WIDTH - 1)) == 0, "DRAM_CHANNEL_WIDTH must be a power of two");
+static_assert((DRAM_CHANNELS & (DRAM_CHANNELS - 1)) == 0, "DRAM_CHANNELS must be a power of two");
+static_assert((DRAM_RANKS & (DRAM_RANKS - 1)) == 0, "DRAM_RANKS must be a power of two");
+static_assert((DRAM_BANK_GROUPS & (DRAM_BANK_GROUPS - 1)) == 0, "DRAM_BANK_GROUPS must be a power of two");
+static_assert((DRAM_BANKS & (DRAM_BANKS - 1)) == 0, "DRAM_BANKS must be a power of two");
+static_assert((DRAM_ROWS & (DRAM_ROWS - 1)) == 0, "DRAM_ROWS must be a power of two");
+static_assert((DRAM_COLUMNS & (DRAM_COLUMNS - 1)) == 0, "DRAM_COLUMNS must be a power of two");
 
 constexpr std::size_t DRAM_RQ_SIZE           = 64;
 constexpr std::size_t DRAM_WQ_SIZE           = 64;

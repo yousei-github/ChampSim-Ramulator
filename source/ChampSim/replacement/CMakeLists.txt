@@ -1,4 +1,4 @@
-target_sources(${EXECUTABLE_NAME}
+target_sources(${CHAMPSIM_TARGET}
     PRIVATE
     drrip/drrip.cc
     lru/lru.cc

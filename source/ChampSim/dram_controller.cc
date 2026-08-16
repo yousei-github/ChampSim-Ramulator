@@ -726,8 +726,6 @@ champsim::data::bytes MEMORY_CONTROLLER::size() const
     const auto address_bit_width = address_mapping.address_slicer.bit_size();
     const long long memory_size  = 1ll << address_bit_width;
 
-    assert(memory_size == DRAM_CAPACITY);
-
     return champsim::data::bytes {memory_size};
 #else
     return champsim::data::bytes {(1ll << address_mapping.address_slicer.bit_size())};

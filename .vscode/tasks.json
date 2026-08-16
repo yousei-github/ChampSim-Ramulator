@@ -89,7 +89,7 @@
 				"-Wall", // Turns on all optional warnings which are desirable for normal code
 				// "-Werror", // Make all warnings into hard errors. Source code which triggers warnings will be rejected
 				"-fopenmp", // Enables #pragma omp in source code
-				"-std=c++20", // Ramulator 2.0 uses C++20 (concepts, consteval, .contains()); matches CMAKE_CXX_STANDARD 20
+				"-std=c++23", // Ramulator 2.0 uses C++20 (concepts, consteval, .contains()), and ChampSim/address.h needs C++23 for a constexpr std::from_chars; matches CMAKE_CXX_STANDARD 23
 				/**
 				 * Below are header files: (can be from multiples folders)
 				 */
@@ -191,11 +191,12 @@
 		},
 		{
 			"type": "shell",
-			"label": "Remove build files",
+			"label": "Remove executable files",
 			"command": "rm",
 			"args": [
 				"-f",
-				"bin/*"
+				"bin/*", // The simulator
+				"test/bin/*" // The unit tests
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -205,7 +206,8 @@
 				"command": "rd",
 				"args": [
 					"-r", // Remove contents recursively
-					".\\bin\\*"
+					".\\bin\\*",
+					".\\test\\bin\\*"
 				],
 				"options": {
 					"cwd": "${workspaceFolder}"
@@ -222,7 +224,8 @@
 			"dependsOn": [
 				"Show binary folder"
 			],
-			"dependsOrder": "sequence"
+			"dependsOrder": "sequence",
+			"detail": "Delete the built executables in bin/ and test/bin/, leaving the build/ tree alone. Use \"CMake: Clean build artifacts\" instead to discard the compiled objects but keep the configuration.",
 		},
 		{
 			"type": "shell",
@@ -253,6 +256,7 @@
 			"args": [
 				"-l",
 				"./bin/",
+				"./test/bin/",
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -261,7 +265,8 @@
 			"windows": {
 				"command": "dir",
 				"args": [
-					".\\bin\\"
+					".\\bin\\",
+					".\\test\\bin\\"
 				],
 				"options": {
 					"cwd": "${workspaceFolder}"
@@ -779,6 +784,36 @@
 			"hide": false,
 			"detail": "Run pytest on test/end_to_end/. The task assumes the venv exists at /.virtualEnvironment. It does in this environment. If a user hasn't created it, they'll need python3 -m venv .virtualEnvironment && pip install -r test/end_to_end/requirements.txt first."
 		},
+		{
+			"type": "shell",
+			"label": "CTest: Run ChampSim unit test",
+			"command": "ctest",
+			"args": [
+				"--preset",
+				"tests" // See CMakePresets.json -> testPresets
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			// Defines to which group the task belongs
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": false, // Don't show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
+			"hide": false,
+			"detail": "Run every test case on test/unitTest/ChampSim.",
+		},
 	],
 	/**
 	 * Input variables is a mechanism to configure the command being run for a specific use case.
@@ -797,7 +832,8 @@
 				"default",
 				"debug",
 				"release",
-				"strict"
+				"strict",
+				"tests"
 			],
 			"default": "default", // Default value that will be used if the user doesn't enter something else. It must be one of the option values
 		},

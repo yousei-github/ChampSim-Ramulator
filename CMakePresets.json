@@ -25,7 +25,8 @@
         "jobs": "[buildPresets] jobs is an optional integer. Equivalent to passing --parallel or -j on the command line. If the value is 0, it is equivalent to passing --parallel with <jobs> omitted; alternatively, one can define the environment variable CMAKE_BUILD_PARALLEL_LEVEL as an empty string using the environment field.",
         "targets": "[buildPresets] targets is an optional string or array of strings. Equivalent to passing --target or -t on the command line. Vendors may ignore the targets property or hide build presets that explicitly specify targets. This field supports macro expansion.",
         "cleanFirst": "[buildPresets] cleanFirst is an optional bool. If true, equivalent to passing [--clean-first] on the command line.",
-        "verbose": "[buildPresets] verbose is an optional bool. If true, equivalent to passing --verbose on the command line."
+        "verbose": "[buildPresets] verbose is an optional bool. If true, equivalent to passing --verbose on the command line.",
+        "outputOnFailure": "[testPresets] outputOnFailure is an optional bool. If true, equivalent to passing --output-on-failure on the command line, which means that the ctest outputs anything outputted by the test program if the test should fail."
     },
     "configurePresets": [
         {
@@ -34,7 +35,8 @@
             "binaryDir": "${sourceDir}/build",
             "toolchainFile": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "BUILD_CHAMPSIM_TESTS": "OFF"
             }
         },
         {
@@ -81,6 +83,15 @@
             "cacheVariables": {
                 "ENABLE_All_WARNING_ERROR": "ON"
             }
+        },
+        {
+            "name": "tests",
+            "displayName": "Unit tests (Default + test/unitTest)",
+            "description": "Same as 'default' but also builds the Catch2 unit tests into test/bin/champsim_unit_tests. Shares the build directory with 'default', so the simulator objects are reused rather than recompiled.",
+            "inherits": "default",
+            "cacheVariables": {
+                "BUILD_CHAMPSIM_TESTS": "ON"
+            }
         }
     ],
     "buildPresets": [
@@ -107,6 +118,21 @@
             "configurePreset": "strict",
             "jobs": 8,
             "cleanFirst": true
+        },
+        {
+            "name": "tests",
+            "configurePreset": "tests",
+            "jobs": 8,
+            "cleanFirst": false
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "tests",
+            "configurePreset": "tests",
+            "output": {
+                "outputOnFailure": true
+            }
         }
     ]
 }

@@ -22,9 +22,14 @@
 /**
  * Print a printf-style line into the simulator statistics file.
  * It expands to nothing when PRINT_STATISTICS_INTO_FILE is disabled, so call sites need no guard.
+ *
+ * The null check matters for binaries that never call output_file_initialization(), such as the unit
+ * tests: there the handler legitimately stays null, and std::fprintf(nullptr, ...) is undefined behaviour.
+ * The simulator opens the file before any call site can run, so this costs it one predictable branch.
  */
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-#define PRINTF_STATISTICS_FILE(...) std::fprintf(output_statistics.file_handler, __VA_ARGS__)
+#define PRINTF_STATISTICS_FILE(...) \
+    ((output_statistics.file_handler != nullptr) ? (void) std::fprintf(output_statistics.file_handler, __VA_ARGS__) : (void) 0)
 #else
 #define PRINTF_STATISTICS_FILE(...) ((void) 0)
 #endif /* PRINT_STATISTICS_INTO_FILE */
@@ -101,7 +106,7 @@ public:
 class SIMULATOR_STATISTICS : public DATA_OUTPUT
 {
 public:
-#define PAGE_TABLE_LEVEL_NUMBER (PAGE_TABLE_LEVELS)
+#define PAGE_TABLE_LEVEL_NUMBER (PAGE_TABLE_LEVELS + 1) // The simulator's page table walker has levels from 1 to PAGE_TABLE_LEVELS. Level 0 (+1) is simply used for logical completeness
 
     std::array<uint64_t, PAGE_TABLE_LEVEL_NUMBER> valid_pte_count = {0};
     uint64_t virtual_page_count;

@@ -1,4 +1,4 @@
-target_sources(${EXECUTABLE_NAME}
+target_sources(${CHAMPSIM_TARGET}
     PRIVATE
     ip_stride/ip_stride.cc
     next_line/next_line.cc

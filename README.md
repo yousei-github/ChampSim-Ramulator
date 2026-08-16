@@ -111,7 +111,7 @@ The script reads a list of trace filenames (one per line), defaults to `dpc3_max
 
 # Build and debug
 
-Before starting to build or debug this project, you might need to be familiar with the [Visual Studio Code tutorial](https://code.visualstudio.com/docs/cpp/config-linux). Also, a C++20 compiler is required for compilation (Ramulator 2.0 uses C++20 features such as `concept`, `consteval`, and `.contains()`).
+Before starting to build or debug this project, you might need to be familiar with the [Visual Studio Code tutorial](https://code.visualstudio.com/docs/cpp/config-linux). Also, a C++23 compiler is required for compilation (Ramulator 2.0 uses C++20 features such as `concept`, `consteval`, and `.contains()`, and [include/ChampSim/address.h](include/ChampSim/address.h) formats addresses against literal format strings, which needs the `constexpr` `std::from_chars` that C++23 introduced).
 
 ## Build
 Build methods are explained below.
@@ -142,7 +142,7 @@ The project-local ccache directory is `ChampSim-Ramulator/.ccache/` (isolated fr
 ### 2. Command line-based method.
 By referring to the contents of [tasks.json](.vscode/tasks.json) file in the `.vscode` directory, input the command like below,
 ```
-$ [COMPILER] -O3 -g -Wall -fopenmp -std=c++20 -I [VCPKG_INCLUDE_PATH] -I [PROJECT_INCLUDE_PATH] -L [VCPKG_LIBRARY_PATH] -L [VCPKG_MANUAL_LINK_LIBRARY_PATH]
+$ [COMPILER] -O3 -g -Wall -fopenmp -std=c++23 -I [VCPKG_INCLUDE_PATH] -I [PROJECT_INCLUDE_PATH] -L [VCPKG_LIBRARY_PATH] -L [VCPKG_MANUAL_LINK_LIBRARY_PATH]
 [CHAMPSIM_MAIN_SOURCE_PATH] [CHAMPSIM_BRANCH_SOURCE_PATH] [CHAMPSIM_PREFETCHER_SOURCE_PATH] [CHAMPSIM_REPLACEMENT_SOURCE_PATH] [CHAMPSIM_BRANCH_TARGET_BUFFER_SOURCE_PATH] [RAMULATOR_SOURCE_PATH] [RAMULATOR2_SOURCE_PATH] [PROJECT_SOURCE_PATH]
 -l lzma -l z -l bz2 -l spdlog -l yaml-cpp -l fmt
 -o project_directory/bin/champsim_plus_ramulator
@@ -266,26 +266,16 @@ The Intel PIN tracer can select the traced region either by instruction count (`
 ChampSim measures IPC (Instructions Per Cycle) as a performance metric. <br>
 Some other useful metrics are printed at the end of the simulation. <br>
 
-## Statistics format changes
-
-Updating ChampSim to `51588e1d` changed the per-cache statistics that are printed at the end of a run. **Scripts that parse the simulation output or the `.statistics` file need to be updated accordingly.**
-
-- The per-cache hit/miss lines now end with `MISS_MERGE` instead of `MSHR_MERGE`:
-  ```
-  cpu0->cpu0_DTLB TOTAL        ACCESS:    6644169 HIT:    6634770 MISS:       9399 MISS_MERGE:       8566
-  ```
-- The queue merge and forward counters `RQ_MERGED`, `PQ_MERGED`, `WQ_MERGED`, and `WQ_FORWARD` are no longer reported, because caches no longer merge or forward requests inside the queues.
-- In the JSON output, the key `mshr_merge` is renamed `miss_merge` and `mshr_return` is renamed `fill`.
-
-Cycle-level results also shift relative to earlier versions of this project, because of the request forwarding change above and the reworked `ship` / `drrip` replacement policies. This is expected behavior, not a regression.
-
 # Test
+
+## Unit tests
+Unit testing is implemented in [test/unitTest/](test/unitTest/), using the Catch2 framework. For details, please read [test/unitTest/README.md](test/unitTest/README.md).
 
 ## End-to-end tests
 End-to-end testing is implemented in [test/end_to_end/](test/end_to_end/). For details, please read [test/end_to_end/README.md](test/end_to_end/README.md).
 
 # Miscellaneous
 
-If IntelliSense still doesn't work properly, it might be because of the version of the C++ language standard used. To solve this problem, you need to open Visual Studio Code, click `View` -> `Command Palette`, and in the center where a terminal is popped out, input or select `C/C++: Edit Configurations (UI)`. A new file called `c_cpp_properties.json` should be created, and its UI is opened. After you modify `C++ standard` to `c++20` (or higher) in that file. IntelliSense should work properly now.
+If IntelliSense still doesn't work properly, it might be because of the version of the C++ language standard used. To solve this problem, you need to open Visual Studio Code, click `View` -> `Command Palette`, and in the center where a terminal is popped out, input or select `C/C++: Edit Configurations (UI)`. A new file called `c_cpp_properties.json` should be created, and its UI is opened. After you modify `C++ standard` to `c++23` in that file. IntelliSense should work properly now.
 
 We use [clang-format](https://clang.llvm.org/docs/ClangFormat.html) for code formatting of this project. To configure the path of the clang-format executable, please refer to the [settings.json](.vscode/settings.json). A simple tutorial for using clang-format is at [here](https://code.visualstudio.com/docs/cpp/cpp-ide#_code-formatting).

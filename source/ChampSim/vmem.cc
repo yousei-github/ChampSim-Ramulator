@@ -183,7 +183,7 @@ std::pair<champsim::address, champsim::chrono::clock::duration> VirtualMemory::g
         }
 
 #if (PRINT_STATISTICS_INTO_FILE == ENABLE)
-        output_statistics.valid_pte_count[level - 1]++;
+        output_statistics.valid_pte_count[level]++;
 #endif /* PRINT_STATISTICS_INTO_FILE */
     }
 
