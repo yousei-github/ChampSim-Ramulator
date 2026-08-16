@@ -191,11 +191,12 @@
 		},
 		{
 			"type": "shell",
-			"label": "Remove build files",
+			"label": "Remove executable files",
 			"command": "rm",
 			"args": [
 				"-f",
-				"bin/*"
+				"bin/*", // The simulator
+				"test/bin/*" // The unit tests
 			],
 			"options": {
 				"cwd": "${workspaceFolder}"
@@ -205,7 +206,8 @@
 				"command": "rd",
 				"args": [
 					"-r", // Remove contents recursively
-					".\\bin\\*"
+					".\\bin\\*",
+					".\\test\\bin\\*"
 				],
 				"options": {
 					"cwd": "${workspaceFolder}"
@@ -222,7 +224,8 @@
 			"dependsOn": [
 				"Show binary folder"
 			],
-			"dependsOrder": "sequence"
+			"dependsOrder": "sequence",
+			"detail": "Delete the built executables in bin/ and test/bin/, leaving the build/ tree alone. Use \"CMake: Clean build artifacts\" instead to discard the compiled objects but keep the configuration.",
 		},
 		{
 			"type": "shell",
