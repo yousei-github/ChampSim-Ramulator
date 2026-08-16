@@ -48,7 +48,7 @@
              * The version of the C++ language standard to use for IntelliSense. For example, c++20, gnu++23, or ${default}.
              * Note: GNU standards are only used to query the set compiler to get GNU defines, and IntelliSense will emulate the equivalent C++ standard version.
              */
-            "cppStandard": "c++20",
+            "cppStandard": "c++23",
             /**
              * The IntelliSense mode to use that maps to an architecture-specific variant of MSVC, gcc, or Clang.
              * If not set or if set to ${default}, the extension will choose the default for that platform.

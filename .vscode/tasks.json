@@ -89,7 +89,7 @@
 				"-Wall", // Turns on all optional warnings which are desirable for normal code
 				// "-Werror", // Make all warnings into hard errors. Source code which triggers warnings will be rejected
 				"-fopenmp", // Enables #pragma omp in source code
-				"-std=c++20", // Ramulator 2.0 uses C++20 (concepts, consteval, .contains()); matches CMAKE_CXX_STANDARD 20
+				"-std=c++23", // Ramulator 2.0 uses C++20 (concepts, consteval, .contains()), and ChampSim/address.h needs C++23 for a constexpr std::from_chars; matches CMAKE_CXX_STANDARD 23
 				/**
 				 * Below are header files: (can be from multiples folders)
 				 */
