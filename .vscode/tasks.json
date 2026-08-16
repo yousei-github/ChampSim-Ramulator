@@ -779,6 +779,36 @@
 			"hide": false,
 			"detail": "Run pytest on test/end_to_end/. The task assumes the venv exists at /.virtualEnvironment. It does in this environment. If a user hasn't created it, they'll need python3 -m venv .virtualEnvironment && pip install -r test/end_to_end/requirements.txt first."
 		},
+		{
+			"type": "shell",
+			"label": "CTest: Run ChampSim unit test",
+			"command": "ctest",
+			"args": [
+				"--preset",
+				"tests" // See CMakePresets.json -> testPresets
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [],
+			// Defines to which group the task belongs
+			"group": {
+				"kind": "test",
+				"isDefault": false
+			},
+			"presentation": {
+				"reveal": "always", // The panel is always brought to front
+				"revealProblems": "onProblem", // Only reveals the Problems panel if a problem is found
+				"focus": false,
+				"echo": true,
+				"showReuseMessage": false, // Don't show the "Terminal will be reused by tasks, press any key to close it" message
+				"panel": "shared", // The terminal is shared and the output of other task runs are added to the same terminal
+				"clear": false,
+				"close": false
+			},
+			"hide": false,
+			"detail": "Run every test case on test/unitTest/ChampSim.",
+		},
 	],
 	/**
 	 * Input variables is a mechanism to configure the command being run for a specific use case.
@@ -797,7 +827,8 @@
 				"default",
 				"debug",
 				"release",
-				"strict"
+				"strict",
+				"tests"
 			],
 			"default": "default", // Default value that will be used if the user doesn't enter something else. It must be one of the option values
 		},
