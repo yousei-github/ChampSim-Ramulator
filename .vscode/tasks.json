@@ -812,7 +812,7 @@
 				"close": false
 			},
 			"hide": false,
-			"detail": "Run every test case on test/unitTest/ChampSim.",
+			"detail": "Run every test case on test/unit_test/ChampSim.",
 		},
 	],
 	/**

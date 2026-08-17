@@ -121,7 +121,7 @@ find_package(spdlog   CONFIG REQUIRED)
 
 # Build system options for unit test
 # ChampSim unit test configuration (CMake Cache, boolean, override with -D BUILD_CHAMPSIM_TESTS=ON at configure time, or use the "tests" preset)
-option(BUILD_CHAMPSIM_TESTS "Build the Catch2 unit tests under test/unitTest/ChampSim" OFF)
+option(BUILD_CHAMPSIM_TESTS "Build the Catch2 unit tests under test/unit_test/ChampSim" OFF)
 
 # Output build system options for unit test
 message(STATUS "BUILD_CHAMPSIM_TESTS: ${BUILD_CHAMPSIM_TESTS}")
@@ -209,5 +209,5 @@ add_subdirectory(source)
 if(BUILD_CHAMPSIM_TESTS)
     enable_testing() # Enables testing for this directory and below, so that ctest picks up the tests registered by catch_discover_tests()
     find_package(Catch2 3 CONFIG REQUIRED)
-    add_subdirectory(test/unitTest)
+    add_subdirectory(test/unit_test)
 endif()

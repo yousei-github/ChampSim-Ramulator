@@ -269,7 +269,7 @@ Some other useful metrics are printed at the end of the simulation. <br>
 # Test
 
 ## Unit tests
-Unit testing is implemented in [test/unitTest/](test/unitTest/), using the Catch2 framework. For details, please read [test/unitTest/README.md](test/unitTest/README.md).
+Unit testing is implemented in [test/unit_test/](test/unit_test/), using the Catch2 framework. For details, please read [test/unit_test/README.md](test/unit_test/README.md).
 
 ## End-to-end tests
 End-to-end testing is implemented in [test/end_to_end/](test/end_to_end/). For details, please read [test/end_to_end/README.md](test/end_to_end/README.md).
