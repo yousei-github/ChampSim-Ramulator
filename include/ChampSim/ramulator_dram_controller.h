@@ -94,9 +94,11 @@ public:
     };
 
     std::array<BUFFER_ENTRY, SWAPPING_BUFFER_ENTRY_NUMBER> buffer = {};
-    uint64_t base_address[SWAPPING_SEGMENT_NUMBER]; // Here base_address[0] for segment 1, base_address[1] for segment 2. Address is hardware address and at cache line granularity.
-    uint8_t active_entry_number;
-    uint8_t finish_number;
+    uint64_t base_address[SWAPPING_SEGMENT_NUMBER] = {}; // Here base_address[0] for segment 1, base_address[1] for segment 2. Address is hardware address and at cache line granularity.
+    // Initialized here because initialize_swapping() bills the entries it is about to clear to
+    // swapping_count before resetting them, and the constructor calls it once with nothing swapped yet.
+    uint8_t active_entry_number                    = 0;
+    uint8_t finish_number                          = 0;
 
     // Scoped enumerations
     enum class SwappingState : uint8_t {
