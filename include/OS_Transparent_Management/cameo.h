@@ -11,6 +11,7 @@
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/channel.h"
 #include "ChampSim/util/bits.h"
+#include "OS_Transparent_Management/os_transparent_management_common.h"
 #include "ProjectConfiguration.h" // User file
 
 /**
@@ -22,29 +23,17 @@
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
-#define COUNTER_WIDTH                         uint8_t
-#define COUNTER_MAX_VALUE                     (UINT8_MAX)
-#define COUNTER_DEFAULT_VALUE                 (0)
+#define REMAPPING_LOCATION_WIDTH_BITS      (3) // Default: 3
+#define LOCATION_TABLE_ENTRY_WIDTH         uint16_t
 
-#define HOTNESS_WIDTH                         bool
-#define HOTNESS_DEFAULT_VALUE                 (false)
-
-#define REMAPPING_LOCATION_WIDTH              uint8_t
-#define REMAPPING_LOCATION_WIDTH_BITS         (3) // Default: 3
-#define LOCATION_TABLE_ENTRY_WIDTH            uint16_t
-
-#define NUMBER_OF_BLOCK                       (5) // Default: 5
+#define NUMBER_OF_BLOCK                    (5) // Default: 5
 
 // 0x0538 for the congruence group with 5 members (lines) at most, (000_001_010_011_100_0 = 0x0538)
 // [15:13] bit for member 0, [12:10] bit for member 1, [9:7] bit for member 2, [6:4] bit for member 3, [3:1] bit for member 4.
-#define LOCATION_TABLE_ENTRY_DEFAULT_VALUE    (0x0538)
-#define LOCATION_TABLE_ENTRY_MSB              (UINT16_WIDTH - 1) // MSB -> most significant bit
+#define LOCATION_TABLE_ENTRY_DEFAULT_VALUE (0x0538)
+#define LOCATION_TABLE_ENTRY_MSB           (UINT16_WIDTH - 1) // MSB -> most significant bit
 
-#define REMAPPING_REQUEST_QUEUE_LENGTH        (64) // 1024/4096
-#define QUEUE_BUSY_DEGREE_THRESHOLD           (0.8f)
-
-#define INCOMPLETE_READ_REQUEST_QUEUE_LENGTH  (128)
-#define INCOMPLETE_WRITE_REQUEST_QUEUE_LENGTH (128)
+#define REMAPPING_REQUEST_QUEUE_LENGTH     (64) // 1024/4096
 
 #if (BITS_MANIPULATION == DISABLE)
 #undef REMAPPING_LOCATION_WIDTH_BITS
@@ -53,41 +42,16 @@
 #define NUMBER_OF_BLOCK               (35)
 #endif /* BITS_MANIPULATION */
 
-class OS_TRANSPARENT_MANAGEMENT
+class OS_TRANSPARENT_MANAGEMENT : public OS_TRANSPARENT_MANAGEMENT_BASE
 {
     using channel_type = champsim::channel;
     using request_type = typename channel_type::request_type;
 
 public:
-    /** @brief Memory request type */
-    enum class MemoryRequestType : int
-    {
-        Read = 0,
-        Write,
-        Max
-    };
-
-    uint64_t cycle                  = 0;
     COUNTER_WIDTH hotness_threshold = 0;
-    uint64_t total_capacity;       // Uint is byte
-    uint64_t fast_memory_capacity; // Uint is byte
-    uint64_t total_capacity_at_data_block_granularity;
-    uint64_t fast_memory_capacity_at_data_block_granularity;
-    uint8_t fast_memory_offset_bit; // Address format in the data management granularity
 
     std::vector<COUNTER_WIDTH>& counter_table; // A counter for every data block
     std::vector<HOTNESS_WIDTH>& hotness_table; // A hotness bit for every data block, true -> data block is hot, false -> data block is cold.
-
-    /* Remapping request */
-    struct RemappingRequest
-    {
-        uint64_t address_in_fm, address_in_sm; // Hardware address in fast and slow memories
-        REMAPPING_LOCATION_WIDTH fm_location, sm_location;
-        uint8_t size; // Number of cache lines to remap
-    };
-
-    std::deque<RemappingRequest> remapping_request_queue;
-    uint64_t remapping_request_queue_congestion;
 
     // Scoped enumerations
     enum class RemappingLocation : REMAPPING_LOCATION_WIDTH
@@ -156,23 +120,23 @@ public:
     ~OS_TRANSPARENT_MANAGEMENT();
 
     // Address is physical address and at byte granularity
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-    // Address is physical address and at byte granularity
     bool memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree);
-#else
-    // Address is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree);
-#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     // Translate the physical address to hardware address
     void physical_to_hardware_address(request_type& packet);
     void physical_to_hardware_address(uint64_t& address);
 
-    bool issue_remapping_request(RemappingRequest& remapping_request);
     bool finish_remapping_request();
 
     // Detect cold data block
     void cold_data_detection();
+
+    /**
+     * @brief Epoch hook, only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval.
+     * @note Part of the interface every proposal exposes, so the memory controller can
+     *       call it without knowing which proposal is compiled in.
+     */
+    void check_interval_swap([[maybe_unused]] uint8_t swapping_states, [[maybe_unused]] bool warmup) {};
 
 #if (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
     bool finish_fm_access_in_incomplete_read_request_queue(uint64_t h_address);

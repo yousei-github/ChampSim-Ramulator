@@ -102,7 +102,7 @@ MEMORY_CONTROLLER::MEMORY_CONTROLLER(champsim::chrono::picoseconds mc_period, st
     }
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    os_transparent_management = new OS_TRANSPARENT_MANAGEMENT(max_address + max_address2, max_address);
+    os_transparent_management = std::make_unique<OS_TRANSPARENT_MANAGEMENT>(max_address + max_address2, max_address);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -148,10 +148,6 @@ MEMORY_CONTROLLER::~MEMORY_CONTROLLER()
     output_statistics.read_request_in_memory2  = read_request_in_memory2;
     output_statistics.write_request_in_memory  = write_request_in_memory;
     output_statistics.write_request_in_memory2 = write_request_in_memory2;
-
-#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    delete os_transparent_management;
-#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     // Finalize the simulation. Recursively print all statistics from all components.
     if (frontend != nullptr)
@@ -242,7 +238,8 @@ long MEMORY_CONTROLLER::operate()
 
             DRAM_CHANNEL::request_type rq_it = DRAM_CHANNEL::request_type {packet};
             rq_it.forward_checked            = false;
-            rq_it.event_cycle                = current_cycle;
+            rq_it.scheduled                  = false;
+            rq_it.ready_time                 = current_time;
             if (packet.response_requested)
                 rq_it.to_return = {&(queues.at(packet.cpu)->returned)}; // Store the response queue to communicate with the LLC
 
@@ -277,7 +274,8 @@ long MEMORY_CONTROLLER::operate()
 
             DRAM_CHANNEL::request_type wq_it = DRAM_CHANNEL::request_type {packet};
             wq_it.forward_checked            = false;
-            wq_it.event_cycle                = current_cycle;
+            wq_it.scheduled                  = false;
+            wq_it.ready_time                 = current_time;
 
             /* Send memory request below */
             bool stall                       = true;
@@ -317,9 +315,14 @@ long MEMORY_CONTROLLER::operate()
 #endif /* COLOCATED_LINE_LOCATION_TABLE */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
+    // Declared outside the swapping unit's guard: check_interval_swap() below needs it
+    // whether or not the swapping unit is compiled in. Without the unit no swapping is ever
+    // in flight, so the state stays "idle".
+    uint8_t swapping_states = 0;
+
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Operate swapping below */
-    uint8_t swapping_states = operate_swapping();
+    swapping_states = operate_swapping();
     switch (swapping_states)
     {
     case 0: // The swapping unit is idle
@@ -329,11 +332,7 @@ long MEMORY_CONTROLLER::operate()
         bool issue = os_transparent_management->issue_remapping_request(remapping_request);
         if (issue == true) // Get a new remapping request.
         {
-#if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-            start_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
-#elif (IDEAL_SINGLE_MEMPOD == ENABLE)
             start_swapping_segments(remapping_request.h_address_in_fm, remapping_request.h_address_in_sm, remapping_request.size);
-#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD */
         }
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
     }
@@ -346,11 +345,7 @@ long MEMORY_CONTROLLER::operate()
         if (issue == true) // Get a remapping request.
         {
             // In case the swapping segments are updated
-#if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-            update_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
-#elif (IDEAL_SINGLE_MEMPOD == ENABLE)
             update_swapping_segments(remapping_request.h_address_in_fm, remapping_request.h_address_in_sm, remapping_request.size);
-#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD */
         }
         else
         {
@@ -369,11 +364,7 @@ long MEMORY_CONTROLLER::operate()
         if (issue == true) // Get a remapping request.
         {
             // In case the swapping segments are updated
-#if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE) || (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-            is_updated = update_swapping_segments(remapping_request.address_in_fm, remapping_request.address_in_sm, remapping_request.size);
-#elif (IDEAL_SINGLE_MEMPOD == ENABLE)
             is_updated = update_swapping_segments(remapping_request.h_address_in_fm, remapping_request.h_address_in_sm, remapping_request.size);
-#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_SINGLE_MEMPOD */
         }
         else
         {
@@ -409,9 +400,8 @@ long MEMORY_CONTROLLER::operate()
 #endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-#if (IDEAL_SINGLE_MEMPOD == ENABLE)
+    // Only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval; it is a no-op elsewhere.
     os_transparent_management->check_interval_swap(swapping_states, warmup);
-#endif /* IDEAL_SINGLE_MEMPOD */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
     /* Operate memories below */
@@ -504,7 +494,6 @@ void MEMORY_CONTROLLER::initiate_requests()
 bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
 {
     const static int type                                              = Ramulator::Request::Type::Read;                     // It means the input request is read request (Ramulator 2.0 id).
-    const static OS_TRANSPARENT_MANAGEMENT::MemoryRequestType ost_type = OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read; // The matching id for OS-transparent management.
     const static RequestType queue_type                                = RequestType::Read;                                  // The matching id for queue queries.
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
@@ -514,16 +503,13 @@ bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management->physical_to_hardware_address(packet);
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), ost_type, packet.type_origin, float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>()));
-#else
-    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), ost_type, float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>()));
-#endif /* TRACKING_LOAD_STORE_STATISTICS */
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read, packet.type_origin,
+        float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>()));
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Check swapping below */
-    uint8_t under_swapping = check_request(packet, ost_type);
+    uint8_t under_swapping = check_request(packet, queue_type);
     switch (under_swapping)
     {
     case 0: // This address is under swapping.
@@ -675,22 +661,18 @@ bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
 bool MEMORY_CONTROLLER::add_wq(request_type& packet)
 {
     const static int type                                              = Ramulator::Request::Type::Write;                     // It means the input request is write request (Ramulator 2.0 id).
-    const static OS_TRANSPARENT_MANAGEMENT::MemoryRequestType ost_type = OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write; // The matching id for OS-transparent management.
     const static RequestType queue_type                                = RequestType::Write;                                  // The matching id for queue queries.
 
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management->physical_to_hardware_address(packet);
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
-    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), ost_type, packet.type_origin, float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>()));
-#else
-    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), ost_type, float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>()));
-#endif /* TRACKING_LOAD_STORE_STATISTICS */
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write, packet.type_origin,
+        float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>()));
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Check swapping below */
-    uint8_t under_swapping = check_request(packet, ost_type);
+    uint8_t under_swapping = check_request(packet, queue_type);
     switch (under_swapping)
     {
     case 0: // This address is under swapping.
@@ -1206,13 +1188,13 @@ void MEMORY_CONTROLLER::return_swapping_data(Ramulator::Request& request)
     }
 };
 
-uint8_t MEMORY_CONTROLLER::check_request(request_type& packet, OS_TRANSPARENT_MANAGEMENT::MemoryRequestType type)
+uint8_t MEMORY_CONTROLLER::check_request(request_type& packet, RequestType type)
 {
     uint64_t address;
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     address = packet.h_address;
 #else
-    address = packet.address;
+    address = packet.address.to<uint64_t>();
 #endif
 
     address >>= LOG2_BLOCK_SIZE;
@@ -1234,7 +1216,7 @@ uint8_t MEMORY_CONTROLLER::check_request(request_type& packet, OS_TRANSPARENT_MA
         return 1; // This address is not under swapping.
     }
 
-    if (type == OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read) // For read request
+    if (type == RequestType::Read) // For read request
     {
         if ((buffer[entry_index].finish == true) || (buffer[entry_index].read[segment_index] == true) || (buffer[entry_index].write[segment_index] == true) || (buffer[entry_index].dirty[segment_index] == true))
         {
@@ -1244,7 +1226,7 @@ uint8_t MEMORY_CONTROLLER::check_request(request_type& packet, OS_TRANSPARENT_MA
             return 2; // Though this address is under swapping, we can service its request because the data is in the swapping buffer.
         }
     }
-    else if (type == OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write) // For write request
+    else if (type == RequestType::Write) // For write request
     {
         if ((buffer[entry_index].read[0] == true) && (buffer[entry_index].read[1] == true))
         {

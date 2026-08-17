@@ -65,6 +65,8 @@
 #error "Exactly one of IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD may be enabled."
 #endif
 
+// Disabling every design above selects the static-placement baseline: data is placed once
+// and never migrated, which is the control run the designs above are measured against.
 #if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE) && (IDEAL_SINGLE_MEMPOD == DISABLE)
 #define NO_METHOD_FOR_RUN_HYBRID_MEMORY (ENABLE)
 #endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD */
@@ -86,11 +88,6 @@
 #else
 #define HOTNESS_THRESHOLD (1u)
 #endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD */
-
-// Check
-#if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
-#error OS-transparent management designs need to be enabled.
-#endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE */
 
 // Statistics of OS-transparent management designs
 #define TRACKING_LOAD_STORE_STATISTICS (DISABLE)

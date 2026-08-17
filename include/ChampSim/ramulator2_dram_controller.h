@@ -82,7 +82,7 @@ public:
     // Built in the constructor body once both memory systems exist (capacities
     // are unknown until the YAML configs are parsed), so a pointer rather than a
     // reference like the Ramulator 1.0 controller.
-    OS_TRANSPARENT_MANAGEMENT* os_transparent_management = nullptr;
+    std::unique_ptr<OS_TRANSPARENT_MANAGEMENT> os_transparent_management;
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -192,8 +192,10 @@ private:
     void return_swapping_data(Ramulator::Request& request);
 
     // This function is used by memory controller in add_rq() and add_wq().
-    uint8_t check_request(request_type& packet, OS_TRANSPARENT_MANAGEMENT::MemoryRequestType type); // Packet needs to prepare its hardware address.
-    uint8_t check_address(uint64_t address, uint8_t type);                                          // The address is physical address.
+    // The swapping unit has no dependency on the OS-transparent management design, hence
+    // the controller's own RequestType rather than OS_TRANSPARENT_MANAGEMENT::MemoryRequestType.
+    uint8_t check_request(request_type& packet, RequestType type); // Packet needs to prepare its hardware address.
+    uint8_t check_address(uint64_t address, uint8_t type);         // The address is physical address.
 
 #endif /* MEMORY_USE_SWAPPING_UNIT */
 };

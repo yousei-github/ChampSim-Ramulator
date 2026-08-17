@@ -5,18 +5,15 @@
 
 #if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
 OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address)
-: total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
-  total_capacity_at_data_block_granularity(max_address >> DATA_MANAGEMENT_OFFSET_BITS),
-  fast_memory_capacity_at_data_block_granularity(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS),
-  fast_memory_offset_bit(champsim::lg2(fast_memory_max_address)), // Note here only support integers of 2's power.
+// Note here only support integers of 2's power.
+: OS_TRANSPARENT_MANAGEMENT_BASE(max_address, fast_memory_max_address, DATA_MANAGEMENT_OFFSET_BITS, champsim::lg2(fast_memory_max_address)),
   counter_table(*(new std::vector<COUNTER_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, COUNTER_DEFAULT_VALUE))),
   hotness_table(*(new std::vector<HOTNESS_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, HOTNESS_DEFAULT_VALUE))),
-  set_msb(REMAPPING_LOCATION_WIDTH_BITS + fast_memory_offset_bit - 1),
+  congruence_group_msb(REMAPPING_LOCATION_WIDTH_BITS + fast_memory_offset_bit - 1),
   access_table(*(new std::vector<AccessDistribution>(max_address >> DATA_MANAGEMENT_OFFSET_BITS))),
   placement_table(*(new std::vector<PlacementEntry>(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS)))
 {
     hotness_threshold                   = HOTNESS_THRESHOLD;
-    remapping_request_queue_congestion  = 0;
 
     expected_number_in_congruence_group = total_capacity / fast_memory_capacity;
     std::printf("Number in Congruence group: %ld.\n", expected_number_in_congruence_group);
@@ -106,8 +103,13 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
     delete &placement_table;
 };
 
-bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree)
+bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
+    if (otm::should_skip_tracking(type, type_origin))
+    {
+        return true;
+    }
+
     if (address >= total_capacity)
     {
         std::cout << __func__ << ": address input error." << std::endl;
@@ -134,35 +136,14 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, Memor
     cold_data_detection_in_group(address);
 #endif /* COLD_DATA_DETECTION_IN_GROUP */
 
-    if (type == MemoryRequestType::Read) // For read request
-    {
-        if (counter_table.at(data_block_address) < COUNTER_MAX_VALUE)
-        {
-            counter_table[data_block_address]++; // Increment its counter
-        }
-
-        if (counter_table.at(data_block_address) >= hotness_threshold)
-        {
-            hotness_table.at(data_block_address) = true; // Mark hot data block
-        }
-    }
-    else if (type == MemoryRequestType::Write) // For write request
-    {
-        if (counter_table.at(data_block_address) < COUNTER_MAX_VALUE)
-        {
-            counter_table[data_block_address]++; // Increment its counter
-        }
-
-        if (counter_table.at(data_block_address) >= hotness_threshold)
-        {
-            hotness_table.at(data_block_address) = true; // Mark hot data block
-        }
-    }
-    else
+    if ((type != MemoryRequestType::Read) && (type != MemoryRequestType::Write))
     {
         std::cout << __func__ << ": type input error." << std::endl;
         std::abort();
     }
+
+    // Read and write requests are counted the same way
+    otm::update_counter_and_hotness(counter_table, hotness_table, data_block_address, hotness_threshold);
 
     // Prepare a remapping request
     RemappingRequest remapping_request;
@@ -452,10 +433,10 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, Memor
         // Follow rule 2 (data blocks belonging to NM are recovered to the original locations)
         START_ADDRESS_WIDTH start_address_in_fm = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4) - free_space;
 
-        remapping_request.address_in_fm         = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
-        remapping_request.address_in_sm         = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
+        remapping_request.h_address_in_fm         = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
+        remapping_request.h_address_in_sm         = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
 
-        // Indicate where the data come from for address_in_fm and address_in_sm. (What block the data belong to)
+        // Indicate where the data come from for h_address_in_fm and h_address_in_sm. (What block the data belong to)
         remapping_request.fm_location           = fm_location; // This should be RemappingLocation::Zero.
         remapping_request.sm_location           = tag;         // This shouldn't be RemappingLocation::Zero.
 
@@ -548,10 +529,10 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, Memor
             START_ADDRESS_WIDTH start_address_in_fm = used_space;
             start_address                           = placement_table.at(placement_table_index).start_address[occupied_group_number];
 
-            remapping_request.address_in_fm         = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
-            remapping_request.address_in_sm         = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
+            remapping_request.h_address_in_fm         = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
+            remapping_request.h_address_in_sm         = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
 
-            // Indicate where the data come from for address_in_fm and address_in_sm. (What block the data belong to)
+            // Indicate where the data come from for h_address_in_fm and h_address_in_sm. (What block the data belong to)
             remapping_request.fm_location           = sm_location; // This shouldn't be RemappingLocation::Zero.
             remapping_request.sm_location           = tag;         // This should be RemappingLocation::Zero.
 
@@ -617,7 +598,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packe
             // Calculate the start address
             START_ADDRESS_WIDTH start_address    = used_space + data_line_positon - placement_table.at(placement_table_index).start_address[data_block_position];
             REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
-            packet.h_address                     = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_LINE_OFFSET_BITS - 1);
+            packet.h_address                     = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_LINE_OFFSET_BITS - 1);
         }
         else
         {
@@ -670,7 +651,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packe
             REMAPPING_LOCATION_WIDTH sm_location = placement_table.at(placement_table_index).tag[occupied_group_number];
             start_address                        = placement_table.at(placement_table_index).start_address[occupied_group_number] + start_address - used_space;
 
-            packet.h_address                     = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_LINE_OFFSET_BITS - 1);
+            packet.h_address                     = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), packet.address.to<uint64_t>(), DATA_LINE_OFFSET_BITS - 1);
         }
     }
 };
@@ -721,7 +702,7 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
             // Calculate the start address
             START_ADDRESS_WIDTH start_address    = used_space + data_line_positon - placement_table.at(placement_table_index).start_address[data_block_position];
             REMAPPING_LOCATION_WIDTH fm_location = REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero);
-            address                              = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), address, DATA_LINE_OFFSET_BITS - 1);
+            address                              = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), address, DATA_LINE_OFFSET_BITS - 1);
         }
         else
         {
@@ -772,20 +753,9 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
             REMAPPING_LOCATION_WIDTH sm_location = placement_table.at(placement_table_index).tag[occupied_group_number];
             start_address                        = placement_table.at(placement_table_index).start_address[occupied_group_number] + start_address - used_space;
 
-            address                              = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit), address, DATA_LINE_OFFSET_BITS - 1);
+            address                              = champsim::replace_bits(champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit), address, DATA_LINE_OFFSET_BITS - 1);
         }
     }
-};
-
-bool OS_TRANSPARENT_MANAGEMENT::issue_remapping_request(RemappingRequest& remapping_request)
-{
-    if (remapping_request_queue.empty() == false)
-    {
-        remapping_request = remapping_request_queue.front();
-        return true;
-    }
-
-    return false;
 };
 
 bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
@@ -795,8 +765,8 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         RemappingRequest remapping_request = remapping_request_queue.front();
         remapping_request_queue.pop_front();
 
-        uint64_t data_block_address    = remapping_request.address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
-        //data_block_address = remapping_request.address_in_sm >> DATA_MANAGEMENT_OFFSET_BITS;
+        uint64_t data_block_address    = remapping_request.h_address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
+        //data_block_address = remapping_request.h_address_in_sm >> DATA_MANAGEMENT_OFFSET_BITS;
         uint64_t placement_table_index = data_block_address % fast_memory_capacity_at_data_block_granularity;
 
         // Check whether the remapping_request moves block 0's data into fast memory
@@ -804,9 +774,9 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         {
             // This remapping_request moves block 0's data into slow memory
 
-            data_block_address                           = remapping_request.address_in_sm >> DATA_MANAGEMENT_OFFSET_BITS;
+            data_block_address                           = remapping_request.h_address_in_sm >> DATA_MANAGEMENT_OFFSET_BITS;
             REMAPPING_LOCATION_WIDTH tag                 = remapping_request.sm_location;
-            START_ADDRESS_WIDTH start_address            = (remapping_request.address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
+            START_ADDRESS_WIDTH start_address            = (remapping_request.h_address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
 
             // Check whether part of this data block can be expanded in fast memory
             REMAPPING_LOCATION_WIDTH data_block_position = 0;
@@ -943,8 +913,8 @@ bool OS_TRANSPARENT_MANAGEMENT::finish_remapping_request()
         else if (remapping_request.sm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero))
         {
             // This remapping_request moves block 0's data into fast memory
-            START_ADDRESS_WIDTH start_address_in_fm        = (remapping_request.address_in_fm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
-            START_ADDRESS_WIDTH start_address              = (remapping_request.address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
+            START_ADDRESS_WIDTH start_address_in_fm        = (remapping_request.h_address_in_fm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
+            START_ADDRESS_WIDTH start_address              = (remapping_request.h_address_in_sm >> DATA_LINE_OFFSET_BITS) % (START_ADDRESS_WIDTH(StartAddress::Max));
 
             bool find_occupied_group                       = false;
             REMAPPING_LOCATION_WIDTH occupied_group_number = 0;
@@ -1127,7 +1097,7 @@ void OS_TRANSPARENT_MANAGEMENT::cold_data_detection_in_group(uint64_t source_add
         if (i != tag)
         {
             REMAPPING_LOCATION_WIDTH location    = i;
-            uint64_t data_base_address_to_evict  = champsim::replace_bits(base_remapping_address, uint64_t(location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
+            uint64_t data_base_address_to_evict  = champsim::replace_bits(base_remapping_address, uint64_t(location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
             uint64_t data_block_address_to_evict = data_base_address_to_evict >> DATA_MANAGEMENT_OFFSET_BITS;
 
             counter_table[data_block_address_to_evict] >>= 1; // Halve the counter value
@@ -1178,7 +1148,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
         {
 #if (IMMEDIATE_EVICTION == ENABLE)
             REMAPPING_LOCATION_WIDTH sm_location = placement_table.at(placement_table_index).tag[i];
-            uint64_t data_base_address_to_evict  = champsim::replace_bits(base_remapping_address, uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
+            uint64_t data_base_address_to_evict  = champsim::replace_bits(base_remapping_address, uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
             uint64_t data_block_address_to_evict = data_base_address_to_evict >> DATA_MANAGEMENT_OFFSET_BITS;
             for (START_ADDRESS_WIDTH j = 0; j < START_ADDRESS_WIDTH(StartAddress::Max); j++)
             {
@@ -1193,7 +1163,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
 #else
             // Check whether this data block is cold
             REMAPPING_LOCATION_WIDTH sm_location = placement_table.at(placement_table_index).tag[i];
-            uint64_t data_base_address_to_evict  = champsim::replace_bits(base_remapping_address, uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
+            uint64_t data_base_address_to_evict  = champsim::replace_bits(base_remapping_address, uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
             uint64_t data_block_address_to_evict = data_base_address_to_evict >> DATA_MANAGEMENT_OFFSET_BITS;
 
             if (hotness_table.at(data_block_address_to_evict) == false) // This data block is cold
@@ -1224,10 +1194,10 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
 
                 // Prepare a remapping request
                 RemappingRequest remapping_request;
-                remapping_request.address_in_fm = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
-                remapping_request.address_in_sm = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, set_msb, fast_memory_offset_bit);
+                remapping_request.h_address_in_fm = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
+                remapping_request.h_address_in_sm = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
 
-                // Indicate where the data come from for address_in_fm and address_in_sm.
+                // Indicate where the data come from for h_address_in_fm and h_address_in_sm.
                 remapping_request.fm_location   = sm_location; // This shouldn't be RemappingLocation::Zero.
                 remapping_request.sm_location   = tag;         // This should be RemappingLocation::Zero.
 
@@ -1262,7 +1232,7 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
 
 bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& remapping_request)
 {
-    uint64_t data_block_address       = remapping_request.address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
+    uint64_t data_block_address       = remapping_request.h_address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
     uint64_t placement_table_index    = data_block_address % fast_memory_capacity_at_data_block_granularity;
 
     // Check duplicated remapping request in remapping_request_queue
@@ -1270,7 +1240,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
     bool duplicated_remapping_request = false;
     for (uint64_t i = 0; i < remapping_request_queue.size(); i++)
     {
-        uint64_t data_block_address_to_check    = remapping_request_queue[i].address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
+        uint64_t data_block_address_to_check    = remapping_request_queue[i].h_address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
         uint64_t placement_table_index_to_check = data_block_address_to_check % fast_memory_capacity_at_data_block_granularity;
 
         if (placement_table_index_to_check == placement_table_index)
@@ -1281,7 +1251,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
             if ((remapping_request.fm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero)) && (remapping_request_queue[i].fm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero)))
             {
                 // For the request that moves block 0's data into slow memory, only one remapping request for the same set can exist in remapping_request_queue to maintain data consistency
-                if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm) && ((remapping_request_queue[i].address_in_sm == remapping_request.address_in_sm)))
+                if ((remapping_request_queue[i].h_address_in_fm == remapping_request.h_address_in_fm) && ((remapping_request_queue[i].h_address_in_sm == remapping_request.h_address_in_sm)))
                 {
                     if (remapping_request.size > remapping_request_queue[i].size)
                     {
@@ -1295,7 +1265,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
             else if ((remapping_request.sm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero)) && (remapping_request_queue[i].sm_location == REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero)))
             {
                 // For the request that moves block 0's data into fast memory, multiple remapping requests for the same set can exist as long as the data movement in fast memory are different
-                if ((remapping_request_queue[i].address_in_fm == remapping_request.address_in_fm) && (remapping_request_queue[i].address_in_sm == remapping_request.address_in_sm))
+                if ((remapping_request_queue[i].h_address_in_fm == remapping_request.h_address_in_fm) && (remapping_request_queue[i].h_address_in_sm == remapping_request.h_address_in_sm))
                 {
                     if (remapping_request.size > remapping_request_queue[i].size)
                     {
@@ -1305,7 +1275,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
                     // New remapping request won't be issued, but the duplicated one is updated.
                     return true;
                 }
-                else if (remapping_request_queue[i].address_in_fm != remapping_request.address_in_fm)
+                else if (remapping_request_queue[i].h_address_in_fm != remapping_request.h_address_in_fm)
                 {
                     duplicated_remapping_request = false;
                     continue;
@@ -1321,7 +1291,7 @@ bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& rema
     {
         if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
         {
-            if (remapping_request.address_in_fm == remapping_request.address_in_sm) // Check
+            if (remapping_request.h_address_in_fm == remapping_request.h_address_in_sm) // Check
             {
                 std::cout << __func__ << ": add new remapping request error." << std::endl;
                 std::abort();
@@ -1392,17 +1362,16 @@ MIGRATION_GRANULARITY_WIDTH OS_TRANSPARENT_MANAGEMENT::calculate_migration_granu
     return migration_granularity;
 }
 
-START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity)
+START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::shrink_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH limit, MIGRATION_GRANULARITY_WIDTH& migration_granularity, const START_ADDRESS_WIDTH original_end_address)
 {
-    START_ADDRESS_WIDTH updated_end_address = end_address;
+    START_ADDRESS_WIDTH updated_end_address = original_end_address;
 
-    // Check whether this migration granularity is beyond the block's range
     while (true)
     {
-        if ((start_address + migration_granularity - 1) >= START_ADDRESS_WIDTH(StartAddress::Max))
+        if ((start_address + migration_granularity - 1) > limit)
         {
 #if (FLEXIBLE_GRANULARITY == ENABLE)
-            migration_granularity = end_address - start_address + 1;
+            migration_granularity = original_end_address - start_address + 1;
 #else
             if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4)))
             {
@@ -1437,7 +1406,7 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(cons
         }
         else
         {
-            // This migration granularity is within the block's range.
+            // This migration granularity is within the limit.
             updated_end_address = start_address + migration_granularity - 1;
             break;
         }
@@ -1446,58 +1415,16 @@ START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(cons
     return updated_end_address;
 }
 
+START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity)
+{
+    // Check whether this migration granularity is beyond the block's range
+    return shrink_migration_granularity(start_address, START_ADDRESS_WIDTH(StartAddress::Max) - 1, migration_granularity, end_address);
+}
+
 START_ADDRESS_WIDTH OS_TRANSPARENT_MANAGEMENT::round_down_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity)
 {
-    START_ADDRESS_WIDTH updated_end_address = end_address;
-
     // Check whether this migration granularity is beyond the block's end address
-    while (true)
-    {
-        if ((start_address + migration_granularity - 1) > end_address)
-        {
-#if (FLEXIBLE_GRANULARITY == ENABLE)
-            migration_granularity = end_address - start_address + 1;
-#else
-            if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4)))
-            {
-                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2);
-            }
-            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_2)))
-            {
-                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1);
-            }
-            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_1)))
-            {
-                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512);
-            }
-            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_512)))
-            {
-                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256);
-            }
-            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_256)))
-            {
-                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128);
-            }
-            else if ((MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_64) < migration_granularity) && (migration_granularity <= MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_128)))
-            {
-                migration_granularity = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::Byte_64);
-            }
-            else
-            {
-                std::cout << __func__ << ": migration granularity calculation error." << std::endl;
-                std::abort();
-            }
-#endif /* FLEXIBLE_GRANULARITY */
-        }
-        else
-        {
-            // This migration granularity is within the block's end address.
-            updated_end_address = start_address + migration_granularity - 1;
-            break;
-        }
-    }
-
-    return updated_end_address;
+    return shrink_migration_granularity(start_address, end_address, migration_granularity, end_address);
 }
 
 #endif /* IDEAL_VARIABLE_GRANULARITY */

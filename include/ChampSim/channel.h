@@ -82,9 +82,15 @@ class channel
         uint64_t h_address_fm = 0;
 #endif /* COLOCATED_LINE_LOCATION_TABLE */
 
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
+        /**
+         * @brief What kind of access produced this request.
+         *
+         * @note
+         * Always present, so the memory controller can hand it to the OS-transparent
+         * management design unconditionally. Only TRACKING_LOAD_STORE_STATISTICS makes the
+         * cache hierarchy fill it in; otherwise it keeps this default and is ignored.
+         */
         access_type type_origin {access_type::LOAD};
-#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 

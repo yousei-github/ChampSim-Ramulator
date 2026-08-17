@@ -11,6 +11,7 @@
 
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/channel.h"
+#include "OS_Transparent_Management/os_transparent_management_common.h"
 #include "ProjectConfiguration.h" // User file
 
 /**
@@ -36,54 +37,27 @@
 #define SWAP_DATA_CACHE_LINES                 (DATA_MANAGEMENT_GRANULARITY / CACHE_LINE_SIZE) // [lines]
 
 /* For mea_counter_table */
-#define NUMBER_MEA_COUNTER                    (16u)
-#define MEA_COUNTER_WIDTH                     uint8_t
-#define MEA_COUNTER_MAX_VALUE                 (4u)
-#define COUNTER_DEFAULT_VALUE                 (0)
-#define MEA_COUNTER_RESET_EVERY_EPOCH         (DISABLE)
+#define NUMBER_MEA_COUNTER               (16u)
+#define MEA_COUNTER_WIDTH                uint8_t
+#define MEA_COUNTER_MAX_VALUE            (4u)
+#define MEA_COUNTER_RESET_EVERY_EPOCH    (DISABLE)
 
 /* For address_remapping_table */
-#define REMAPPING_TABLE_ENTRY_WIDTH           uint64_t
+#define REMAPPING_TABLE_ENTRY_WIDTH      uint64_t
 
 /* For swapping */
-#define REMAPPING_REQUEST_QUEUE_LENGTH        (4096) // 1024/4096
-#define QUEUE_BUSY_DEGREE_THRESHOLD_UP        (0.9f)
-#define QUEUE_BUSY_DEGREE_THRESHOLD_DOWN      (0.8f)
-#define QUEUE_BUSY_DEGREE_THRESHOLD           (0.8f)
+#define REMAPPING_REQUEST_QUEUE_LENGTH   (4096) // 1024/4096
+#define QUEUE_BUSY_DEGREE_THRESHOLD_UP   (0.9f)
+#define QUEUE_BUSY_DEGREE_THRESHOLD_DOWN (0.8f)
 
-#define INCOMPLETE_READ_REQUEST_QUEUE_LENGTH  (128)
-#define INCOMPLETE_WRITE_REQUEST_QUEUE_LENGTH (128)
-
-class OS_TRANSPARENT_MANAGEMENT
+class OS_TRANSPARENT_MANAGEMENT : public OS_TRANSPARENT_MANAGEMENT_BASE
 {
     using channel_type = champsim::channel;
     using request_type = typename channel_type::request_type;
 
 public:
-    /** @brief Memory request type */
-    enum class MemoryRequestType : int
-    {
-        Read = 0,
-        Write,
-        Max
-    };
-
-    uint64_t cycle = 0;
-    uint64_t total_capacity;       // [B]
-    uint64_t fast_memory_capacity; // [B]
-    uint64_t total_capacity_at_granularity;
-    uint64_t fast_memory_capacity_at_granularity;
-    uint8_t fast_memory_offset_bit;                                          // Address format in the data management granularity
     uint8_t swap_size                               = SWAP_DATA_CACHE_LINES; // == 32
     REMAPPING_TABLE_ENTRY_WIDTH swap_fm_address_itr = 0;
-
-    /* Remapping request */
-    struct RemappingRequest
-    {
-        uint64_t h_address_in_fm, h_address_in_sm; // Hardware address in fast and slow memories
-        uint64_t p_address_in_fm, p_address_in_sm; // Physical address in fast and slow memories
-        uint8_t size;                              // Number of cache lines to remap == 32 (2048B)
-    };
 
     struct PhysicalHardwareAddressTuple
     {
@@ -99,9 +73,6 @@ public:
     std::unordered_map<REMAPPING_TABLE_ENTRY_WIDTH, REMAPPING_TABLE_ENTRY_WIDTH>& address_remapping_table;
     std::unordered_map<REMAPPING_TABLE_ENTRY_WIDTH, REMAPPING_TABLE_ENTRY_WIDTH>& invert_address_remapping_table;
 
-    std::deque<RemappingRequest> remapping_request_queue;
-    uint64_t remapping_request_queue_congestion;
-
     double interval_cycle;
     double next_interval_cycle;
     uint32_t intervals;
@@ -110,13 +81,8 @@ public:
     OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address);
     ~OS_TRANSPARENT_MANAGEMENT();
 
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     // Address is physical address and at byte granularity
     bool memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree);
-#else
-    // Address is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree);
-#endif /* TRACKING_LOAD_STORE_STATISTICS */
 
     // Translate the physical address to hardware address
     void physical_to_hardware_address(request_type& packet);
@@ -127,7 +93,6 @@ public:
 
     // MemPod interval swap
     void check_interval_swap(uint8_t swapping_states, bool warmup);
-    bool issue_remapping_request(RemappingRequest& remapping_request);
     bool finish_remapping_request();
 
 private:

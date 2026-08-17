@@ -9,7 +9,9 @@
 #include <vector>
 
 #include "ChampSim/champsim_constants.h"
+#include "ChampSim/channel.h"
 #include "ChampSim/util/bits.h"
+#include "OS_Transparent_Management/os_transparent_management_common.h"
 #include "ProjectConfiguration.h" // User file
 
 /**
@@ -21,15 +23,7 @@
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 
 #if (IDEAL_VARIABLE_GRANULARITY == ENABLE)
-#define COUNTER_WIDTH                    uint8_t
-#define COUNTER_MAX_VALUE                (UINT8_MAX)
-#define COUNTER_DEFAULT_VALUE            (0)
-
-#define HOTNESS_WIDTH                    bool
-#define HOTNESS_DEFAULT_VALUE            (false)
-
-#define REMAPPING_LOCATION_WIDTH         uint8_t // Default: uint8_t
-#define REMAPPING_LOCATION_WIDTH_SIGN    int8_t  // Default: int8_t
+#define REMAPPING_LOCATION_WIDTH_SIGN    int8_t // Default: int8_t
 #define REMAPPING_LOCATION_WIDTH_BITS    (champsim::lg2(64))
 
 #define START_ADDRESS_WIDTH              uint8_t
@@ -41,45 +35,19 @@
 #define NUMBER_OF_BLOCK                  (5) // Default: 5
 
 #define REMAPPING_REQUEST_QUEUE_LENGTH   (64) // 1024/4096
-#define QUEUE_BUSY_DEGREE_THRESHOLD      (0.8f)
 
 #define INTERVAL_FOR_DECREMENT           (1000000) // Default: 1000000
 
-class OS_TRANSPARENT_MANAGEMENT
+class OS_TRANSPARENT_MANAGEMENT : public OS_TRANSPARENT_MANAGEMENT_BASE
 {
     using channel_type = champsim::channel;
     using request_type = typename channel_type::request_type;
 
 public:
-    /** @brief Memory request type */
-    enum class MemoryRequestType : int
-    {
-        Read = 0,
-        Write,
-        Max
-    };
-
-    uint64_t cycle                  = 0;
     COUNTER_WIDTH hotness_threshold = 0;
-    uint64_t total_capacity;       // Uint is byte
-    uint64_t fast_memory_capacity; // Uint is byte
-    uint64_t total_capacity_at_data_block_granularity;
-    uint64_t fast_memory_capacity_at_data_block_granularity;
-    uint8_t fast_memory_offset_bit; // Address format in the data management granularity
 
     std::vector<COUNTER_WIDTH>& counter_table; // A counter for every data block
     std::vector<HOTNESS_WIDTH>& hotness_table; // A hotness bit for every data block, true -> data block is hot, false -> data block is cold.
-
-    /* Remapping request */
-    struct RemappingRequest
-    {
-        uint64_t address_in_fm, address_in_sm; // Hardware address in fast and slow memories
-        REMAPPING_LOCATION_WIDTH fm_location, sm_location;
-        uint8_t size; // Number of cache lines to remap
-    };
-
-    std::deque<RemappingRequest> remapping_request_queue;
-    uint64_t remapping_request_queue_congestion;
 
     // Scoped enumerations
     /**
@@ -96,7 +64,7 @@ public:
         Max = NUMBER_OF_BLOCK
     };
 
-    uint8_t set_msb; // Most significant bit of set, and its address format is in the byte granularity
+    uint8_t congruence_group_msb; // Most significant bit of the congruence group (set), and its address format is in the byte granularity
 
     /**
      * @brief
@@ -193,17 +161,32 @@ public:
     ~OS_TRANSPARENT_MANAGEMENT();
 
     // Address is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree);
+    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree);
 
     // Translate the physical address to hardware address
     void physical_to_hardware_address(request_type& packet);
     void physical_to_hardware_address(uint64_t& address);
 
-    bool issue_remapping_request(RemappingRequest& remapping_request);
     bool finish_remapping_request();
 
     // Detect cold data block
     void cold_data_detection();
+
+    /**
+     * @brief Epoch hook, only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval.
+     * @note Part of the interface every proposal exposes, so the memory controller can
+     *       call it without knowing which proposal is compiled in.
+     */
+    void check_interval_swap([[maybe_unused]] uint8_t swapping_states, [[maybe_unused]] bool warmup) {};
+
+    // Member functions for migration granularity:
+
+    // Calculate the migration granularity based on start_address and end_address.
+    static MIGRATION_GRANULARITY_WIDTH calculate_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address);
+    // Check whether this migration granularity is beyond the block's range and adjust it to a proper value, this function returns updated end_address
+    static START_ADDRESS_WIDTH adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
+    // Check whether this migration granularity is beyond the block's end address and adjust it to a proper value, this function returns updated end_address
+    static START_ADDRESS_WIDTH round_down_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
 
 private:
 #if (COLD_DATA_DETECTION_IN_GROUP == ENABLE)
@@ -217,14 +200,15 @@ private:
     // Add new remapping request into the remapping_request_queue
     bool enqueue_remapping_request(RemappingRequest& remapping_request);
 
-    // Member functions for migration granularity:
-
-    // Calculate the migration granularity based on start_address and end_address.
-    MIGRATION_GRANULARITY_WIDTH calculate_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address);
-    // Check whether this migration granularity is beyond the block's range and adjust it to a proper value, this function returns updated end_address
-    START_ADDRESS_WIDTH adjust_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
-    // Check whether this migration granularity is beyond the block's end address and adjust it to a proper value, this function returns updated end_address
-    START_ADDRESS_WIDTH round_down_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH end_address, MIGRATION_GRANULARITY_WIDTH& migration_granularity);
+    /**
+     * @brief Shrink migration_granularity until the migrated part fits below limit
+     *
+     * @param limit                The last data line position the migration may cover.
+     * @param original_end_address The end address the caller was asked for, used as-is by
+     *                             FLEXIBLE_GRANULARITY to fall back to an exact-size migration.
+     * @return The updated end address.
+     */
+    static START_ADDRESS_WIDTH shrink_migration_granularity(const START_ADDRESS_WIDTH start_address, const START_ADDRESS_WIDTH limit, MIGRATION_GRANULARITY_WIDTH& migration_granularity, const START_ADDRESS_WIDTH original_end_address);
 };
 
 #endif /* IDEAL_VARIABLE_GRANULARITY */
