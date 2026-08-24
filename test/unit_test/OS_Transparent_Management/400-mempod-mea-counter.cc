@@ -44,7 +44,7 @@ SCENARIO("MemPod counts accesses to a data segment up to its counter's maximum")
 
             AND_WHEN("It is accessed far more often than its counter can hold")
             {
-                for (int i = 0; i < 4 * MEA_COUNTER_MAX_VALUE; i++)
+                for (unsigned int i = 0; i < 4 * MEA_COUNTER_MAX_VALUE; i++)
                 {
                     track_read(os_transparent_management, otm_test::data_block_address(segment));
                 }
@@ -97,7 +97,7 @@ SCENARIO("MemPod decays every counter when a new data segment finds the table fu
         WHEN("One tracked data segment is much hotter than the rest")
         {
             const uint64_t hot_segment = 0;
-            for (int i = 0; i < MEA_COUNTER_MAX_VALUE; i++)
+            for (unsigned int i = 0; i < MEA_COUNTER_MAX_VALUE; i++)
             {
                 track_read(os_transparent_management, otm_test::data_block_address(hot_segment));
             }
