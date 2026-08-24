@@ -1,7 +1,6 @@
-#include "OS_Transparent_Management/os_transparent_management.h"
-
 #include <algorithm>
 
+#include "OS_Transparent_Management/os_transparent_management.h"
 #include "simulator_statistics.h"
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -48,7 +47,7 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 // Complete
 bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
-    if (otm::should_skip_tracking(type, type_origin))
+    if (OsTransparentManagement::should_skip_tracking(type, type_origin))
     {
         return true;
     }

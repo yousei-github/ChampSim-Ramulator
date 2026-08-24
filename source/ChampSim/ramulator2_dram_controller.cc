@@ -315,10 +315,15 @@ long MEMORY_CONTROLLER::operate()
 #endif /* COLOCATED_LINE_LOCATION_TABLE */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
-    // Declared outside the swapping unit's guard: check_interval_swap() below needs it
-    // whether or not the swapping unit is compiled in. Without the unit no swapping is ever
-    // in flight, so the state stays "idle".
-    uint8_t swapping_states = 0;
+    /**
+     * Swapping unit's state from operate_swapping() below
+     *
+     * @details
+     * Declared outside the swapping unit's guard:
+     * check_interval_swap() below needs it whether or not the swapping unit is compiled in.
+     * Without the unit no swapping is ever in flight, so the state stays "idle".
+     */
+    [[maybe_unused]] uint8_t swapping_states = 0;
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Operate swapping below */
@@ -400,7 +405,7 @@ long MEMORY_CONTROLLER::operate()
 #endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    // Only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval; it is a no-op elsewhere.
+    // Only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval currently; it is a no-op elsewhere.
     os_transparent_management->check_interval_swap(swapping_states, warmup);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -493,8 +498,8 @@ void MEMORY_CONTROLLER::initiate_requests()
 
 bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
 {
-    const static int type                                              = Ramulator::Request::Type::Read;                     // It means the input request is read request (Ramulator 2.0 id).
-    const static RequestType queue_type                                = RequestType::Read;                                  // The matching id for queue queries.
+    [[maybe_unused]] const static int type               = Ramulator::Request::Type::Read; // It means the input request is read request (Ramulator 2.0 id).
+    [[maybe_unused]] const static RequestType queue_type = RequestType::Read;              // The matching id for queue queries.
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     access_type type_origin = packet.type_origin;
@@ -503,8 +508,9 @@ bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management->physical_to_hardware_address(packet);
-    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read, packet.type_origin,
-        float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>()));
+
+    const float queue_busy_degree = float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>());
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read, packet.type_origin, queue_busy_degree);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -660,14 +666,15 @@ bool MEMORY_CONTROLLER::add_rq(request_type& packet, champsim::channel* ul)
 
 bool MEMORY_CONTROLLER::add_wq(request_type& packet)
 {
-    const static int type                                              = Ramulator::Request::Type::Write;                     // It means the input request is write request (Ramulator 2.0 id).
-    const static RequestType queue_type                                = RequestType::Write;                                  // The matching id for queue queries.
+    [[maybe_unused]] const static int type               = Ramulator::Request::Type::Write; // It means the input request is write request (Ramulator 2.0 id).
+    [[maybe_unused]] const static RequestType queue_type = RequestType::Write;              // The matching id for queue queries.
 
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management->physical_to_hardware_address(packet);
-    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write, packet.type_origin,
-        float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>()));
+
+    const float queue_busy_degree = float(get_occupancy(queue_type, packet.address.to<uint64_t>())) / get_queue_size(queue_type, packet.address.to<uint64_t>());
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write, packet.type_origin, queue_busy_degree);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)

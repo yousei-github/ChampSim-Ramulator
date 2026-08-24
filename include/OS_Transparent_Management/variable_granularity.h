@@ -167,15 +167,13 @@ public:
     void physical_to_hardware_address(request_type& packet);
     void physical_to_hardware_address(uint64_t& address);
 
-    bool finish_remapping_request();
+    bool finish_remapping_request() override;
 
     // Detect cold data block
     void cold_data_detection();
 
     /**
-     * @brief Epoch hook, only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval.
-     * @note Part of the interface every proposal exposes, so the memory controller can
-     *       call it without knowing which proposal is compiled in.
+     * @brief Operate during a fixed time interval (Epoch) of swapping.
      */
     void check_interval_swap([[maybe_unused]] uint8_t swapping_states, [[maybe_unused]] bool warmup) {};
 

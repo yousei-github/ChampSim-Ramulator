@@ -24,7 +24,7 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 
 bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
-    if (otm::should_skip_tracking(type, type_origin))
+    if (OsTransparentManagement::should_skip_tracking(type, type_origin))
     {
         return true;
     }

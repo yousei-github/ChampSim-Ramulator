@@ -33,9 +33,8 @@
  * The baseline for the hybrid memory system: data is placed statically and never migrated,
  * so a run measures what the research proposals in this directory have to beat.
  *
- * Selected by disabling every proposal macro in the "Research proposal selection" block of
- * ProjectConfiguration.h. The physical address is the hardware address, hence the identity
- * translation below, and no remapping request is ever produced.
+ * Selected by disabling every proposal macro in the "Research proposal selection" block of ProjectConfiguration.h.
+ * The physical address is the hardware address, hence the identity translation below, and no remapping request is ever produced.
  */
 class OS_TRANSPARENT_MANAGEMENT : public OS_TRANSPARENT_MANAGEMENT_BASE
 {
@@ -59,15 +58,13 @@ public:
     void physical_to_hardware_address(request_type& packet);
     void physical_to_hardware_address(uint64_t& address);
 
-    bool finish_remapping_request();
+    bool finish_remapping_request() override;
 
     // Detect cold data block
     void cold_data_detection();
 
     /**
-     * @brief Epoch hook, only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval.
-     * @note Part of the interface every proposal exposes, so the memory controller can
-     *       call it without knowing which proposal is compiled in.
+     * @brief Operate during a fixed time interval (Epoch) of swapping.
      */
     void check_interval_swap([[maybe_unused]] uint8_t swapping_states, [[maybe_unused]] bool warmup) {};
 
@@ -82,7 +79,7 @@ private:
 #endif /* NO_METHOD_FOR_RUN_HYBRID_MEMORY */
 
 /**
- * @brief The interface the memory controller drives an OS-transparent management design through
+ * @brief The interface which the memory controller drives an OS-transparent management design through
  *
  * @note
  * Every research proposal implements the same set of member functions, so the memory
@@ -92,8 +89,8 @@ private:
  */
 template<typename OTM>
 concept os_transparent_management_policy =
-    std::derived_from<OTM, OS_TRANSPARENT_MANAGEMENT_BASE> && requires(OTM otm, typename OTM::RemappingRequest remapping_request, champsim::channel::request_type packet, uint64_t address, float queue_busy_degree, uint8_t swapping_states, bool warmup, access_type type_origin) {
-        { otm.memory_activity_tracking(address, OTM::MemoryRequestType::Read, type_origin, queue_busy_degree) } -> std::same_as<bool>;
+    std::derived_from<OTM, OS_TRANSPARENT_MANAGEMENT_BASE> && requires(OTM otm, OS_TRANSPARENT_MANAGEMENT_BASE::MemoryRequestType type, OS_TRANSPARENT_MANAGEMENT_BASE::RemappingRequest remapping_request, champsim::channel::request_type packet, uint64_t address, float queue_busy_degree, uint8_t swapping_states, bool warmup, access_type type_origin) {
+        { otm.memory_activity_tracking(address, type, type_origin, queue_busy_degree) } -> std::same_as<bool>;
         { otm.physical_to_hardware_address(packet) } -> std::same_as<void>;
         { otm.physical_to_hardware_address(address) } -> std::same_as<void>;
         { otm.issue_remapping_request(remapping_request) } -> std::same_as<bool>;

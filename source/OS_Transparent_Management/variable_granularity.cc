@@ -105,7 +105,7 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 
 bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
-    if (otm::should_skip_tracking(type, type_origin))
+    if (OsTransparentManagement::should_skip_tracking(type, type_origin))
     {
         return true;
     }
@@ -143,7 +143,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, Memor
     }
 
     // Read and write requests are counted the same way
-    otm::update_counter_and_hotness(counter_table, hotness_table, data_block_address, hotness_threshold);
+    OsTransparentManagement::update_counter_and_hotness(counter_table, hotness_table, data_block_address, hotness_threshold);
 
     // Prepare a remapping request
     RemappingRequest remapping_request;
@@ -433,8 +433,8 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, Memor
         // Follow rule 2 (data blocks belonging to NM are recovered to the original locations)
         START_ADDRESS_WIDTH start_address_in_fm = MIGRATION_GRANULARITY_WIDTH(MigrationGranularity::KiB_4) - free_space;
 
-        remapping_request.h_address_in_fm         = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
-        remapping_request.h_address_in_sm         = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
+        remapping_request.h_address_in_fm       = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(fm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
+        remapping_request.h_address_in_sm       = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
 
         // Indicate where the data come from for h_address_in_fm and h_address_in_sm. (What block the data belong to)
         remapping_request.fm_location           = fm_location; // This should be RemappingLocation::Zero.
@@ -529,8 +529,8 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, Memor
             START_ADDRESS_WIDTH start_address_in_fm = used_space;
             start_address                           = placement_table.at(placement_table_index).start_address[occupied_group_number];
 
-            remapping_request.h_address_in_fm         = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
-            remapping_request.h_address_in_sm         = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
+            remapping_request.h_address_in_fm       = champsim::replace_bits(base_remapping_address + (start_address_in_fm << DATA_LINE_OFFSET_BITS), uint64_t(tag) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
+            remapping_request.h_address_in_sm       = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
 
             // Indicate where the data come from for h_address_in_fm and h_address_in_sm. (What block the data belong to)
             remapping_request.fm_location           = sm_location; // This shouldn't be RemappingLocation::Zero.
@@ -1198,12 +1198,12 @@ bool OS_TRANSPARENT_MANAGEMENT::cold_data_eviction(uint64_t source_address, floa
                 remapping_request.h_address_in_sm = champsim::replace_bits(base_remapping_address + (start_address << DATA_LINE_OFFSET_BITS), uint64_t(sm_location) << fast_memory_offset_bit, congruence_group_msb, fast_memory_offset_bit);
 
                 // Indicate where the data come from for h_address_in_fm and h_address_in_sm.
-                remapping_request.fm_location   = sm_location; // This shouldn't be RemappingLocation::Zero.
-                remapping_request.sm_location   = tag;         // This should be RemappingLocation::Zero.
+                remapping_request.fm_location     = sm_location; // This shouldn't be RemappingLocation::Zero.
+                remapping_request.sm_location     = tag;         // This should be RemappingLocation::Zero.
 
-                remapping_request.size          = placement_table.at(placement_table_index).granularity[i];
+                remapping_request.size            = placement_table.at(placement_table_index).granularity[i];
 
-                bool enqueue                    = false;
+                bool enqueue                      = false;
                 if (queue_busy_degree <= QUEUE_BUSY_DEGREE_THRESHOLD)
                 {
                     enqueue = enqueue_remapping_request(remapping_request);

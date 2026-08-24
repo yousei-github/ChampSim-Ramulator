@@ -25,9 +25,8 @@
 /**
  * @brief
  * Definitions shared by every research proposal (OS-transparent management design).
- * A proposal-specific header (cameo.h, variable_granularity.h, ideal_single_mempod.h, ...)
- * is responsible only for what actually differs between proposals; anything that was
- * identical in all of them lives here.
+ * A proposal-specific header (cameo.h, variable_granularity.h, ideal_single_mempod.h, ...) is responsible only for what actually differs between proposals; 
+ * anything that was identical in all of them lives here.
  */
 
 #define COUNTER_WIDTH                         uint8_t
@@ -46,15 +45,11 @@
 
 /**
  * @brief
- * The state and behaviour every OS_TRANSPARENT_MANAGEMENT shares, whichever research
- * proposal is compiled in. Proposals inherit from this publicly, so the memory controller
- * keeps naming the nested types as OS_TRANSPARENT_MANAGEMENT::RemappingRequest and
- * OS_TRANSPARENT_MANAGEMENT::MemoryRequestType.
+ * The state and behaviour every OS_TRANSPARENT_MANAGEMENT shares.
+ * Every research proposal inherit from this publicly
  *
  * @note
- * Nothing here is virtual: exactly one proposal is compiled in (the macros in
- * ProjectConfiguration.h are mutually exclusive), so the class is never used
- * polymorphically and no object is ever deleted through this base.
+ * Exactly one proposal is compiled in, so the class is never used polymorphically.
  */
 class OS_TRANSPARENT_MANAGEMENT_BASE
 {
@@ -71,18 +66,19 @@ public:
      * @brief Remapping request
      *
      * @note
-     * The fields are the union of what the proposals need. Every proposal fills in the
-     * hardware addresses and the size; the remaining fields are proposal-specific and
-     * keep their default value where they carry no meaning:
+     * The fields are the combination of what the proposals need.
+     *
+     * Every proposal fills in the hardware addresses and the size;
+     * the remaining fields are proposal-specific and keep their default value where they carry no meaning:
      * - p_address_in_fm / p_address_in_sm: physical addresses, IDEAL_SINGLE_MEMPOD only.
-     * - fm_location / sm_location: positions inside a congruence group, that is the line
-     *   location table entry (CAMEO) or the placement table entry (variable granularity).
+     * - fm_location / sm_location: positions inside the remapping table,
+     *   that is the line location table entry in a congruence group (CAMEO) or the placement table entry (variable granularity).
      */
     struct RemappingRequest
     {
         uint64_t h_address_in_fm = 0, h_address_in_sm = 0;         // Hardware address in fast and slow memories
         uint64_t p_address_in_fm = 0, p_address_in_sm = 0;         // Physical address in fast and slow memories
-        REMAPPING_LOCATION_WIDTH fm_location = 0, sm_location = 0; // Positions in the congruence group
+        REMAPPING_LOCATION_WIDTH fm_location = 0, sm_location = 0; // Positions in the remapping table
         uint8_t size = 0;                                          // Number of cache lines to remap
     };
 
@@ -91,20 +87,20 @@ public:
     uint64_t fast_memory_capacity; // Unit is byte
     uint64_t total_capacity_at_data_block_granularity;
     uint64_t fast_memory_capacity_at_data_block_granularity;
-    uint8_t fast_memory_offset_bit; // Address format in the data management granularity
+    // Address format in the data management granularity
+    uint8_t fast_memory_offset_bit;
 
     std::deque<RemappingRequest> remapping_request_queue;
     uint64_t remapping_request_queue_congestion = 0;
 
     /**
-     * @brief Get the remapping request at the head of the remapping_request_queue
+     * @brief Get a remapping request at the head of the remapping_request_queue
      *
      * @note
-     * The request is only peeked at, not dequeued: the memory controller keeps issuing the
-     * same request until it tells the proposal the swapping is over via
-     * finish_remapping_request().
+     * The request is only peeked at, not dequeued.
+     * The memory controller keeps processing the same request until it tells the proposal the swapping is over via finish_remapping_request().
      */
-    bool issue_remapping_request(RemappingRequest& remapping_request)
+    virtual bool issue_remapping_request(RemappingRequest& remapping_request)
     {
         if (remapping_request_queue.empty() == false)
         {
@@ -115,15 +111,12 @@ public:
         return false;
     };
 
+    virtual bool finish_remapping_request() = 0;
+
 protected:
     /**
-     * @param data_management_offset_bits Passed in rather than read from the
-     *        DATA_MANAGEMENT_OFFSET_BITS macro, because IDEAL_SINGLE_MEMPOD defines that
-     *        macro in its own header, which this header cannot depend on.
-     * @param fm_offset_bit Address format in the data management granularity. Also
-     *        proposal-specific: champsim::lg2(fast_memory_max_address) for the proposals
-     *        that place data inside a congruence group, DATA_MANAGEMENT_OFFSET_BITS for
-     *        IDEAL_SINGLE_MEMPOD.
+     * @param[in] data_management_offset_bits The width of offset bits of data block management granularity
+     * @param[in] fm_offset_bit The width of offset bits of fast memory
      */
     OS_TRANSPARENT_MANAGEMENT_BASE(uint64_t max_address, uint64_t fast_memory_max_address, uint8_t data_management_offset_bits, uint8_t fm_offset_bit)
     : total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
@@ -136,7 +129,7 @@ protected:
     ~OS_TRANSPARENT_MANAGEMENT_BASE() = default;
 };
 
-namespace otm
+namespace OsTransparentManagement
 {
 /**
  * @brief Whether this access is excluded from activity tracking
@@ -177,7 +170,7 @@ inline void update_counter_and_hotness(std::vector<COUNTER_WIDTH>& counter_table
         hotness_table.at(data_block_address) = true; // Mark hot data block
     }
 }
-} // namespace otm
+} // namespace OsTransparentManagement
 
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 #endif /* OS_TRANSPARENT_MANAGEMENT_COMMON_H */

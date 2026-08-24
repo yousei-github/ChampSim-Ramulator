@@ -40,7 +40,7 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 
 bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
-    if (otm::should_skip_tracking(type, type_origin))
+    if (OsTransparentManagement::should_skip_tracking(type, type_origin))
     {
         return true;
     }
@@ -77,7 +77,7 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, Memor
     }
 
     // Read and write requests are counted the same way
-    otm::update_counter_and_hotness(counter_table, hotness_table, data_block_address, hotness_threshold);
+    OsTransparentManagement::update_counter_and_hotness(counter_table, hotness_table, data_block_address, hotness_threshold);
 
     // Add new remapping requests to queue
     if ((hotness_table.at(data_block_address) == true) && (remapping_location != REMAPPING_LOCATION_WIDTH(RemappingLocation::Zero)))
@@ -150,7 +150,6 @@ bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, Memor
 
     return true;
 };
-
 
 void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(request_type& packet)
 {

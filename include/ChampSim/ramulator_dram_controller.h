@@ -78,6 +78,9 @@ public:
     const uint8_t memory2_id = MEMORY_NUMBER_TWO;
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+    /**
+     * Built in the constructor body once both memory systems exist (capacities are unknown until the .cfg configs are parsed)
+     */
     std::unique_ptr<OS_TRANSPARENT_MANAGEMENT> os_transparent_management;
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -95,11 +98,9 @@ public:
     };
 
     std::array<BUFFER_ENTRY, SWAPPING_BUFFER_ENTRY_NUMBER> buffer = {};
-    uint64_t base_address[SWAPPING_SEGMENT_NUMBER] = {}; // Here base_address[0] for segment 1, base_address[1] for segment 2. Address is hardware address and at cache line granularity.
-    // Initialized here because initialize_swapping() bills the entries it is about to clear to
-    // swapping_count before resetting them, and the constructor calls it once with nothing swapped yet.
-    uint8_t active_entry_number                    = 0;
-    uint8_t finish_number                          = 0;
+    uint64_t base_address[SWAPPING_SEGMENT_NUMBER]                = {}; // Here base_address[0] for segment 1, base_address[1] for segment 2. Address is hardware address and at cache line granularity.
+    uint8_t active_entry_number                                   = 0;
+    uint8_t finish_number                                         = 0;
 
     // Scoped enumerations
     enum class SwappingState : uint8_t {
@@ -245,7 +246,6 @@ MEMORY_CONTROLLER<T, T2>::~MEMORY_CONTROLLER()
     output_statistics.read_request_in_memory2  = read_request_in_memory2;
     output_statistics.write_request_in_memory  = write_request_in_memory;
     output_statistics.write_request_in_memory2 = write_request_in_memory2;
-
 }
 
 template<typename T, typename T2>
@@ -397,10 +397,15 @@ long MEMORY_CONTROLLER<T, T2>::operate()
 #endif /* COLOCATED_LINE_LOCATION_TABLE */
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
-    // Declared outside the swapping unit's guard: check_interval_swap() below needs it
-    // whether or not the swapping unit is compiled in. Without the unit no swapping is ever
-    // in flight, so the state stays "idle".
-    uint8_t swapping_states = 0;
+    /**
+     * Swapping unit's state from operate_swapping() below
+     *
+     * @details
+     * Declared outside the swapping unit's guard:
+     * check_interval_swap() below needs it whether or not the swapping unit is compiled in.
+     * Without the unit no swapping is ever in flight, so the state stays "idle".
+     */
+    [[maybe_unused]] uint8_t swapping_states = 0;
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
     /* Operate swapping below */
@@ -482,7 +487,7 @@ long MEMORY_CONTROLLER<T, T2>::operate()
 #endif /* MEMORY_USE_SWAPPING_UNIT */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    // Only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval; it is a no-op elsewhere.
+    // Only IDEAL_SINGLE_MEMPOD migrates on a fixed time interval currently; it is a no-op elsewhere.
     os_transparent_management->check_interval_swap(swapping_states, warmup);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
@@ -583,7 +588,7 @@ void MEMORY_CONTROLLER<T, T2>::initiate_requests()
 template<typename T, typename T2>
 bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* ul)
 {
-    const static ramulator::Request::Type type                         = ramulator::Request::Type::READ;                     // It means the input request is read request.
+    [[maybe_unused]] const static ramulator::Request::Type type = ramulator::Request::Type::READ; // It means the input request is read request.
 
 #if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
     access_type type_origin = packet.type_origin;
@@ -592,8 +597,9 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management->physical_to_hardware_address(packet);
-    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read, packet.type_origin,
-        float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
+
+    const float queue_busy_degree = float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>());
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Read, packet.type_origin, queue_busy_degree);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -750,13 +756,14 @@ bool MEMORY_CONTROLLER<T, T2>::add_rq(request_type& packet, champsim::channel* u
 template<typename T, typename T2>
 bool MEMORY_CONTROLLER<T, T2>::add_wq(request_type& packet)
 {
-    const static ramulator::Request::Type type                         = ramulator::Request::Type::WRITE;                     // It means the input request is write request.
+    [[maybe_unused]] const static ramulator::Request::Type type = ramulator::Request::Type::WRITE; // It means the input request is write request.
 
     /* Operate research proposals below */
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
     os_transparent_management->physical_to_hardware_address(packet);
-    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write, packet.type_origin,
-        float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>()));
+
+    const float queue_busy_degree = float(get_occupancy(type, packet.address.to<uint64_t>())) / get_queue_size(type, packet.address.to<uint64_t>());
+    os_transparent_management->memory_activity_tracking(packet.address.to<uint64_t>(), OS_TRANSPARENT_MANAGEMENT::MemoryRequestType::Write, packet.type_origin, queue_busy_degree);
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)

@@ -30,11 +30,11 @@
 #if (IDEAL_SINGLE_MEMPOD == ENABLE)
 
 /* MemPod Parameter Setting */
-#define TIME_INTERVAL_MEMPOD_us               (50)                                            // [us]
-#define DATA_MANAGEMENT_GRANULARITY           (2048)                                          // [B] default:2048
-#define DATA_MANAGEMENT_OFFSET_BITS           (champsim::lg2(DATA_MANAGEMENT_GRANULARITY))    // [bit]
-#define CACHE_LINE_SIZE                       (64)                                            // [B]
-#define SWAP_DATA_CACHE_LINES                 (DATA_MANAGEMENT_GRANULARITY / CACHE_LINE_SIZE) // [lines]
+#define TIME_INTERVAL_MEMPOD_us          (50)                                            // [us]
+#define DATA_MANAGEMENT_GRANULARITY      (2048)                                          // [B] default:2048
+#define DATA_MANAGEMENT_OFFSET_BITS      (champsim::lg2(DATA_MANAGEMENT_GRANULARITY))    // [bit]
+#define CACHE_LINE_SIZE                  (64)                                            // [B]
+#define SWAP_DATA_CACHE_LINES            (DATA_MANAGEMENT_GRANULARITY / CACHE_LINE_SIZE) // [lines]
 
 /* For mea_counter_table */
 #define NUMBER_MEA_COUNTER               (16u)
@@ -93,7 +93,7 @@ public:
 
     // MemPod interval swap
     void check_interval_swap(uint8_t swapping_states, bool warmup);
-    bool finish_remapping_request();
+    bool finish_remapping_request() override;
 
 private:
     void get_hot_page_from_mea_counter(std::vector<REMAPPING_TABLE_ENTRY_WIDTH>& hot_pages);

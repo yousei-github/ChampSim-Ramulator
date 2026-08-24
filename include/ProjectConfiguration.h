@@ -29,7 +29,7 @@
 // Functionalities related to hybrid memory system
 #if (MEMORY_USE_HYBRID == ENABLE)
 #define MEMORY_USE_SWAPPING_UNIT             (ENABLE) // Whether memory controller uses swapping unit to swap data (data swapping overhead is considered)
-#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT (ENABLE) // Whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) methodss
+#define MEMORY_USE_OS_TRANSPARENT_MANAGEMENT (ENABLE) // Whether memory controller uses OS-transparent management designs to simulate the memory system instead of static (no-migration) method
 
 #endif /* MEMORY_USE_HYBRID */
 
@@ -65,8 +65,7 @@
 #error "Exactly one of IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD may be enabled."
 #endif
 
-// Disabling every design above selects the static-placement baseline: data is placed once
-// and never migrated, which is the control run the designs above are measured against.
+// Disabling every design above selects the static-placement baseline: data is placed once and never migrated, which is the method which the designs above are measured against.
 #if (IDEAL_LINE_LOCATION_TABLE == DISABLE) && (COLOCATED_LINE_LOCATION_TABLE == DISABLE) && (IDEAL_VARIABLE_GRANULARITY == DISABLE) && (IDEAL_SINGLE_MEMPOD == DISABLE)
 #define NO_METHOD_FOR_RUN_HYBRID_MEMORY (ENABLE)
 #endif /* IDEAL_LINE_LOCATION_TABLE, COLOCATED_LINE_LOCATION_TABLE, IDEAL_VARIABLE_GRANULARITY, IDEAL_SINGLE_MEMPOD */
