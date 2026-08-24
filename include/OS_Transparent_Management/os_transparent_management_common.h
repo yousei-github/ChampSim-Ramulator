@@ -49,7 +49,7 @@
  * Every research proposal inherit from this publicly
  *
  * @note
- * Exactly one proposal is compiled in, so the class is never used polymorphically.
+ * Exactly one proposal is compiled in.
  */
 class OS_TRANSPARENT_MANAGEMENT_BASE
 {
