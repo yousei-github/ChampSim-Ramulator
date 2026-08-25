@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+#include "ChampSim/util/bits.h" // DATA_MANAGEMENT_OFFSET_BITS expands to champsim::lg2()
 #include "ProjectConfiguration.h" // User file
 
 /**

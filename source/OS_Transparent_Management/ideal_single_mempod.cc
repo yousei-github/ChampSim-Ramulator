@@ -200,49 +200,9 @@ void OS_TRANSPARENT_MANAGEMENT::check_interval_swap(uint8_t swapping_states, boo
 // Complete
 bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& remapping_request, bool warmup)
 {
-    /*
-        uint64_t data_segment_address = remapping_request.h_address_in_sm >> DATA_MANAGEMENT_OFFSET_BITS;
-
-        // check duplicated remapping request in remapping_request_queue
-        // if duplicated remapping requests exist, we won't add this new remapping request into the remapping_request_queue.
-        bool duplicated_remapping_request = false;
-        for (uint64_t i = 1; i < remapping_request_queue.size(); i++)
-        {
-            uint64_t data_block_address_to_check = remapping_request_queue[i].address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
-            uint64_t line_location_table_index_to_check = data_block_address_to_check % fast_memory_capacity_at_data_block_granularity;
-
-            if (line_location_table_index_to_check == line_location_table_index)
-            {
-                duplicated_remapping_request = true;    // find a duplicated remapping request
-
-                break;
-            }
-        }
-
-        if (duplicated_remapping_request == false)
-        {
-            if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
-            {
-                if (remapping_request.address_in_fm == remapping_request.address_in_sm)    // check
-                {
-                    std::cout << __func__ << ": add new remapping request error 2." << std::endl;
-                    std::abort();
-                }
-
-                // enqueue a remapping request
-                remapping_request_queue.push_back(remapping_request);
-            }
-            else
-            {
-                //std::cout << __func__ << ": remapping_request_queue is full." << std::endl;
-                remapping_request_queue_congestion++;
-            }
-        }
-        else
-        {
-            return false;
-        }
-    */
+    // MemPod cancels whatever is still queued at every epoch boundary
+    // (cancel_not_started_remapping_request), so unlike CAMEO and variable granularity
+    // it does not scan the queue for a duplicate before enqueuing.
     if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
     {
         if (remapping_request.h_address_in_fm == remapping_request.h_address_in_sm) // Check

@@ -12,8 +12,3 @@ target_sources(${UNIT_TEST_EXECUTABLE_NAME}
     400-mempod-mea-counter.cc
     401-mempod-interval-swap.cc
     500-static-placement-baseline.cc)
-
-# test_capacities.hpp lives beside the sources that include it.
-target_include_directories(${UNIT_TEST_EXECUTABLE_NAME}
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR})
