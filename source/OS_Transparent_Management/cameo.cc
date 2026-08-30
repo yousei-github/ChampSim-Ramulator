@@ -3,10 +3,16 @@
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 
+#if (IDEAL_LINE_LOCATION_TABLE == ENABLE)
+#define METHOD_NAME "CAMEO_IDEAL"
+#elif (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
+#define METHOD_NAME "CAMEO_COLOCATED"
+#endif /* IDEAL_LINE_LOCATION_TABLE */
+
 #if (IDEAL_LINE_LOCATION_TABLE == ENABLE) || (COLOCATED_LINE_LOCATION_TABLE == ENABLE)
 OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address)
 // Note here only support integers of 2's power.
-: OS_TRANSPARENT_MANAGEMENT_BASE(max_address, fast_memory_max_address, DATA_MANAGEMENT_OFFSET_BITS, champsim::lg2(fast_memory_max_address)),
+: OS_TRANSPARENT_MANAGEMENT_BASE(METHOD_NAME, max_address, fast_memory_max_address, DATA_MANAGEMENT_OFFSET_BITS, champsim::lg2(fast_memory_max_address)),
   counter_table(*(new std::vector<COUNTER_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, COUNTER_DEFAULT_VALUE))),
   hotness_table(*(new std::vector<HOTNESS_WIDTH>(max_address >> DATA_MANAGEMENT_OFFSET_BITS, HOTNESS_DEFAULT_VALUE))),
   congruence_group_msb(REMAPPING_LOCATION_WIDTH_BITS + fast_memory_offset_bit - 1),

@@ -8,7 +8,7 @@
 
 // Complete
 OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address)
-: OS_TRANSPARENT_MANAGEMENT_BASE(max_address, fast_memory_max_address, DATA_MANAGEMENT_OFFSET_BITS, DATA_MANAGEMENT_OFFSET_BITS),
+: OS_TRANSPARENT_MANAGEMENT_BASE("MEMPOD", max_address, fast_memory_max_address, DATA_MANAGEMENT_OFFSET_BITS, DATA_MANAGEMENT_OFFSET_BITS),
   mea_counter_table(*(new std::unordered_map<REMAPPING_TABLE_ENTRY_WIDTH, MEA_COUNTER_WIDTH>())),
   address_remapping_table(*(new std::unordered_map<REMAPPING_TABLE_ENTRY_WIDTH, REMAPPING_TABLE_ENTRY_WIDTH>())),
   invert_address_remapping_table(*(new std::unordered_map<REMAPPING_TABLE_ENTRY_WIDTH, REMAPPING_TABLE_ENTRY_WIDTH>()))

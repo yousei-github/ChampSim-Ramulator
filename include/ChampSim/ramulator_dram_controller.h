@@ -298,6 +298,17 @@ void MEMORY_CONTROLLER<T, T2>::initialize()
         memory.spec->org_entry.count[int(T::Level::Channel)], memory2.spec->org_entry.count[int(T::Level::Channel)], memory.spec->channel_width, memory2.spec->channel_width, memory.spec->speed_entry.rate, memory2.spec->speed_entry.rate);
 
 #endif /* PRINT_STATISTICS_INTO_FILE */
+
+#if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
+    // Name the design that is compiled in. Disabling every research proposal is a valid
+    // configuration (it selects the static-placement baseline), so a run gives no other sign of
+    // which one produced its numbers.
+#if (USE_VCPKG == ENABLE)
+    fmt::print("OS-transparent management: {}\n", os_transparent_management->name);
+#endif /* USE_VCPKG */
+
+    PRINTF_STATISTICS_FILE("OS-transparent management: %s\n", os_transparent_management->name.c_str());
+#endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 }
 
 template<typename T, typename T2>

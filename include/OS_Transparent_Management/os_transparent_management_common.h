@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <deque>
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "ChampSim/access_type.h"
@@ -82,6 +83,7 @@ public:
         uint8_t size = 0;                                          // Number of cache lines to remap
     };
 
+    std::string name {};
     uint64_t cycle = 0;
     uint64_t total_capacity;       // Unit is byte
     uint64_t fast_memory_capacity; // Unit is byte
@@ -118,8 +120,8 @@ protected:
      * @param[in] data_management_offset_bits The width of offset bits of data block management granularity
      * @param[in] fm_offset_bit The width of offset bits of fast memory
      */
-    OS_TRANSPARENT_MANAGEMENT_BASE(uint64_t max_address, uint64_t fast_memory_max_address, uint8_t data_management_offset_bits, uint8_t fm_offset_bit)
-    : total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
+    OS_TRANSPARENT_MANAGEMENT_BASE(std::string method_name, uint64_t max_address, uint64_t fast_memory_max_address, uint8_t data_management_offset_bits, uint8_t fm_offset_bit)
+    : name(method_name), total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
       total_capacity_at_data_block_granularity(max_address >> data_management_offset_bits),
       fast_memory_capacity_at_data_block_granularity(fast_memory_max_address >> data_management_offset_bits),
       fast_memory_offset_bit(fm_offset_bit)
