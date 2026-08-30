@@ -24,17 +24,13 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
 
 bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
-    if (OsTransparentManagement::should_skip_tracking(type, type_origin))
-    {
-        return true;
-    }
-
     if (address >= total_capacity)
     {
         std::cout << __func__ << ": address input error." << std::endl;
         return false;
     }
 
+    // No counters to update, so there is nothing for should_skip_tracking() to filter here.
     return true;
 };
 

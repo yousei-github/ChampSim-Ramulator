@@ -191,7 +191,7 @@ void MEMORY_CONTROLLER::initialize()
     {
         fmt::print("Off-chip DRAM Size: {}", sz);
     }
-    fmt::print(" Channels: {}, {} Width: {}-bit, {}-bit Data Rate: {} MT/s, {} MT/s\n",
+    fmt::print(" Channels: {}, {}. Width: {}-bit, {}-bit. Data Rate: {} MT/s, {} MT/s.\n",
         memory_system->get_channel(), memory_system2->get_channel(), memory_system->get_channel_width(), memory_system2->get_channel_width(), memory_system->get_rate(), memory_system2->get_rate());
 
 #endif /* USE_VCPKG */
@@ -213,20 +213,17 @@ void MEMORY_CONTROLLER::initialize()
     {
         PRINTF_STATISTICS_FILE("Off-chip DRAM Size: %lld", sz.count());
     }
-    PRINTF_STATISTICS_FILE(" Channels: %d, %d Width: %d-bit, %d-bit Data Rate: %d MT/s, %d MT/s\n",
+    PRINTF_STATISTICS_FILE(" Channels: %d, %d. Width: %d-bit, %d-bit. Data Rate: %d MT/s, %d MT/s.\n",
         memory_system->get_channel(), memory_system2->get_channel(), memory_system->get_channel_width(), memory_system2->get_channel_width(), memory_system->get_rate(), memory_system2->get_rate());
 
 #endif /* PRINT_STATISTICS_INTO_FILE */
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    // Name the design that is compiled in. Disabling every research proposal is a valid
-    // configuration (it selects the static-placement baseline), so a run gives no other sign of
-    // which one produced its numbers.
 #if (USE_VCPKG == ENABLE)
-    fmt::print("OS-transparent management: {}\n", os_transparent_management->name);
+    fmt::print("OS-transparent management of hybrid memory systems: {}\n", os_transparent_management->name);
 #endif /* USE_VCPKG */
 
-    PRINTF_STATISTICS_FILE("OS-transparent management: %s\n", os_transparent_management->name.c_str());
+    PRINTF_STATISTICS_FILE("OS-transparent management of hybrid memory systems: %s\n", os_transparent_management->name.c_str());
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 }
 
