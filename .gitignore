@@ -90,6 +90,9 @@ __pycache__/
 # Unmodifying a modified file (undo):
 # git restore [name]
 
+# Reverting a file to a specific past commit:
+# git restore --source [commit_number] [file_name]
+
 # (11) Showing your remotes (parameter -v shows the URLs):
 # git remote [-v]
 
@@ -201,14 +204,20 @@ __pycache__/
 
 # Note using the git fetch command to update the newest data from the remotes.
 
-# (25) Seeing the changes but not yet staged:
+# (25) Viewing the changes but not yet staged:
 # git diff
 
-# Seeing the staged changes to your last commit:
+# Viewing the staged changes to your last commit:
 # git diff --staged
 
-# Seeing a full difference between your current branch with another branch:
+# Viewing a full difference between your current branch with another branch:
 # git diff [name]
+
+# Comparing two completely different files (even outside a Git repository):
+# git diff --no-index [file1_name] [file2_name]
+
+# Viewing changes in a file compared to a specific commit:
+# git diff [commit_number] -- [file_name]
 
 # (26) Undoing your last commit, the git add and git commit commands, and all the work in your working directory:
 # git reset --hard [commit_number]

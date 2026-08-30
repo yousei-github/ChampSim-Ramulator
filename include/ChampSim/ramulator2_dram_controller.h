@@ -79,10 +79,10 @@ public:
     const uint8_t memory2_id = MEMORY_NUMBER_TWO;
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
-    // Built in the constructor body once both memory systems exist (capacities
-    // are unknown until the YAML configs are parsed), so a pointer rather than a
-    // reference like the Ramulator 1.0 controller.
-    OS_TRANSPARENT_MANAGEMENT* os_transparent_management = nullptr;
+    /**
+     * Built in the constructor body once both memory systems exist (capacities are unknown until the YAML configs are parsed)
+     */
+    std::unique_ptr<OS_TRANSPARENT_MANAGEMENT> os_transparent_management;
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 
 #if (MEMORY_USE_SWAPPING_UNIT == ENABLE)
@@ -99,9 +99,9 @@ public:
     };
 
     std::array<BUFFER_ENTRY, SWAPPING_BUFFER_ENTRY_NUMBER> buffer = {};
-    uint64_t base_address[SWAPPING_SEGMENT_NUMBER]; // Here base_address[0] for segment 1, base_address[1] for segment 2. Address is hardware address and at cache line granularity.
-    uint8_t active_entry_number;
-    uint8_t finish_number;
+    uint64_t base_address[SWAPPING_SEGMENT_NUMBER]                = {}; // Here base_address[0] for segment 1, base_address[1] for segment 2. Address is hardware address and at cache line granularity.
+    uint8_t active_entry_number                                   = 0;
+    uint8_t finish_number                                         = 0;
 
     // Scoped enumerations
     enum class SwappingState : uint8_t
@@ -181,7 +181,9 @@ public:
     bool update_swapping_segments(uint64_t address_1, uint64_t address_2, uint8_t size);
 
 private:
-    /* Member functions for swapping */
+    /**
+     * Member functions for swapping
+    */
     void initialize_swapping();
 
     uint8_t operate_swapping();
@@ -190,8 +192,8 @@ private:
     void return_swapping_data(Ramulator::Request& request);
 
     // This function is used by memory controller in add_rq() and add_wq().
-    uint8_t check_request(request_type& packet, OS_TRANSPARENT_MANAGEMENT::MemoryRequestType type); // Packet needs to prepare its hardware address.
-    uint8_t check_address(uint64_t address, uint8_t type);                                          // The address is physical address.
+    uint8_t check_request(request_type& packet, RequestType type); // Packet needs to prepare its hardware address.
+    uint8_t check_address(uint64_t address, uint8_t type);         // The address is physical address.
 
 #endif /* MEMORY_USE_SWAPPING_UNIT */
 };

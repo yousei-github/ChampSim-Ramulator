@@ -8,7 +8,9 @@ classes rather than a copy.
 Everything builds into a single `champsim_unit_tests` executable. The suites under
 [ChampSim/](ChampSim/) are ported from upstream ChampSim; see
 [ChampSim/README.txt](ChampSim/README.txt) for their numbering scheme and the
-conventions the port follows.
+conventions the port follows. [OS_Transparent_Management/](OS_Transparent_Management/)
+covers this fork's own research proposals for hybrid memory data placement; see
+[OS_Transparent_Management/README.md](OS_Transparent_Management/README.md).
 
 ## Quick start
 
@@ -68,7 +70,12 @@ Ramulator bridge replaces. They are guarded and compile to nothing unless both
 | Ramulator 2.0 (default) | 607 |
 | ChampSim internal memory (`RAMULATOR` and `RAMULATOR2` both `DISABLE`) | 624 |
 
-Both configurations pass. Changing a toggle forces a wide recompile, which ccache
+The `OS_Transparent_Management/` suite works the same way: the research proposals it
+covers only exist when `MEMORY_USE_HYBRID` is enabled, and each proposal's tests
+compile only when that proposal is the one selected, so a hybrid build runs 611 to
+616 cases depending on which one it is. Its README has the breakdown.
+
+All configurations pass. Changing a toggle forces a wide recompile, which ccache
 makes cheap on the way back.
 
 ## Adding another suite

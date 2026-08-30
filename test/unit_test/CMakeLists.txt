@@ -35,6 +35,7 @@ set_target_properties(${UNIT_TEST_EXECUTABLE_NAME}
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/test/bin")
 
 add_subdirectory(ChampSim)
+add_subdirectory(OS_Transparent_Management)
 
 # Catch.cmake ships with Catch2 and lands on CMAKE_MODULE_PATH via find_package(Catch2).
 # catch_discover_tests() registers every TEST_CASE / SCENARIO with ctest individually.

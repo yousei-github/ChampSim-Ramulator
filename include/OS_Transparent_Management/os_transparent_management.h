@@ -1,6 +1,7 @@
 #ifndef OS_TRANSPARENT_MANAGEMENT_H
 #define OS_TRANSPARENT_MANAGEMENT_H
 #include <cassert>
+#include <concepts>
 #include <cstdlib>
 #include <deque>
 #include <iostream>
@@ -9,6 +10,7 @@
 
 #include "ChampSim/champsim_constants.h"
 #include "ChampSim/util/bits.h"
+#include "OS_Transparent_Management/os_transparent_management_common.h"
 #include "ProjectConfiguration.h" // User file
 
 /* Includes for research */
@@ -25,68 +27,46 @@
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
 
 #if (NO_METHOD_FOR_RUN_HYBRID_MEMORY == ENABLE)
-#define COUNTER_WIDTH                 uint8_t
-#define COUNTER_MAX_VALUE             (UINT8_MAX)
-#define COUNTER_DEFAULT_VALUE         (0)
 
-#define HOTNESS_WIDTH                 bool
-#define HOTNESS_DEFAULT_VALUE         (false)
-
-#define REMAPPING_LOCATION_WIDTH      uint8_t
-#define REMAPPING_LOCATION_WIDTH_BITS (3)
-
-class OS_TRANSPARENT_MANAGEMENT
+/**
+ * @brief
+ * The baseline for the hybrid memory system: data is placed statically and never migrated,
+ * so a run measures what the research proposals in this directory have to beat.
+ *
+ * Selected by disabling every proposal macro in the "Research proposal selection" block of ProjectConfiguration.h.
+ * The physical address is the hardware address, hence the identity translation below, and no remapping request is ever produced.
+ */
+class OS_TRANSPARENT_MANAGEMENT : public OS_TRANSPARENT_MANAGEMENT_BASE
 {
     using channel_type = champsim::channel;
     using request_type = typename channel_type::request_type;
 
 public:
-    /** @brief Memory request type */
-    enum class MemoryRequestType : int
-    {
-        Read = 0,
-        Write,
-        Max
-    };
-
-    uint64_t cycle                  = 0;
     COUNTER_WIDTH hotness_threshold = 0;
-    uint64_t total_capacity;       // Uint is byte
-    uint64_t fast_memory_capacity; // Uint is byte
-    uint64_t total_capacity_at_data_block_granularity;
-    uint64_t fast_memory_capacity_at_data_block_granularity;
-    uint8_t fast_memory_offset_bit; // Address format in the data management granularity
 
     std::vector<COUNTER_WIDTH>& counter_table; // A counter for every data block
     std::vector<HOTNESS_WIDTH>& hotness_table; // A hotness bit for every data block, true -> data block is hot, false -> data block is cold.
-
-    /* Remapping request */
-    struct RemappingRequest
-    {
-        uint64_t address_in_fm, address_in_sm; // Hardware address in fast and slow memories
-        REMAPPING_LOCATION_WIDTH fm_location, sm_location;
-        uint8_t size; // Number of cache lines to remap
-    };
-
-    std::deque<RemappingRequest> remapping_request_queue;
-    uint64_t remapping_request_queue_congestion;
 
     /* Member functions */
     OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address);
     ~OS_TRANSPARENT_MANAGEMENT();
 
     // Adress is physical address and at byte granularity
-    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree);
+    bool memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree);
 
     // Translate the physical address to hardware address
     void physical_to_hardware_address(request_type& packet);
     void physical_to_hardware_address(uint64_t& address);
 
-    bool issue_remapping_request(RemappingRequest& remapping_request);
-    bool finish_remapping_request();
+    bool finish_remapping_request() override;
 
     // Detect cold data block
     void cold_data_detection();
+
+    /**
+     * @brief Operate during a fixed time interval (Epoch) of swapping.
+     */
+    void check_interval_swap([[maybe_unused]] uint8_t swapping_states, [[maybe_unused]] bool warmup) {};
 
 private:
     // Evict cold data block
@@ -97,6 +77,30 @@ private:
 };
 
 #endif /* NO_METHOD_FOR_RUN_HYBRID_MEMORY */
+
+/**
+ * @brief The interface which the memory controller drives an OS-transparent management design through
+ *
+ * @note
+ * Every research proposal implements the same set of member functions, so the memory
+ * controller needs no #if of its own to call them. The static_assert below checks the
+ * proposal that is actually compiled in, which turns "I added a proposal and forgot a
+ * hook" from a wall of template errors at the call site into one readable message here.
+ */
+template<typename OTM>
+concept os_transparent_management_policy =
+    std::derived_from<OTM, OS_TRANSPARENT_MANAGEMENT_BASE> && requires(OTM otm, OS_TRANSPARENT_MANAGEMENT_BASE::MemoryRequestType type, OS_TRANSPARENT_MANAGEMENT_BASE::RemappingRequest remapping_request, champsim::channel::request_type packet, uint64_t address, float queue_busy_degree, uint8_t swapping_states, bool warmup, access_type type_origin) {
+        { otm.memory_activity_tracking(address, type, type_origin, queue_busy_degree) } -> std::same_as<bool>;
+        { otm.physical_to_hardware_address(packet) } -> std::same_as<void>;
+        { otm.physical_to_hardware_address(address) } -> std::same_as<void>;
+        { otm.issue_remapping_request(remapping_request) } -> std::same_as<bool>;
+        { otm.finish_remapping_request() } -> std::same_as<bool>;
+        { otm.cold_data_detection() } -> std::same_as<void>;
+        { otm.check_interval_swap(swapping_states, warmup) } -> std::same_as<void>;
+    };
+
+static_assert(os_transparent_management_policy<OS_TRANSPARENT_MANAGEMENT>,
+    "The selected OS-transparent management design does not implement the interface the memory controller expects.");
 
 #endif /* MEMORY_USE_OS_TRANSPARENT_MANAGEMENT */
 #endif /* OS_TRANSPARENT_MANAGEMENT_H */

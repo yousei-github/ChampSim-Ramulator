@@ -1,7 +1,6 @@
-#include "OS_Transparent_Management/ideal_single_mempod.h"
-
 #include <algorithm>
 
+#include "OS_Transparent_Management/os_transparent_management.h"
 #include "simulator_statistics.h"
 
 #if (MEMORY_USE_OS_TRANSPARENT_MANAGEMENT == ENABLE)
@@ -9,34 +8,30 @@
 
 // Complete
 OS_TRANSPARENT_MANAGEMENT::OS_TRANSPARENT_MANAGEMENT(uint64_t max_address, uint64_t fast_memory_max_address)
-: total_capacity(max_address), fast_memory_capacity(fast_memory_max_address),
-  total_capacity_at_granularity(max_address >> DATA_MANAGEMENT_OFFSET_BITS),
-  fast_memory_capacity_at_granularity(fast_memory_max_address >> DATA_MANAGEMENT_OFFSET_BITS),
-  fast_memory_offset_bit(DATA_MANAGEMENT_OFFSET_BITS),
+: OS_TRANSPARENT_MANAGEMENT_BASE("MEMPOD", max_address, fast_memory_max_address, DATA_MANAGEMENT_OFFSET_BITS, DATA_MANAGEMENT_OFFSET_BITS),
   mea_counter_table(*(new std::unordered_map<REMAPPING_TABLE_ENTRY_WIDTH, MEA_COUNTER_WIDTH>())),
   address_remapping_table(*(new std::unordered_map<REMAPPING_TABLE_ENTRY_WIDTH, REMAPPING_TABLE_ENTRY_WIDTH>())),
   invert_address_remapping_table(*(new std::unordered_map<REMAPPING_TABLE_ENTRY_WIDTH, REMAPPING_TABLE_ENTRY_WIDTH>()))
 {
-    remapping_request_queue_congestion = 0;
-    intervals                          = 1;
+    intervals           = 1;
 
-    interval_cycle                     = CPU_FREQUENCY * (double) TIME_INTERVAL_MEMPOD_us / MEMORY_CONTROLLER_CLOCK_SCALE;
-    next_interval_cycle                = interval_cycle;
+    interval_cycle      = CPU_FREQUENCY * (double) TIME_INTERVAL_MEMPOD_us / MEMORY_CONTROLLER_CLOCK_SCALE;
+    next_interval_cycle = interval_cycle;
 
     /* Initializing address_remapping_table and invert_address_remapping_table */
     // TODO: I think there is faster way to construct mapping.
 
-    for (REMAPPING_TABLE_ENTRY_WIDTH itr_map = 0; itr_map < fast_memory_capacity_at_granularity; itr_map++)
+    for (REMAPPING_TABLE_ENTRY_WIDTH itr_map = 0; itr_map < fast_memory_capacity_at_data_block_granularity; itr_map++)
     {
         address_remapping_table[itr_map]        = itr_map;
         invert_address_remapping_table[itr_map] = itr_map;
     }
-    for (REMAPPING_TABLE_ENTRY_WIDTH itr_map = fast_memory_capacity_at_granularity; itr_map < total_capacity_at_granularity; itr_map++)
+    for (REMAPPING_TABLE_ENTRY_WIDTH itr_map = fast_memory_capacity_at_data_block_granularity; itr_map < total_capacity_at_data_block_granularity; itr_map++)
     {
         address_remapping_table[itr_map] = itr_map;
     }
-    assert(address_remapping_table.size() == total_capacity_at_granularity);
-    assert(invert_address_remapping_table.size() == fast_memory_capacity_at_granularity);
+    assert(address_remapping_table.size() == total_capacity_at_data_block_granularity);
+    assert(invert_address_remapping_table.size() == fast_memory_capacity_at_data_block_granularity);
 };
 
 // Complete
@@ -49,48 +44,24 @@ OS_TRANSPARENT_MANAGEMENT::~OS_TRANSPARENT_MANAGEMENT()
     delete &invert_address_remapping_table;
 };
 
-#if (TRACKING_LOAD_STORE_STATISTICS == ENABLE)
 // Complete
 bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, access_type type_origin, float queue_busy_degree)
 {
-#if (TRACKING_LOAD_ONLY)
-    if (type_origin == access_type::RFO || type_origin == access_type::WRITE) // CPU Store Instruction and LLC Writeback is ignored
-    {
-        return true;
-    }
-#endif /* TRACKING_LOAD_ONLY */
-
-#if (TRACKING_READ_ONLY)
-    if (type == MemoryRequestType::Write) // Memory Write is ignored
-    {
-        return true;
-    }
-#endif /* TRACKING_READ_ONLY */
-
     if (address >= total_capacity)
     {
         std::cout << __func__ << ": address input error." << std::endl;
         return false;
     }
 
-    uint64_t data_segment_address = address >> DATA_MANAGEMENT_OFFSET_BITS; // Calculate the data block address
-    update_mea_counter(data_segment_address);
-    return true;
-};
-#else
-bool OS_TRANSPARENT_MANAGEMENT::memory_activity_tracking(uint64_t address, MemoryRequestType type, float queue_busy_degree)
-{
-    if (address >= total_capacity)
+    if (OsTransparentManagement::should_skip_tracking(type, type_origin))
     {
-        std::cout << __func__ << ": address input error." << std::endl;
-        return false;
+        return true;
     }
 
     uint64_t data_segment_address = address >> DATA_MANAGEMENT_OFFSET_BITS; // Calculate the data block address
     update_mea_counter(data_segment_address);
     return true;
 };
-#endif
 
 // Debugged
 void OS_TRANSPARENT_MANAGEMENT::update_mea_counter(uint64_t segment_address)
@@ -154,18 +125,6 @@ void OS_TRANSPARENT_MANAGEMENT::physical_to_hardware_address(uint64_t& address)
     std::printf("physical_to_hardware_address(uint64_t), p_segment %lu, h_segment %lu \n", data_segment_address, address_remapping_table[data_segment_address]);
 #endif
     address = (address_remapping_table[data_segment_address] << DATA_MANAGEMENT_OFFSET_BITS) + data_segment_offset;
-};
-
-// Complete
-bool OS_TRANSPARENT_MANAGEMENT::issue_remapping_request(RemappingRequest& remapping_request)
-{
-    if (remapping_request_queue.empty() == false)
-    {
-        remapping_request = remapping_request_queue.front();
-        return true;
-    }
-
-    return false;
 };
 
 // Complete
@@ -241,49 +200,9 @@ void OS_TRANSPARENT_MANAGEMENT::check_interval_swap(uint8_t swapping_states, boo
 // Complete
 bool OS_TRANSPARENT_MANAGEMENT::enqueue_remapping_request(RemappingRequest& remapping_request, bool warmup)
 {
-    /*
-        uint64_t data_segment_address = remapping_request.h_address_in_sm >> DATA_MANAGEMENT_OFFSET_BITS;
-
-        // check duplicated remapping request in remapping_request_queue
-        // if duplicated remapping requests exist, we won't add this new remapping request into the remapping_request_queue.
-        bool duplicated_remapping_request = false;
-        for (uint64_t i = 1; i < remapping_request_queue.size(); i++)
-        {
-            uint64_t data_block_address_to_check = remapping_request_queue[i].address_in_fm >> DATA_MANAGEMENT_OFFSET_BITS;
-            uint64_t line_location_table_index_to_check = data_block_address_to_check % fast_memory_capacity_at_data_block_granularity;
-
-            if (line_location_table_index_to_check == line_location_table_index)
-            {
-                duplicated_remapping_request = true;    // find a duplicated remapping request
-
-                break;
-            }
-        }
-
-        if (duplicated_remapping_request == false)
-        {
-            if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
-            {
-                if (remapping_request.address_in_fm == remapping_request.address_in_sm)    // check
-                {
-                    std::cout << __func__ << ": add new remapping request error 2." << std::endl;
-                    std::abort();
-                }
-
-                // enqueue a remapping request
-                remapping_request_queue.push_back(remapping_request);
-            }
-            else
-            {
-                //std::cout << __func__ << ": remapping_request_queue is full." << std::endl;
-                remapping_request_queue_congestion++;
-            }
-        }
-        else
-        {
-            return false;
-        }
-    */
+    // MemPod cancels whatever is still queued at every epoch boundary
+    // (cancel_not_started_remapping_request), so unlike CAMEO and variable granularity
+    // it does not scan the queue for a duplicate before enqueuing.
     if (remapping_request_queue.size() < REMAPPING_REQUEST_QUEUE_LENGTH)
     {
         if (remapping_request.h_address_in_fm == remapping_request.h_address_in_sm) // Check
@@ -342,11 +261,11 @@ void OS_TRANSPARENT_MANAGEMENT::determine_swap_pair(std::vector<REMAPPING_TABLE_
         PhysicalHardwareAddressTuple hot_page_ph_address;
         hot_page_ph_address.h_address = hot_page_h_address;
         hot_page_ph_address.p_address = hot_page_p_address;
-        if (hot_page_h_address < fast_memory_capacity_at_granularity) // If hot_page in Fast Memory
+        if (hot_page_h_address < fast_memory_capacity_at_data_block_granularity) // If hot_page in Fast Memory
         {
             hot_page_in_fm.push_back(hot_page_ph_address.h_address);
         }
-        else if (hot_page_h_address < total_capacity_at_granularity) // If hot_page in Slow Memory
+        else if (hot_page_h_address < total_capacity_at_data_block_granularity) // If hot_page in Slow Memory
         {
             hot_page_in_sm.push_back(hot_page_ph_address);
         }
@@ -383,7 +302,7 @@ void OS_TRANSPARENT_MANAGEMENT::determine_swap_pair(std::vector<REMAPPING_TABLE_
         swap_fm_address_itr++;
 
         // If this iterator's value is over fast memory range, then swap_fm_address_itr = 0. (loop)
-        swap_fm_address_itr = swap_fm_address_itr % fast_memory_capacity_at_granularity;
+        swap_fm_address_itr = swap_fm_address_itr % fast_memory_capacity_at_data_block_granularity;
     }
 
 #if (PRINT_SWAPS_PER_EPOCH_MEMPOD == ENABLE)
