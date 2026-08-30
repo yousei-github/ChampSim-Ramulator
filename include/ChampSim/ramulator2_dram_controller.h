@@ -183,12 +183,6 @@ public:
 private:
     /**
      * Member functions for swapping
-     *
-     * @note
-     * check_request() below takes the controller's own RequestType rather than
-     * OS_TRANSPARENT_MANAGEMENT::MemoryRequestType, so the swapping unit does not name a
-     * type belonging to the OS-transparent management design. It still reads the hardware
-     * address the design produces, and check_address() still asks it to translate one.
     */
     void initialize_swapping();
 

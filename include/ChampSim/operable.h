@@ -20,8 +20,6 @@
 #include "ChampSim/chrono.h"
 #include "ProjectConfiguration.h" // User file
 
-#if (USER_CODES == ENABLE)
-
 namespace champsim
 {
 
@@ -54,41 +52,5 @@ public:
 };
 
 } // namespace champsim
-
-#else
-/* Original code of ChampSim */
-
-namespace champsim
-{
-class operable
-{
-public:
-    champsim::chrono::picoseconds clock_period {};
-    champsim::chrono::clock::time_point current_time {};
-    bool warmup = true;
-
-    operable();
-    virtual ~operable() = default;
-    explicit operable(champsim::chrono::picoseconds clock_period);
-
-    long _operate();
-    long operate_on(const champsim::chrono::clock& clock);
-
-    virtual void initialize() {} // LCOV_EXCL_LINE
-
-    virtual long operate() = 0;
-
-    virtual void begin_phase() {} // LCOV_EXCL_LINE
-
-    virtual void end_phase(unsigned /*cpu index*/) {} // LCOV_EXCL_LINE
-
-    virtual void print_deadlock() {} // LCOV_EXCL_LINE
-
-    [[deprecated]] uint64_t current_cycle() const;
-};
-
-} // namespace champsim
-
-#endif /* USER_CODES */
 
 #endif
